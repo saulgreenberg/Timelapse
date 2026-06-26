@@ -11,18 +11,6 @@ namespace Timelapse
 {
     public partial class TimelapseWindow
     {
-        public async void HandleArgumentsOnOpen()
-        {
-            try
-            {
-                await HandleArgumentsOnOpenAsync();
-            }
-            catch (Exception ex)
-            {
-                TracePrint.CatchException(ex.Message);
-            }
-        }
-
         private async Task HandleArgumentsOnOpenAsync()
         {
             // Note: Timelapse allows  -viewOnly, -relativepath <relative path>, -templatepath <template path>, -templateeditor arguments to be combined.

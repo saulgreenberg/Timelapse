@@ -118,3 +118,21 @@ Session started 2026-06-25 14:23:00 | C:\MyImages\Survey2024
 - Thread-safe via `System.Threading.Lock`.
 - `StreamWriter` opened and closed per write — no open handles to clean up on database close.
 - Silent no-op if the Backups folder cannot be created.
+
+### Open issue: log location unreachable on write failure
+
+**Problem:** The log currently writes to `<root>\Backups\Timelapse.log`. If the write failure is caused by a file server or portable hard drive becoming temporarily unreachable, the log location is also unreachable — the error is lost at exactly the moment it's most needed.
+
+**Secondary problem:** Even if the log were in a reliable location (e.g. `%LocalAppData%\Timelapse\Timelapse.log`), most users won't know how to find it when asked to email it for diagnosis.
+
+**Approaches under consideration (decision pending):**
+
+1. **"Open Log Folder" button in the shutdown dialog** — adds a button that opens File Explorer at the log folder via `Process.Start`. One click, no path knowledge needed. Users attach the file to an email.
+
+2. **"Copy log to clipboard" button** — copies log file contents to the clipboard. Users paste into an email body. No file navigation required.
+
+3. **Dual-location logging** — write to `%LocalAppData%\Timelapse\` as the primary (always reachable), and also attempt `<root>\Backups\` as a secondary. Show the Backups path to users first (familiar location); reference LocalAppData in the dialog Solution text as the fallback when the drive was unreachable.
+
+4. **Embed log excerpt in the shutdown dialog** — show the last N lines directly in the dialog with a "Copy" button. No file navigation, no ambiguity.
+
+**Recommended approach:** Option 3 (dual-location) + Option 1 ("Open Log Folder" button), with Option 2 (copy to clipboard) as a low-cost addition. This ensures the log is always captured, and gives users a one-click way to access it.

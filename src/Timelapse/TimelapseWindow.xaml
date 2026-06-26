@@ -963,6 +963,10 @@
                     </MenuItem>
 
                     <Separator />
+                    <MenuItem Name="MenuItemOpenErrorLog" Header="Open Error Log&#x2026;" Click="MenuItemOpenErrorLog_Click"
+                              ToolTip="The log records certain warnings and errors.&#x0a;If you have any issues, the developer may ask you to send its text to him." />
+
+                    <Separator />
                     <MenuItem Header="Utilities">
                         <!-- Upgrade Timelapse Files -->
                         <MenuItem Name="MenuItemUpgradeTimelapseFiles"  IsEnabled="true" 

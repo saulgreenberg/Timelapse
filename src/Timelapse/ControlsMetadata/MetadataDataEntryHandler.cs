@@ -695,11 +695,12 @@ namespace Timelapse.ControlsMetadata
             columnToUpdate.SetWhere(new ColumnTuple(DatabaseColumn.FolderDataPath, control.ParentPanel.SubPath));
 
 
-            if (!FileDatabase.Database.Update(tableName, columnToUpdate).Success)
+            SqlOperationResult updateResult = FileDatabase.Database.Update(tableName, columnToUpdate);
+            if (!updateResult.Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
                     FileDatabase.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
-                    "The problem occurred in UpdateMetadataTableAndMetadataDatabase", FileDatabase.FilePath);
+                    "The problem occurred in UpdateMetadataTableAndMetadataDatabase", FileDatabase.FilePath, updateResult);
             }
         }
 

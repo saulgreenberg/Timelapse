@@ -442,6 +442,7 @@ namespace Timelapse.Dialog
         public static void FileCantOpen(Window owner, string path, bool isFile)
         {
             string entity = isFile ? "file" : "folder";
+            AppLog.Error($"FileCantOpen: Could not open {entity}: '{path}'.");
             // Tell the user we could not read or write the file
             string title = "Could not open the " + entity;
 
@@ -687,6 +688,7 @@ namespace Timelapse.Dialog
 
         public static void DependencyFilesMissingDialog(string missingAssemblies)
         {
+            AppLog.Error($"DependencyFilesMissingDialog: Missing assemblies: {missingAssemblies}.");
             // can't use DialogMessageBox to show this message as that class requires the Timelapse window to be displayed.
             string messageTitle = $"Timelapse needs to be in its original downloaded folder.";
             StringBuilder message = new("Problem:" + Environment.NewLine);
@@ -798,6 +800,7 @@ namespace Timelapse.Dialog
 
         public static bool FilePathDeletedFileTooLongDialog(Window owner)
         {
+            AppLog.Warning("FilePathDeletedFileTooLongDialog: Deleted file paths too long — files will not be backed up to the Deleted folder.");
             const string title = "The files you want to delete won't be backed up";
             var dialog = new FormattedDialog()
             {
@@ -841,6 +844,7 @@ namespace Timelapse.Dialog
         public static void CouldNotDeleteFoldlerOnExitDialog(Window owner, string folder)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Warning($"CouldNotDeleteFoldlerOnExitDialog: Could not delete folder '{folder}' on exit.");
             const string title = "Timelapse could not delete you Deleted folder";
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
@@ -866,6 +870,7 @@ namespace Timelapse.Dialog
         // notify the user when the path is too long
         public static void TemplatePathTooLongDialog(Window owner, string templateDatabasePath)
         {
+            AppLog.Error($"TemplatePathTooLongDialog: '{templateDatabasePath}'.");
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
                 Owner = owner,
@@ -886,6 +891,7 @@ namespace Timelapse.Dialog
         // notify the user the template couldn't be loaded because its path is too long
         public static void DatabasePathTooLongDialog(Window owner, string databasePath)
         {
+            AppLog.Error($"DatabasePathTooLongDialog: '{databasePath}'.");
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
                 Owner = owner,
@@ -907,6 +913,7 @@ namespace Timelapse.Dialog
         // Warn the user if backups may not be made
         public static void BackupPathTooLongDialog(Window owner)
         {
+            AppLog.Warning("BackupPathTooLongDialog: Backup path too long — backups will not be created.");
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
                 Owner = owner,
@@ -954,6 +961,7 @@ namespace Timelapse.Dialog
 
         public static void TemplateInDisallowedFolder(Window owner, bool isDrive, string path)
         {
+            AppLog.Error($"TemplateInDisallowedFolder: path '{path}', isDrive: {isDrive}.");
             const string title = "Your template file is in a problematic location";
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
@@ -995,6 +1003,7 @@ namespace Timelapse.Dialog
         public static void TemplateIncludesControlOfUnknownType(Window owner, string unknownTypes)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error($"TemplateIncludesControlOfUnknownType: Unknown types: '{unknownTypes}'.");
             // notify the user the template couldn't be loaded rather than silently doing nothing
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
@@ -1020,6 +1029,7 @@ namespace Timelapse.Dialog
         public static void TemplateFileNotLoadedAsCorruptDialog(Window owner, string templateDatabasePath)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error($"TemplateFileNotLoadedAsCorruptDialog: '{templateDatabasePath}'.");
             string title = "Timelapse could not load the Template file.";
             // notify the user the template couldn't be loaded rather than silently doing nothing
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
@@ -1056,6 +1066,7 @@ namespace Timelapse.Dialog
 
         public static void DatabaseFileNotLoadedAsCorruptDialog(Window owner, string ddbDatabasePath, bool isEmpty)
         {
+            AppLog.Error($"DatabaseFileNotLoadedAsCorruptDialog: '{ddbDatabasePath}'. Is empty: {isEmpty}.");
             // notify the user the database couldn't be loaded because there is a problem with it
             string title = "Timelapse could not load your database file.";
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
@@ -1094,6 +1105,7 @@ namespace Timelapse.Dialog
             Window owner, List<string> missingDataLabels, List<string> extraColumns, FileDatabase fileDatabase)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error($"DatabaseColumnsMissingDialog: {missingDataLabels?.Count ?? 0} missing column(s), {extraColumns?.Count ?? 0} extra column(s).");
             var dialog = new DatabaseSchemaMismatchDialog(owner, missingDataLabels, extraColumns, fileDatabase);
             dialog.ShowDialog();
             return dialog.Result ?? new DatabaseSchemaMismatchResult { UserChoseRepair = false };
@@ -1106,6 +1118,7 @@ namespace Timelapse.Dialog
         public static void FileNotATimelapseFile(Window owner, string templateDatabasePath)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error($"FileNotATimelapseFile: '{templateDatabasePath}'.");
             // notify the user the template couldn't be loaded rather than silently doing nothing
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
@@ -1548,6 +1561,7 @@ namespace Timelapse.Dialog
         public static void MenuFileCantWriteSpreadsheetFileDialog(Window owner, string csvFilePath, string exceptionName, string exceptionMessage)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error($"MenuFileCantWriteSpreadsheetFileDialog: '{csvFilePath}'. {exceptionName}: {exceptionMessage}");
             const string title = "Can't write the spreadsheet file.";
 
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
@@ -1947,6 +1961,7 @@ namespace Timelapse.Dialog
         public static void MenuFileCantImportCSVFileDialog(Window owner, string csvFileName, string exceptionMessage)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error($"MenuFileCantImportCSVFileDialog: '{csvFileName}'. {exceptionMessage}");
             const string title = "Can't import the .csv file.";
 
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
@@ -2145,6 +2160,7 @@ namespace Timelapse.Dialog
         public static void MenuEditPopulateDataFieldWithMetadataDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error("MenuEditPopulateDataFieldWithMetadataDialog: Current image or video is missing or corrupted.");
             const string title = "Timelapse could not extract metadata";
 
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
@@ -2561,6 +2577,7 @@ namespace Timelapse.Dialog
         public static void DatabaseFileOpenedWithIncompatibleVersionOfTimelapse(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error("DatabaseFileOpenedWithIncompatibleVersionOfTimelapse: Database file is incompatible with this version of Timelapse.");
             const string title = "You are using an old incompatible version of Timelapse";
             Cursor cursor = Mouse.OverrideCursor;
             Mouse.OverrideCursor = null;
@@ -2586,6 +2603,7 @@ namespace Timelapse.Dialog
         public static void DatabaseFileBeingMergedIsIncompatibleWithParent(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Warning("DatabaseFileBeingMergedIsIncompatibleWithParent: Merge candidate database is incompatible with the parent.");
             const string title = "You are trying to merge an old incompatible database.";
             Cursor cursor = Mouse.OverrideCursor;
             Mouse.OverrideCursor = null;
@@ -2687,6 +2705,7 @@ namespace Timelapse.Dialog
         public static void MergeErrorDatabaseFileAppearsCorruptDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error("MergeErrorDatabaseFileAppearsCorruptDialog: Database .ddb file appears corrupt.");
             string title = $"Your database {File.FileDatabaseFileExtension} file  is likely corrupted.";
             // notify the user the database appears corrupt
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
@@ -2754,6 +2773,7 @@ namespace Timelapse.Dialog
         public static void MergeErrorDatabaseFileNeedsToBeUpdatedDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Warning("MergeErrorDatabaseFileNeedsToBeUpdatedDialog: Database file needs to be updated before it can be merged.");
             string title = $"Your selected database {File.FileDatabaseFileExtension} needs to be updated.";
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
@@ -2822,6 +2842,7 @@ namespace Timelapse.Dialog
         public static void MergeErrorTemplateFilesNotCompatableDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error("MergeErrorTemplateFilesNotCompatableDialog: Templates are incompatible, merge aborted.");
             const string title = "Incompatible templates ";
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
@@ -2913,6 +2934,7 @@ namespace Timelapse.Dialog
         public static void MergeSkippedDueToMalformedSQLiteQuery(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error("MergeSkippedDueToMalformedSQLiteQuery: Merge skipped due to malformed SQLite query.");
             const string title = "Merge skipped...";
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
@@ -2934,6 +2956,7 @@ namespace Timelapse.Dialog
         public static void RenameRelativePathError(Window owner, MoveFolderResultEnum result, string sourceFolderPath, string destinationFolderPath)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error($"RenameRelativePathError (rename): result={result}, source='{sourceFolderPath}', destination='{destinationFolderPath}'.");
             string title = $"Could not rename the folder {sourceFolderPath}";
 
             string reason;
@@ -2970,6 +2993,7 @@ namespace Timelapse.Dialog
         public static void RenameRelativePathError(Window owner, CreateSubfolderResultEnum result, string sourceFolderPath, string destinationName)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error($"RenameRelativePathError (create subfolder): result={result}, source='{sourceFolderPath}', destination='{destinationName}'.");
             string title = $"Could not create the folder {destinationName}";
 
             string reason;
@@ -3152,6 +3176,7 @@ namespace Timelapse.Dialog
         public static void MenuFileRecognizersDataCouldNotBeReadDialog(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            AppLog.Error("MenuFileRecognizersDataCouldNotBeReadDialog: Recognition data could not be read.");
             const string title = "Recognition data not imported.";
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
@@ -4387,19 +4412,21 @@ namespace Timelapse.Dialog
             return dialog.BuildAndShowDialog();
         }
 
-        public static void TimelapseNeedsToShutDownDataWriteErrorDialog(Window owner, bool? isDDBfile=null, string message="", string filePath="", Exception ex=null)
+        public static void TimelapseNeedsToShutDownDataWriteErrorDialog(Window owner, bool? isDDBfile=null, string message="", string filePath="", SqlOperationResult sqlResult=null)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
             if (!owner.Dispatcher.CheckAccess())
             {
-                owner.Dispatcher.Invoke(() => TimelapseNeedsToShutDownDataWriteErrorDialog(owner, isDDBfile, message, filePath, ex));
+                owner.Dispatcher.Invoke(() => TimelapseNeedsToShutDownDataWriteErrorDialog(owner, isDDBfile, message, filePath, sqlResult));
                 return;
             }
             string typeOfFile = isDDBfile.HasValue ? (isDDBfile.Value ? "data (.ddb) file" : "template (.tdb) file") : "database file";
-            string logMessage = $"Timelapse is shutting down due to a write error on the {typeOfFile}.";
+            string logMessage = $"TimelapseNeedsToShutDownDataWriteErrorDialog: Timelapse is shutting down due to a write error on the {typeOfFile}.";
             if (!string.IsNullOrEmpty(filePath)) logMessage += $" File: '{filePath}'.";
-            if (!string.IsNullOrEmpty(message)) logMessage += $" {message}.";
-            if (ex != null) AppLog.Error(logMessage, ex);
+            if (!string.IsNullOrEmpty(message)) logMessage += $" Context: {message}.";
+            if (!string.IsNullOrEmpty(sqlResult?.ErrorMessage)) logMessage += $" DB error: {sqlResult.ErrorMessage}.";
+            if (!string.IsNullOrEmpty(sqlResult?.FailingStatement)) logMessage += $" SQL: {sqlResult.FailingStatement}.";
+            if (sqlResult?.Exception != null) AppLog.Error(logMessage, sqlResult.Exception);
             else AppLog.Error(logMessage);
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {

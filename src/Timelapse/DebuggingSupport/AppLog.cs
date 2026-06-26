@@ -7,23 +7,54 @@ using File = Timelapse.Constant.File;
 namespace Timelapse.DebuggingSupport
 {
     /// <summary>
-    /// Persistent error/warning log written to the Backups folder (Backups\Timelapse.log).
+    /// Persistent error/warning log written to %LocalAppData%\Timelapse\Timelapse.txt.
     /// Call <see cref="Initialize"/> once at startup when the root path is known.
     /// All methods are thread-safe and are silent no-ops if initialization has not occurred or failed.
     /// </summary>
     public static class AppLog
     {
+        private const long MaxLogSizeBytes = 2 * 1024 * 1024; // 2 MB — trim threshold
+        private const long TrimToBytes     = 1 * 1024 * 1024; // 1 MB — keep this many bytes from the end
+
         private static string _logFilePath;
         private static string _rootPath;
         private static DateTime _sessionStart;
         private static bool _sessionHeaderWritten;
         private static readonly Lock _lock = new();
 
+        static AppLog()
+        {
+            try
+            {
+                string logFolder = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    File.LogFolder);
+                Directory.CreateDirectory(logFolder);
+                _logFilePath = Path.Combine(logFolder, File.LogFile);
+            }
+            catch
+            {
+                _logFilePath = null;
+            }
+        }
+
+        /// <summary>The full path to the log file, or null if not yet initialized.</summary>
+        public static string LogFilePath => _logFilePath;
+
+        /// <summary>
+        /// The expected log file path based on well-known constants, regardless of whether
+        /// Initialize has been called. Use this to check for an existing log file at any time.
+        /// </summary>
+        public static string DefaultLogFilePath => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            File.LogFolder,
+            File.LogFile);
+
         #region Initialization
         /// <summary>
-        /// Set the root path (the folder containing the .tdb / .ddb files).
-        /// Creates the Backups sub-folder if it does not yet exist, then writes
-        /// a session-start separator so that restarts are visible in the log.
+        /// Records the root path (folder containing the .tdb / .ddb files) for the session header,
+        /// and trims the log file to 1 MB if it exceeds 2 MB.
+        /// Called each time a database is opened.
         /// </summary>
         public static void Initialize(string rootPath)
         {
@@ -31,23 +62,33 @@ namespace Timelapse.DebuggingSupport
             {
                 return;
             }
-            try
+
+            _rootPath = rootPath;
+            _sessionStart = DateTime.Now;
+            _sessionHeaderWritten = false;
+
+            // Trim if over the size cap: keep the last 1 MB, starting on a clean line boundary
+            if (_logFilePath != null &&
+                System.IO.File.Exists(_logFilePath) &&
+                new FileInfo(_logFilePath).Length > MaxLogSizeBytes)
             {
-                string backupFolderPath = Path.Combine(rootPath, File.BackupFolder);
-                Directory.CreateDirectory(backupFolderPath);   // no-op if it already exists
-                _logFilePath = Path.Combine(backupFolderPath, File.LogFile);
-                _rootPath = rootPath;
-                _sessionStart = DateTime.Now;
-                _sessionHeaderWritten = false;
-            }
-            catch
-            {
-                // Cannot create the log (permissions, path too long, etc.).
-                // All subsequent calls become silent no-ops.
-                _logFilePath = null;
-                _rootPath = null;
-                _sessionStart = default;
-                _sessionHeaderWritten = false;
+                try
+                {
+                    byte[] allBytes = System.IO.File.ReadAllBytes(_logFilePath);
+                    int trimStart = (int)(allBytes.Length - TrimToBytes);
+                    while (trimStart < allBytes.Length && allBytes[trimStart] != '\n')
+                    {
+                        trimStart++;
+                    }
+                    trimStart++;
+                    byte[] trimmed = new byte[allBytes.Length - trimStart];
+                    Array.Copy(allBytes, trimStart, trimmed, 0, trimmed.Length);
+                    System.IO.File.WriteAllBytes(_logFilePath, trimmed);
+                }
+                catch
+                {
+                    // If trimming fails, leave the file as-is and continue
+                }
             }
         }
         #endregion
@@ -66,18 +107,6 @@ namespace Timelapse.DebuggingSupport
         }
 
         /// <summary>
-        /// Log an error — an operation failed.
-        /// Caller location is captured automatically; no extra arguments needed.
-        /// </summary>
-        public static void Error(string message,
-            [CallerFilePath]   string file   = "",
-            [CallerMemberName] string member = "",
-            [CallerLineNumber] int    line   = 0)
-        {
-            WriteEntry("ERROR  ", message, null, file, member, line);
-        }
-
-        /// <summary>
         /// Log a warning with the associated exception.
         /// The full exception chain (type, message, stack trace) is appended to the log entry.
         /// Caller location is captured automatically; no extra arguments needed.
@@ -88,6 +117,18 @@ namespace Timelapse.DebuggingSupport
             [CallerLineNumber] int    line   = 0)
         {
             WriteEntry("WARNING", message, ex, file, member, line);
+        }
+
+        /// <summary>
+        /// Log an error — an operation failed.
+        /// Caller location is captured automatically; no extra arguments needed.
+        /// </summary>
+        public static void Error(string message,
+            [CallerFilePath]   string file   = "",
+            [CallerMemberName] string member = "",
+            [CallerLineNumber] int    line   = 0)
+        {
+            WriteEntry("ERROR  ", message, null, file, member, line);
         }
 
         /// <summary>
@@ -153,7 +194,7 @@ namespace Timelapse.DebuggingSupport
             }
             catch
             {
-                // If the write fails (file locked, drive full, etc.) give up silently.
+                // If the write fails (drive full, etc.) give up silently.
             }
         }
         #endregion

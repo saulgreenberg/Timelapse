@@ -337,16 +337,28 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Button callbacks        
-        private void WriteMetadataButton_Click(object sender, RoutedEventArgs e)
+        private async void WriteMetadataButton_Click(object sender, RoutedEventArgs e)
         {
-            // Call the common method with currentFileOnly = true
-            DoWriteMetadataToFiles(currentFileOnly: true);
+            try
+            {
+                await DoWriteMetadataToFilesAsync(currentFileOnly: true);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
         }
 
-        private void WriteMetadataToAll_Click(object sender, RoutedEventArgs e)
+        private async void WriteMetadataToAll_Click(object sender, RoutedEventArgs e)
         {
-            // Call the common method with currentFileOnly = false
-            DoWriteMetadataToFiles(currentFileOnly: false);
+            try
+            {
+                await DoWriteMetadataToFilesAsync(currentFileOnly: false);
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
         }
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
@@ -526,18 +538,6 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Metadata Writing Operations
-
-        private async void DoWriteMetadataToFiles(bool currentFileOnly)
-        {
-            try
-            {
-                await DoWriteMetadataToFilesAsync(currentFileOnly);
-            }
-            catch (Exception ex)
-            {
-                TracePrint.CatchException(ex.Message);
-            }
-        }
 
         private async Task DoWriteMetadataToFilesAsync(bool currentFileOnly)
         {

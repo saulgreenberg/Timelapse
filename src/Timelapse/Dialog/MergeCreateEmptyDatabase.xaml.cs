@@ -40,18 +40,6 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Do Create Empty Database
-        private async void DoCreateEmptyDatabase()
-        {
-            try
-            {
-                await DoCreateEmptyDatabaseAsync();
-            }
-            catch (Exception ex)
-            {
-                TracePrint.CatchException(ex.Message);
-            }
-        }
-
         private async Task DoCreateEmptyDatabaseAsync()
         {
             string message;
@@ -142,7 +130,7 @@ namespace Timelapse.Dialog
                 : Path.Combine(Path.GetDirectoryName(TemplateTdbPath), Path.GetFileNameWithoutExtension(TemplateTdbPath));
             CreateEmptyButton.IsEnabled = !string.IsNullOrWhiteSpace(TemplateTdbPath); // Enable the button only if a folder was specified
         }
-        private void CreateEmptyButton_Click(object sender, RoutedEventArgs e)
+        private async void CreateEmptyButton_Click(object sender, RoutedEventArgs e)
         {
             // Warn the user if ddb file already exists in that folder
             // ReSharper disable once AssignNullToNotNullAttribute
@@ -154,7 +142,14 @@ namespace Timelapse.Dialog
                     return;
                 }
             }
-            DoCreateEmptyDatabase();
+            try
+            {
+                await DoCreateEmptyDatabaseAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
         }
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {

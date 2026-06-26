@@ -70,7 +70,7 @@ namespace Timelapse.Dialog
             }
             ButtonCheckOut.IsEnabled = !string.IsNullOrWhiteSpace(RelativeSubFolderPath); // Enable the button only if a folder was specified
         }
-        private void ButtonCheckOut_Click(object sender, RoutedEventArgs e)
+        private async void ButtonCheckOut_Click(object sender, RoutedEventArgs e)
         {
             // TODO If its a shortcut file, we need to check for folders and files in the database path, not actual path
             // ReSharper disable once AssignNullToNotNullAttribute
@@ -88,7 +88,14 @@ namespace Timelapse.Dialog
             {
                 Directory.CreateDirectory(folderToUse);
             }
-            DoCheckout();
+            try
+            {
+                await DoCheckoutAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
         }
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
@@ -101,18 +108,6 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Do Checkout
-        private async void DoCheckout()
-        {
-            try
-            {
-                await DoCheckoutAsync();
-            }
-            catch (Exception ex)
-            {
-                TracePrint.CatchException(ex.Message);
-            }
-        }
-
         private async Task DoCheckoutAsync()
         {
             // Copy the template to that folder, generating a unique name if needed

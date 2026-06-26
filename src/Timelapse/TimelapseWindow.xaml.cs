@@ -215,7 +215,7 @@ namespace Timelapse
         #endregion
 
         #region Window Loading, Closing
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Abort if some of the required dependencies are missing
             if (Dependencies.AreRequiredBinariesPresent(Assembly.GetExecutingAssembly(), out string missingAssemblies) == false)
@@ -267,7 +267,14 @@ namespace Timelapse
             ToastNotifier = new(this);
 
             // Depending on the arguments, we may open Timelapse in particular wasy, or initiate it with a supplied template and/or data file
-            this.HandleArgumentsOnOpen();
+            try
+            {
+                await HandleArgumentsOnOpenAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
         }
 
         private void Window_LocationChanged(object sender, EventArgs e)

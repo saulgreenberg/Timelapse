@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Constant;
+using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.Dialog;
 using TimelapseTemplateEditor.Controls;
@@ -70,11 +71,12 @@ namespace TimelapseTemplateEditor
                 infoColumnsTuplesWithWhereList.Add(new(columnTupleList, id++));
             }
             // Now add it to the database
-            if (!Globals.TemplateDatabase.Database.Update(DBTables.MetadataTemplate, infoColumnsTuplesWithWhereList).Success)
+            SqlOperationResult updateMetaStdResult = Globals.TemplateDatabase.Database.Update(DBTables.MetadataTemplate, infoColumnsTuplesWithWhereList);
+            if (!updateMetaStdResult.Success)
             {
                 Mouse.OverrideCursor = null;
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false,
-                    "The problem occurred in DoCreateMetadataStandardFields (MetadataTemplate update)", Globals.TemplateDatabase.FilePath);
+                    "The problem occurred in DoCreateMetadataStandardFields (MetadataTemplate update)", Globals.TemplateDatabase.FilePath, updateMetaStdResult);
                 return;
             }
 
@@ -109,11 +111,12 @@ namespace TimelapseTemplateEditor
 
                 rowsColumnsTuplesWithWhereList.Add(new(columnTupleList, id++));
             }
-            if (!Globals.TemplateDatabase.Database.Update(DBTables.Template, rowsColumnsTuplesWithWhereList).Success)
+            SqlOperationResult updateImgStdResult = Globals.TemplateDatabase.Database.Update(DBTables.Template, rowsColumnsTuplesWithWhereList);
+            if (!updateImgStdResult.Success)
             {
                 Mouse.OverrideCursor = null;
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false,
-                    "The problem occurred in DoCreateMetadataStandardFields (Template update)", Globals.TemplateDatabase.FilePath);
+                    "The problem occurred in DoCreateMetadataStandardFields (Template update)", Globals.TemplateDatabase.FilePath, updateImgStdResult);
                 return;
             }
 

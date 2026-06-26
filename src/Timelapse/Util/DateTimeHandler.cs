@@ -42,15 +42,7 @@ namespace Timelapse.Util
         }
 
         public static bool TryParseDatabaseDateTime(string dateTimeAsString, out DateTime dateTime)
-        {
-            // Parse from yyyy-MM-dd HH:mm:ss | 2021-04-05 18:05:01
-            if (false == DateTime.TryParseExact(dateTimeAsString, Time.DateTimeDatabaseFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
-            {
-                dateTime = DateTime.MinValue;
-                return false;
-            }
-            return true;
-        }
+            => TryParseFormat(dateTimeAsString, Time.DateTimeDatabaseFormat, out dateTime);
 
         public static bool TryParseDatabaseOrDisplayDate(string dateTimeAsString, out DateTime dateTime)
         {
@@ -73,70 +65,34 @@ namespace Timelapse.Util
             return true;
         }
 
-
         public static bool TryParseDatabaseDate(string dateAsString, out DateTime dateTime)
-        {
-            // Parse from yyyy-MM-dd | 2021-04-05
-            if (false == DateTime.TryParseExact(dateAsString, Time.DateDatabaseFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
-            {
-                dateTime = DateTime.MinValue;
-                return false;
-            }
-            return true;
-        }
+            => TryParseFormat(dateAsString, Time.DateDatabaseFormat, out dateTime);
 
         public static bool TryParseDatabaseTime(string timeAsString, out DateTime dateTime)
-        {
-            // Parse from HH:mm:ss | 18:05:01
-            if (false == DateTime.TryParseExact(timeAsString, Time.TimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
-            {
-                dateTime = DateTime.MinValue;
-                return false;
-            }
-            return true;
-        }
+            => TryParseFormat(timeAsString, Time.TimeFormat, out dateTime);
 
         public static bool TryParseDisplayDateTime(string dateTimeAsString, out DateTime dateTime)
-        {
-            // Parse from dd-MMM-yyyy HH:mm:ss | 05-Apr-2021 18:05:01
-            if (false == DateTime.TryParseExact(dateTimeAsString, Time.DateTimeDisplayFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
-            {
-                dateTime = DateTime.MinValue;
-                return false;
-            }
-            return true;
-        }
+            => TryParseFormat(dateTimeAsString, Time.DateTimeDisplayFormat, out dateTime);
 
         /// <summary>
         /// Parse a Date from its display format string representation "dd-MMM-yyyy". Return false on failure
         /// </summary>
         // ReSharper disable once UnusedMember.Global
         public static bool TryParseDisplayDate(string dateTimeAsString, out DateTime dateTime)
-        {
-            if (DateTime.TryParseExact(dateTimeAsString, Time.DateDisplayFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
-            {
-                return true;
-            }
-
-            dateTime = DateTime.MinValue;
-            return false;
-        }
+            => TryParseFormat(dateTimeAsString, Time.DateDisplayFormat, out dateTime);
 
         public static bool TryParseDateTimeDatabaseAndDisplayFormats(string dateTimeAsString, out DateTime dateTime)
-        {
-            // Various possible (complete) date/time formats
-            if (false == DateTime.TryParseExact(dateTimeAsString, Time.DateTimeDatabaseAndDisplayFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
-            {
-                dateTime = DateTime.MinValue;
-                return false;
-            }
-            return true;
-        }
+            => TryParseFormat(dateTimeAsString, Time.DateTimeDatabaseAndDisplayFormats, out dateTime);
 
         public static bool TryParseDateDatabaseAndDisplayFormats(string dateTimeAsString, out DateTime dateTime)
+            => TryParseFormat(dateTimeAsString, Time.DateDatabaseAndDisplayFormats, out dateTime);
+
+        public static bool TryParseMetadataDateTaken(string dateTimeAsString, out DateTime dateTime)
+            => TryParseFormat(dateTimeAsString, Time.DateTimeMetadataFormats, out dateTime);
+
+        private static bool TryParseFormat(string s, string format, out DateTime dateTime)
         {
-            // Various possible (complete) date/time formats
-            if (false == DateTime.TryParseExact(dateTimeAsString, Time.DateDatabaseAndDisplayFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+            if (!DateTime.TryParseExact(s, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 dateTime = DateTime.MinValue;
                 return false;
@@ -144,10 +100,9 @@ namespace Timelapse.Util
             return true;
         }
 
-        public static bool TryParseMetadataDateTaken(string dateTimeAsString, out DateTime dateTime)
+        private static bool TryParseFormat(string s, string[] formats, out DateTime dateTime)
         {
-            // Various possible (complete) date/time formats
-            if (false == DateTime.TryParseExact(dateTimeAsString, Time.DateTimeMetadataFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
+            if (!DateTime.TryParseExact(s, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateTime))
             {
                 dateTime = DateTime.MinValue;
                 return false;

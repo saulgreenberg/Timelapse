@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Util;
 using Constant=Timelapse.Constant;
@@ -185,6 +187,20 @@ namespace TimelapseTemplateEditor
         }
         #endregion
 
+        #region Open Error Log
+        private void MenuItemOpenErrorLog_Click(object sender, RoutedEventArgs e)
+        {
+            string logPath = AppLog.DefaultLogFilePath;
+            if (string.IsNullOrEmpty(logPath) || !File.Exists(logPath))
+            {
+                MessageBox.Show(
+                    "No error log file exists yet. A log is only created if certain (but not all) warnings or errors have occurred.",
+                    "No Error Log", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            ProcessExecution.TryProcessStart(logPath);
+        }
+        #endregion
     }
 }
 

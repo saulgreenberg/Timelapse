@@ -385,6 +385,7 @@ namespace Timelapse.Dialog
                 string[] termOperators;
 
                 // I prefer switch statements here for readability, but the IDE suggests a different syntax
+#pragma warning disable IDE0079 // Remove unnecessary suppression
 #pragma warning disable IDE0066
                 switch (controlType)
                 {
@@ -455,6 +456,8 @@ namespace Timelapse.Dialog
                         break;
                 }
 #pragma warning restore IDE0066
+#pragma warning restore IDE0079 // Remove unnecessary suppression
+
 
                 // term operator combo box
                 ComboBox operatorsComboBox = new()
@@ -899,11 +902,8 @@ namespace Timelapse.Dialog
         private void DestroyRecognitionSelectorControl()
         {
             // Remove the RecognitionSelector event handler
-            if (this.RecognitionSelector != null)
-            {
-                this.RecognitionSelector.RecognitionSelectionEvent -= RecognitionSelector_OnRecognitionSelectionEvent;
-                this.RecognitionSelector = null;
-            }
+            this.RecognitionSelector?.RecognitionSelectionEvent -= RecognitionSelector_OnRecognitionSelectionEvent;
+            this.RecognitionSelector = null;
             this.RecognitionsGroupBox.BorderThickness = new(0);
             this.RecognitonsGroupBoxHeaderText.FontWeight = FontWeights.Normal;
             this.RecognitionsGroupBox.Content = null;
@@ -959,10 +959,10 @@ namespace Timelapse.Dialog
             while (lo < hi)
             {
                 int mid = (lo + hi + 1) / 2;
-                if (Measure(text.Substring(0, mid)) <= targetWidth) lo = mid;
+                if (Measure(text[..mid]) <= targetWidth) lo = mid;
                 else hi = mid - 1;
             }
-            return lo == 0 ? ellipsis : text.Substring(0, lo) + ellipsis;
+            return lo == 0 ? ellipsis : text[..lo] + ellipsis;
         }
 
         private static string ComposeRecognitionsSelectionFeedback(string detectionCategory, List<string> classificationCategories, string selectedTaxonNode)
@@ -1000,14 +1000,8 @@ namespace Timelapse.Dialog
                 Database.CustomSelection.UseTimeInsteadOfDate = cb.IsChecked == true;
 
                 // The DateTime label should reflect the state
-                if (dateTimeLabel1 != null)
-                {
-                    dateTimeLabel1.Text = cb.IsChecked == true ? "Time" : "Date";
-                }
-                if (dateTimeLabel2 != null)
-                {
-                    dateTimeLabel2.Text = cb.IsChecked == true ? "Time" : "Date";
-                }
+                dateTimeLabel1?.Text = cb.IsChecked == true ? "Time" : "Date";
+                dateTimeLabel2?.Text = cb.IsChecked == true ? "Time" : "Date";
 
                 // The DateTime control should reflect the state by displaying Time or Date only input
                 if (dateTimeControl1 != null)
@@ -1955,10 +1949,7 @@ namespace Timelapse.Dialog
             this.RelativePathControlRepopulateIfNeeded();
             this.treeViewWithRelativePaths.FocusSelection = true;
             this.RelativePathButton.IsEnabled = this.treeViewWithRelativePaths.HasContent && checkboxforUsingRelativePath is { IsChecked: true };
-            if (checkboxforUsingRelativePath != null)
-            {
-                checkboxforUsingRelativePath.IsEnabled = this.treeViewWithRelativePaths.HasContent;
-            }
+            checkboxforUsingRelativePath?.IsEnabled = this.treeViewWithRelativePaths.HasContent;
             this.treeViewWithRelativePaths.SelectedItemChanged += RelativePathControl_SelectedItemChanged;
             RelativePathButton.GotFocus += ControlsDataHelpers.Control_GotFocus;
             RelativePathButton.LostFocus += ControlsDataHelpers.Control_LostFocus;

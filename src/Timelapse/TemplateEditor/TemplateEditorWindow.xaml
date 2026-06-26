@@ -439,6 +439,10 @@
                         <Image Source="Icons/About_32x.png" />
                     </MenuItem.Icon>
                 </MenuItem>
+
+                <Separator/>
+                <MenuItem Name="MenuItemOpenErrorLog" Header="Open Error Log&#x2026;" Click="MenuItemOpenErrorLog_Click"
+                          ToolTip="The log records certain warnings and errors.&#x0a;If you have any issues, the developer may ask you to send its text to him." />
             </MenuItem>
         </Menu>
         <!--#endregion-->

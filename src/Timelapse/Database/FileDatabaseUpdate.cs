@@ -40,9 +40,10 @@ namespace Timelapse.Database
             columnToUpdate.Columns.Add(new(dataLabel, value)); // Populate the data
             columnToUpdate.SetWhere(fileID);
 
-            if (!this.Database.Update(DBTables.FileData, columnToUpdate).Success)
+            SqlOperationResult updateResult = this.Database.Update(DBTables.FileData, columnToUpdate);
+            if (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFile", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFile", this.FilePath, updateResult);
             }
         }
 
@@ -65,9 +66,10 @@ namespace Timelapse.Database
                 columnToUpdate.Columns.Add(new(dataLabel, value));
                 columnToUpdate.SetWhere(fileID);
 
-                if (!this.Database.Update(DBTables.FileData, columnToUpdate).Success)
+                SqlOperationResult updateResult = this.Database.Update(DBTables.FileData, columnToUpdate);
+                if (!updateResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFileAsync", this.FilePath);
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFileAsync", this.FilePath, updateResult);
                 }
             }
             finally
@@ -149,26 +151,29 @@ namespace Timelapse.Database
         public void UpdateFiles(List<ColumnTuplesWithWhere> filesToUpdate)
         {
             CreateBackupIfNeeded();
-            if (!Database.Update(DBTables.FileData, filesToUpdate).Success)
+            SqlOperationResult updateResult = Database.Update(DBTables.FileData, filesToUpdate);
+            if (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(List)", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(List)", this.FilePath, updateResult);
             }
         }
 
         public void UpdateFiles(ColumnTuplesWithWhere filesToUpdate)
         {
             List<ColumnTuplesWithWhere> imagesToUpdateList = [filesToUpdate];
-            if (!Database.Update(DBTables.FileData, imagesToUpdateList).Success)
+            SqlOperationResult updateResult = Database.Update(DBTables.FileData, imagesToUpdateList);
+            if (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(ColumnTuplesWithWhere)", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(ColumnTuplesWithWhere)", this.FilePath, updateResult);
             }
         }
 
         public void UpdateFiles(ColumnTuple columnToUpdate)
         {
-            if (!Database.Update(DBTables.FileData, columnToUpdate).Success)
+            SqlOperationResult updateResult = Database.Update(DBTables.FileData, columnToUpdate);
+            if (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(ColumnTuple)", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(ColumnTuple)", this.FilePath, updateResult);
             }
         }
 
@@ -284,7 +289,7 @@ namespace Timelapse.Database
                 });
                 if (!result.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFilesCore", this.FilePath);
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFilesCore", this.FilePath, result);
                     return;
                 }
 
@@ -302,9 +307,10 @@ namespace Timelapse.Database
         {
             // don't trigger backups on image set updates as none of the properties in the image set table is particularly important
             // For example, this avoids creating a backup when a custom selection is reverted to all when Timelapse exits.
-            if (!Database.Update(DBTables.ImageSet, ImageSet.CreateColumnTuplesWithWhereByID()).Success)
+            SqlOperationResult updateResult = Database.Update(DBTables.ImageSet, ImageSet.CreateColumnTuplesWithWhereByID());
+            if (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateSyncImageSetToDatabase", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateSyncImageSetToDatabase", this.FilePath, updateResult);
             }
         }
 
@@ -314,9 +320,10 @@ namespace Timelapse.Database
             ThrowIf.IsNullArgument(marker, nameof(marker));
 
             CreateBackupIfNeeded();
-            if (!Database.Update(DBTables.Markers, marker.CreateColumnTuplesWithWhereByID()).Success)
+            SqlOperationResult updateResult = Database.Update(DBTables.Markers, marker.CreateColumnTuplesWithWhereByID());
+            if (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateSyncMarkerToDatabase", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateSyncMarkerToDatabase", this.FilePath, updateResult);
             }
         }
         #endregion
@@ -329,9 +336,10 @@ namespace Timelapse.Database
         {
             // update markers in database
             CreateBackupIfNeeded();
-            if (!Database.Update(DBTables.Markers, markersToUpdate).Success)
+            SqlOperationResult updateResult = Database.Update(DBTables.Markers, markersToUpdate);
+            if (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateMarkers", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateMarkers", this.FilePath, updateResult);
                 return;
             }
 
@@ -425,9 +433,10 @@ namespace Timelapse.Database
             if (imagesToUpdate.Count > 0)
             {
                 CreateBackupIfNeeded();
-                if (!Database.Update(DBTables.FileData, imagesToUpdate).Success)
+                SqlOperationResult updateResult = Database.Update(DBTables.FileData, imagesToUpdate);
+                if (!updateResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateAdjustedFileTimes", this.FilePath);
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateAdjustedFileTimes", this.FilePath, updateResult);
                 }
             }
         }
@@ -472,9 +481,10 @@ namespace Timelapse.Database
             if (imagesToUpdate.Count > 0)
             {
                 CreateBackupIfNeeded();
-                if (!Database.Update(DBTables.FileData, imagesToUpdate).Success)
+                SqlOperationResult updateResult = Database.Update(DBTables.FileData, imagesToUpdate);
+                if (!updateResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateExchangeDayAndMonthInFileDates", this.FilePath);
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateExchangeDayAndMonthInFileDates", this.FilePath, updateResult);
                 }
             }
         }
@@ -519,9 +529,10 @@ namespace Timelapse.Database
                                    + Sql.Where
                                    + DatabaseColumn.RelativePath + Sql.BooleanEquals + Sql.Quote(oldPrefixPath);
             }
-            if (!Database.ExecuteNonQueryWithRollback(query).Success)
+            SqlOperationResult updateResult = Database.ExecuteNonQueryWithRollback(query);
+            if (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateRelativePathByReplacingPrefix", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateRelativePathByReplacingPrefix", this.FilePath, updateResult);
             }
         }
         #endregion

@@ -89,7 +89,7 @@ namespace Timelapse.SearchingAndSorting
                 DatabaseValue = DatabaseValue,
                 DataLabel = DataLabel,
                 Label = Label,
-                List = [..List],
+                List = List == null ? null : [..List],
                 Operator = Operator,
                 UseForSearching = UseForSearching
             };

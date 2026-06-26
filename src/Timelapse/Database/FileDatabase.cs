@@ -275,9 +275,10 @@ namespace Timelapse.Database
                 new(DatabaseColumn.Standard, existingTemplateDatabase.GetTemplateStandard())
             ];
             List<List<ColumnTuple>> insertionStatements = [columnsToUpdate];
-            if (!Database.Insert(DBTables.ImageSet, insertionStatements).Success)
+            SqlOperationResult insertResult = Database.Insert(DBTables.ImageSet, insertionStatements);
+            if (!insertResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnDatabaseCreatedAsync (ImageSet insert)", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnDatabaseCreatedAsync (ImageSet insert)", this.FilePath, insertResult);
                 return;
             }
 
@@ -336,26 +337,29 @@ namespace Timelapse.Database
             {
                 // DataLabels between the TemplateTable in the .tdb and .ddb database differ.
                 // Update the .ddb Template table by dropping the .ddb template tables and replacing it with the ones in the .tdb table.
-                if (!Database.DropTable(DBTables.Template).Success)
+                SqlOperationResult dropResult = Database.DropTable(DBTables.Template);
+                if (!dropResult.Success)
                 {
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (Template)", this.FilePath);
+                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (Template)", this.FilePath, dropResult);
                     return;
                 }
                 isDatabaseRecreated = true;
             }
             if (templateSyncResults.SyncRequiredAsFolderLevelsDiffer && false == templateSyncResults.InfoHierarchyIncompatibleDifferences)
             {
-                if (!Database.DropTable(DBTables.MetadataTemplate).Success)
+                SqlOperationResult dropMetaTemplateResult = Database.DropTable(DBTables.MetadataTemplate);
+                if (!dropMetaTemplateResult.Success)
                 {
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (MetadataTemplate)", this.FilePath);
+                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (MetadataTemplate)", this.FilePath, dropMetaTemplateResult);
                     return;
                 }
-                if (!Database.DropTable(DBTables.MetadataInfo).Success)
+                SqlOperationResult dropMetaInfoResult = Database.DropTable(DBTables.MetadataInfo);
+                if (!dropMetaInfoResult.Success)
                 {
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (MetadataInfo)", this.FilePath);
+                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (MetadataInfo)", this.FilePath, dropMetaInfoResult);
                     return;
                 }
                 isDatabaseRecreated = true;
@@ -375,9 +379,10 @@ namespace Timelapse.Database
                         ctww.Columns.Add(new(Control.Guid, row.Guid)); // Populate the data 
                         updateQueryList.Add(ctww);
                     }
-                    if (!Database.Update(DBTables.MetadataInfo, updateQueryList).Success)
+                    SqlOperationResult updateResult = Database.Update(DBTables.MetadataInfo, updateQueryList);
+                    if (!updateResult.Success)
                     {
-                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (MetadataInfo update)", this.FilePath);
+                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (MetadataInfo update)", this.FilePath, updateResult);
                         return;
                     }
                 }
@@ -412,10 +417,11 @@ namespace Timelapse.Database
                     // Image level: Handle deleted image data controls 
                     foreach (string dataLabel in value)
                     {
-                        if (!Database.SchemaDeleteColumn(DBTables.FileData, dataLabel).Success)
+                        SqlOperationResult deleteColResult = Database.SchemaDeleteColumn(DBTables.FileData, dataLabel);
+                        if (!deleteColResult.Success)
                         {
                             Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                                true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath);
+                                true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath, deleteColResult);
                             return;
                         }
 
@@ -424,10 +430,11 @@ namespace Timelapse.Database
                         // This is because we can't get the type of the data label as it no longer exists in the Template.
                         if (Database.SchemaIsColumnInTable(DBTables.Markers, dataLabel))
                         {
-                            if (!Database.SchemaDeleteColumn(DBTables.Markers, dataLabel).Success)
+                            SqlOperationResult deleteMarkerColResult = Database.SchemaDeleteColumn(DBTables.Markers, dataLabel);
+                            if (!deleteMarkerColResult.Success)
                             {
                                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                                    true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath);
+                                    true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath, deleteMarkerColResult);
                                 return;
                             }
                             // Delete any empty rows from the Marker Table
@@ -444,9 +451,10 @@ namespace Timelapse.Database
                                     where += controlRow.DataLabel + Sql.Equal + Sql.Quote(DatabaseValues.DefaultMarkerValue);
                                 }
                             }
-                            if (!Database.DeleteRows(DBTables.Markers, where).Success)
+                            SqlOperationResult deleteRowsResult = Database.DeleteRows(DBTables.Markers, where);
+                            if (!deleteRowsResult.Success)
                             {
-                                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (DeleteRows Markers)", this.FilePath);
+                                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (DeleteRows Markers)", this.FilePath, deleteRowsResult);
                                 return;
                             }
                         }
@@ -465,10 +473,11 @@ namespace Timelapse.Database
                         if (columnsInTable - deleteCount == 2)
                         {
                             // Drop this level's table as there are no longer any controls defined within it
-                            if (!Database.DropTable(tableName).Success)
+                            SqlOperationResult dropLevelResult = Database.DropTable(tableName);
+                            if (!dropLevelResult.Success)
                             {
                                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                                    true, "DropTable failed in OnExistingDatabaseOpenedAsync (level table)", this.FilePath);
+                                    true, "DropTable failed in OnExistingDatabaseOpenedAsync (level table)", this.FilePath, dropLevelResult);
                                 return;
                             }
                             countOfLevelTablesDeleted++;
@@ -478,10 +487,11 @@ namespace Timelapse.Database
                             // Remove the control from the table
                             foreach (string dataLabel in templateSyncResults.DataLabelsToDeleteByLevel[level])
                             {
-                                if (!Database.SchemaDeleteColumn(tableName, dataLabel).Success)
+                                SqlOperationResult deleteMetaColResult = Database.SchemaDeleteColumn(tableName, dataLabel);
+                                if (!deleteMetaColResult.Success)
                                 {
                                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                                        true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath);
+                                        true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath, deleteMetaColResult);
                                     return;
                                 }
                             }
@@ -508,20 +518,22 @@ namespace Timelapse.Database
                         long id = GetControlIDFromControls(dataLabel);
                         ControlRow control = Controls.Find(id);
                         SchemaColumnDefinition columnDefinition = CreateFileDataColumnDefinition(control);
-                        if (!Database.SchemaAddColumnToEndOfTable(DBTables.FileData, columnDefinition).Success)
+                        SqlOperationResult addColResult = Database.SchemaAddColumnToEndOfTable(DBTables.FileData, columnDefinition);
+                        if (!addColResult.Success)
                         {
                             Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                                true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath);
+                                true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath, addColResult);
                             return;
                         }
 
                         if (control.Type == Control.Counter)
                         {
                             SchemaColumnDefinition markerColumnDefinition = new(dataLabel, Sql.Text, DatabaseValues.DefaultMarkerValue);
-                            if (!Database.SchemaAddColumnToEndOfTable(DBTables.Markers, markerColumnDefinition).Success)
+                            SqlOperationResult addMarkerColResult = Database.SchemaAddColumnToEndOfTable(DBTables.Markers, markerColumnDefinition);
+                            if (!addMarkerColResult.Success)
                             {
                                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                                    true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath);
+                                    true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath, addMarkerColResult);
                                 return;
                             }
                         }
@@ -537,12 +549,13 @@ namespace Timelapse.Database
                         // As the table already exists, we just add the column definition
                         MetadataControlRow control = GetControlFromMetadataControls(dataLabel, level);
                         SchemaColumnDefinition columnDefinition = CreateFileDataColumnDefinition(control);
-                        if (!Database.SchemaAddColumnToEndOfTable(
+                        SqlOperationResult addMetaColResult = Database.SchemaAddColumnToEndOfTable(
                             MetadataComposeTableNameFromLevel(level),
-                            columnDefinition).Success)
+                            columnDefinition);
+                        if (!addMetaColResult.Success)
                         {
                             Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                                true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath);
+                                true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath, addMetaColResult);
                             return;
                         }
                     }
@@ -554,9 +567,10 @@ namespace Timelapse.Database
             // we should clear the FolderDataInfo table, i.e., return it back to its virgin empty state
             if (countOfLevelTablesDeleted == GetMetadataInfoTableLevels().Count)
             {
-                if (!Database.DeleteAllRowsInTables([DBTables.MetadataInfo]).Success)
+                SqlOperationResult deleteAllResult = Database.DeleteAllRowsInTables([DBTables.MetadataInfo]);
+                if (!deleteAllResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (DeleteAllRowsInTables MetadataInfo)", this.FilePath);
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (DeleteAllRowsInTables MetadataInfo)", this.FilePath, deleteAllResult);
                     return;
                 }
             }
@@ -573,10 +587,11 @@ namespace Timelapse.Database
                     foreach (KeyValuePair<string, string> dataLabelToRename in value)
                     {
                         // Rename the column associated with that data label from the FileData table
-                        if (!Database.SchemaRenameColumn(DBTables.FileData, dataLabelToRename.Key, dataLabelToRename.Value).Success)
+                        SqlOperationResult renameResult = Database.SchemaRenameColumn(DBTables.FileData, dataLabelToRename.Key, dataLabelToRename.Value);
+                        if (!renameResult.Success)
                         {
                             Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                                true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath);
+                                true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath, renameResult);
                             return;
                         }
 
@@ -585,10 +600,11 @@ namespace Timelapse.Database
                         // This is because its easiest to code, as the function handles attempts to delete a column that isn't there (which also returns false).
                         if (Database.SchemaIsColumnInTable(DBTables.Markers, dataLabelToRename.Key))
                         {
-                            if (!Database.SchemaRenameColumn(DBTables.Markers, dataLabelToRename.Key, dataLabelToRename.Value).Success)
+                            SqlOperationResult renameMarkerResult = Database.SchemaRenameColumn(DBTables.Markers, dataLabelToRename.Key, dataLabelToRename.Value);
+                            if (!renameMarkerResult.Success)
                             {
                                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                                    true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath);
+                                    true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath, renameMarkerResult);
                                 return;
                             }
                         }
@@ -602,12 +618,13 @@ namespace Timelapse.Database
                     foreach (KeyValuePair<string, string> dataLabelToRename in value1)
                     {
                         // Rename the column associated with that data label from the given Level table
-                        if (!Database.SchemaRenameColumn(
+                        SqlOperationResult renameMetaResult = Database.SchemaRenameColumn(
                             MetadataComposeTableNameFromLevel(level),
-                            dataLabelToRename.Key, dataLabelToRename.Value).Success)
+                            dataLabelToRename.Key, dataLabelToRename.Value);
+                        if (!renameMetaResult.Success)
                         {
                             Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                                true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath);
+                                true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath, renameMetaResult);
                             return;
                         }
                     }
@@ -635,9 +652,10 @@ namespace Timelapse.Database
                     if (ddbControl.Type != tdbControl.Type)
                     {
                         ColumnTuple columnToUpdate = new(Constant.DatabaseColumn.SearchTerms, string.Empty);
-                        if (!this.Database.Update(Constant.DBTables.ImageSet, columnToUpdate).Success)
+                        SqlOperationResult searchTermsResult = this.Database.Update(Constant.DBTables.ImageSet, columnToUpdate);
+                        if (!searchTermsResult.Success)
                         {
-                            Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (ImageSet search terms update)", this.FilePath);
+                            Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (ImageSet search terms update)", this.FilePath, searchTermsResult);
                             return;
                         }
                     }
@@ -698,9 +716,10 @@ namespace Timelapse.Database
                                + $" UPDATE {table} SET {label} = CASE " 
                                + $" WHEN sr.seq = 1 THEN {newLabel} ELSE {newLabel} || sr.seq END," 
                                + $" {description} = '' FROM SequencedRows sr WHERE {table}.rowid = sr.rowid;";
-                if (!this.Database.ExecuteNonQueryWithRollback(query).Success)
+                SqlOperationResult repairResult = this.Database.ExecuteNonQueryWithRollback(query);
+                if (!repairResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in RepairClassificationCategoriesIfNeeded", this.FilePath);
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in RepairClassificationCategoriesIfNeeded", this.FilePath, repairResult);
                 }
             }
         }
@@ -848,10 +867,11 @@ namespace Timelapse.Database
             }
 
             // Replace the schema in the File DB table with the schema defined by the column definitions.
-            if (!Database.SchemaAlterTableWithNewColumnDefinitions(DBTables.FileData, columnDefinitions).Success)
+            SqlOperationResult alterResult = Database.SchemaAlterTableWithNewColumnDefinitions(DBTables.FileData, columnDefinitions);
+            if (!alterResult.Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                    true, "SchemaAlterTableWithNewColumnDefinitions failed in UpgradeFileDBSchemaDefaultsFromTemplate", this.FilePath);
+                    true, "SchemaAlterTableWithNewColumnDefinitions failed in UpgradeFileDBSchemaDefaultsFromTemplate", this.FilePath, alterResult);
             }
         }
 
@@ -1198,9 +1218,10 @@ namespace Timelapse.Database
 
             // Execute all batches in one transaction — one fsync regardless of image count.
             CreateBackupIfNeeded();
-            if (!Database.ExecuteNonQueryWithRollback(insertCommands).Success)
+            SqlOperationResult addFilesResult = Database.ExecuteNonQueryWithRollback(insertCommands);
+            if (!addFilesResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in AddFiles", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in AddFiles", this.FilePath, addFilesResult);
             }
         }
 
@@ -1417,9 +1438,13 @@ namespace Timelapse.Database
                     deleteStatements.Add(Sql.DeleteFrom + DBTables.Markers + Sql.Where + whereClause + "; ");
                 }
             }
-            if (deleteStatements.Count > 0 && !Database.ExecuteNonQueryWithRollback(deleteStatements).Success)
+            if (deleteStatements.Count > 0)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in DeleteFilesAndMarkers", this.FilePath);
+                SqlOperationResult deleteResult = Database.ExecuteNonQueryWithRollback(deleteStatements);
+                if (!deleteResult.Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in DeleteFilesAndMarkers", this.FilePath, deleteResult);
+                }
             }
         }
         #endregion
@@ -1795,9 +1820,10 @@ namespace Timelapse.Database
         private void InsertRows(string table, List<List<ColumnTuple>> insertionStatements)
         {
             CreateBackupIfNeeded();
-            if (!Database.Insert(table, insertionStatements).Success)
+            SqlOperationResult insertRowsResult = Database.Insert(table, insertionStatements);
+            if (!insertRowsResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertRows", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertRows", this.FilePath, insertRowsResult);
             }
         }
         #endregion
@@ -1867,9 +1893,10 @@ namespace Timelapse.Database
             }
 
             List<List<ColumnTuple>> insertionStatements = [columns];
-            if (!Database.Insert(DBTables.Markers, insertionStatements).Success)
+            SqlOperationResult insertMarkerResult = Database.Insert(DBTables.Markers, insertionStatements);
+            if (!insertMarkerResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MarkersTryInsertNewMarkerRow", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MarkersTryInsertNewMarkerRow", this.FilePath, insertMarkerResult);
                 return false;
             }
 
@@ -1918,9 +1945,10 @@ namespace Timelapse.Database
             // Update the database and datatable
             // Note that I repeated the null check here, as for some reason it was still coming up as a CA1062 warning
             List<string> whereClauses = [DatabaseColumn.ID + Sql.Equal + imageID];
-            if (!Database.Delete(DBTables.Markers, whereClauses).Success)
+            SqlOperationResult deleteMarkerResult = Database.Delete(DBTables.Markers, whereClauses);
+            if (!deleteMarkerResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MarkersRemoveMarkerRow", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MarkersRemoveMarkerRow", this.FilePath, deleteMarkerResult);
             }
         }
         #endregion
@@ -2026,9 +2054,10 @@ namespace Timelapse.Database
                 // The row doesn't exist, so insert it
                 // Create a list matching fields we need to update
                 List<List<ColumnTuple>> newTableTuples = [columnTupleList];
-                if (!Database.Insert(tableName, newTableTuples).Success)
+                SqlOperationResult insertUpsertResult = Database.Insert(tableName, newTableTuples);
+                if (!insertUpsertResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataTablesAndDatabaseUpsertRow (insert)", this.FilePath);
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataTablesAndDatabaseUpsertRow (insert)", this.FilePath, insertUpsertResult);
                     return;
                 }
 
@@ -2039,9 +2068,10 @@ namespace Timelapse.Database
 
             // If we get to here, then the row exists. So we just need to update it instead
             ColumnTuplesWithWhere ctww = new(columnTupleList, (long)dataTable.Rows[0][DatabaseColumn.ID]);
-            if (!Database.Update(tableName, ctww).Success)
+            SqlOperationResult updateUpsertResult = Database.Update(tableName, ctww);
+            if (!updateUpsertResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataTablesAndDatabaseUpsertRow (update)", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataTablesAndDatabaseUpsertRow (update)", this.FilePath, updateUpsertResult);
             }
         }
 
@@ -2056,9 +2086,10 @@ namespace Timelapse.Database
             {
                 { oldpath, newPath }
             };
-            if (!Database.UpdateParticularColumnValuesWithNewValues(tableName, DatabaseColumn.FolderDataPath, currentAndNewValuePairs).Success)
+            SqlOperationResult updatePathResult = Database.UpdateParticularColumnValuesWithNewValues(tableName, DatabaseColumn.FolderDataPath, currentAndNewValuePairs);
+            if (!updatePathResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataUpdateFolderDataPath", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataUpdateFolderDataPath", this.FilePath, updatePathResult);
             }
         }
 
@@ -2264,17 +2295,19 @@ namespace Timelapse.Database
         }
         public void InsertDetection(List<List<ColumnTuple>> detectionInsertionStatements)
         {
-            if (!Database.Insert(DBTables.Detections, detectionInsertionStatements).Success)
+            SqlOperationResult insertDetectionResult = Database.Insert(DBTables.Detections, detectionInsertionStatements);
+            if (!insertDetectionResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertDetection", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertDetection", this.FilePath, insertDetectionResult);
             }
         }
 
         public void InsertDetectionsVideo(List<List<ColumnTuple>> detectionsVideoInsertionStatements)
         {
-            if (!Database.Insert(DBTables.DetectionsVideo, detectionsVideoInsertionStatements).Success)
+            SqlOperationResult insertDetVideoResult = Database.Insert(DBTables.DetectionsVideo, detectionsVideoInsertionStatements);
+            if (!insertDetVideoResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertDetectionsVideo", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertDetectionsVideo", this.FilePath, insertDetVideoResult);
             }
         }
 
@@ -2576,9 +2609,10 @@ namespace Timelapse.Database
                             // If the index wasn't created previously, make sure its there as otherwise its painfully slow.
                             IndexCreateForDetectionsIfNeeded();
                             // Delete these detections and classifications
-                            if (!Database.ExecuteNonQueryWithRollback(queries, progress, "Removing unneeded recognitions. Please wait...", 500).Success)
+                            SqlOperationResult removeResult = Database.ExecuteNonQueryWithRollback(queries, progress, "Removing unneeded recognitions. Please wait...", 500);
+                            if (!removeResult.Success)
                             {
-                                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in recognizer import (remove unneeded detections)", this.FilePath);
+                                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in recognizer import (remove unneeded detections)", this.FilePath, removeResult);
                                 return RecognizerImportResultEnum.Failure;
                             }
                         }
@@ -3176,9 +3210,10 @@ namespace Timelapse.Database
             {
                 return false;
             }
-            if (!Database.Update(DBTables.ImageSet, new ColumnTuple(DatabaseColumn.BoundingBoxDisplayThreshold, threshold)).Success)
+            SqlOperationResult thresholdResult = Database.Update(DBTables.ImageSet, new ColumnTuple(DatabaseColumn.BoundingBoxDisplayThreshold, threshold));
+            if (!thresholdResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in TrySetBoundingBoxDisplayThreshold", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in TrySetBoundingBoxDisplayThreshold", this.FilePath, thresholdResult);
                 return false;
             }
             return true;
@@ -3424,29 +3459,32 @@ namespace Timelapse.Database
                 // Add the two column to the detection table if they don't exist
                 if (false == this.Database.SchemaIsColumnInTable(DBTables.Detections, DetectionColumns.Classification))
                 {
-                    if (!this.Database.SchemaAddColumnToEndOfTable(DBTables.Detections, new(DetectionColumns.Classification, Sql.Text)).Success)
+                    SqlOperationResult addClassResult = this.Database.SchemaAddColumnToEndOfTable(DBTables.Detections, new(DetectionColumns.Classification, Sql.Text));
+                    if (!addClassResult.Success)
                     {
                         Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                            true, "SchemaAddColumnToEndOfTable failed in UpdateOldStyleRecognitionTablesIfNeeded (Classification)", this.FilePath);
+                            true, "SchemaAddColumnToEndOfTable failed in UpdateOldStyleRecognitionTablesIfNeeded (Classification)", this.FilePath, addClassResult);
                         return;
                     }
                 }
                 if (false == this.Database.SchemaIsColumnInTable(DBTables.Detections, Constant.DetectionColumns.ClassificationConf))
                 {
-                    if (!this.Database.SchemaAddColumnToEndOfTable(DBTables.Detections, new(DetectionColumns.ClassificationConf, Sql.Real)).Success)
+                    SqlOperationResult addClassConfResult = this.Database.SchemaAddColumnToEndOfTable(DBTables.Detections, new(DetectionColumns.ClassificationConf, Sql.Real));
+                    if (!addClassConfResult.Success)
                     {
                         Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                            true, "SchemaAddColumnToEndOfTable failed in UpdateOldStyleRecognitionTablesIfNeeded (ClassificationConf)", this.FilePath);
+                            true, "SchemaAddColumnToEndOfTable failed in UpdateOldStyleRecognitionTablesIfNeeded (ClassificationConf)", this.FilePath, addClassConfResult);
                         return;
                     }
                 }
 
                 if (false == this.Database.SchemaIsColumnInTable(DBTables.ClassificationCategories, Constant.ClassificationCategoriesColumns.Description))
                 {
-                    if (!this.Database.SchemaAddColumnToEndOfTable(DBTables.ClassificationCategories, new(ClassificationCategoriesColumns.Description, Sql.Text, string.Empty)).Success)
+                    SqlOperationResult addCatDescResult = this.Database.SchemaAddColumnToEndOfTable(DBTables.ClassificationCategories, new(ClassificationCategoriesColumns.Description, Sql.Text, string.Empty));
+                    if (!addCatDescResult.Success)
                     {
                         Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                            true, "SchemaAddColumnToEndOfTable failed in UpdateOldStyleRecognitionTablesIfNeeded (ClassificationCategories)", this.FilePath);
+                            true, "SchemaAddColumnToEndOfTable failed in UpdateOldStyleRecognitionTablesIfNeeded (ClassificationCategories)", this.FilePath, addCatDescResult);
                         return;
                     }
                 }
@@ -3495,9 +3533,10 @@ namespace Timelapse.Database
                 ColumnTuplesWithWhere columnTupleWithWhere = new(columnTupleList, new ColumnTuple(Constant.DetectionColumns.DetectionID, detectionID));
                 columnsTuplesWithWhereList.Add(columnTupleWithWhere);
             }
-            if (!Database.Update(DBTables.Detections, columnsTuplesWithWhereList).Success)
+            SqlOperationResult updateRecogResult = Database.Update(DBTables.Detections, columnsTuplesWithWhereList);
+            if (!updateRecogResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateOldStyleRecognitionTablesIfNeeded", this.FilePath);
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateOldStyleRecognitionTablesIfNeeded", this.FilePath, updateRecogResult);
                 return;
             }
 

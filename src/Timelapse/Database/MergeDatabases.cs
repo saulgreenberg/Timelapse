@@ -118,11 +118,12 @@ namespace Timelapse.Database
                 }
             }
             // Part 6. We are done.
-            if (!destinationDdb.ExecuteNonQueryWithRollback(query).Success)
+            SqlOperationResult mergeResult = destinationDdb.ExecuteNonQueryWithRollback(query);
+            if (!mergeResult.Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
                     destinationDdb.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
-                    "The problem occurred in CheckoutDatabaseWithRelativePath", destinationDdb.FilePath);
+                    "The problem occurred in CheckoutDatabaseWithRelativePath", destinationDdb.FilePath, mergeResult);
             }
         }
         #endregion
