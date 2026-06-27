@@ -462,10 +462,10 @@ namespace Timelapse.Database
                 }
 
                 else if (false == templateSyncResults.InfoHierarchyIncompatibleDifferences
-                         && templateSyncResults.DataLabelsToDeleteByLevel.ContainsKey(level))
+                         && templateSyncResults.DataLabelsToDeleteByLevel.TryGetValue(level, out var value1))
                 {
                     // Metadata level: Handle deleted metadata controls by level
-                    int deleteCount = templateSyncResults.DataLabelsToDeleteByLevel[level].Count;
+                    int deleteCount = value1.Count;
                     if (deleteCount > 0)
                     {
                         string tableName = MetadataComposeTableNameFromLevel(level);

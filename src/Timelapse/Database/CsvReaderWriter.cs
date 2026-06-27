@@ -790,9 +790,9 @@ namespace Timelapse.Database
                     // Add to the query only if there are columns to add!
                     if (imageToUpdate.Columns.Count > 0)
                     {
-                        if (rowDict.ContainsKey(DatabaseColumn.RelativePath) && !string.IsNullOrWhiteSpace(rowDict[DatabaseColumn.RelativePath]))
+                        if (rowDict.TryGetValue(DatabaseColumn.RelativePath, out var value) && !string.IsNullOrWhiteSpace(value))
                         {
-                            imageToUpdate.SetWhere(rowDict[DatabaseColumn.RelativePath], rowDict[DatabaseColumn.File]);
+                            imageToUpdate.SetWhere(value, rowDict[DatabaseColumn.File]);
                         }
                         else
                         {

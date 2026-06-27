@@ -1086,9 +1086,9 @@ namespace Timelapse.Dialog
             string type, int level,
             Dictionary<int, Dictionary<string, string>> dataLabelsInOneButNotTheOther)
         {
-            if (null != dataLabelsInOneButNotTheOther && dataLabelsInOneButNotTheOther.ContainsKey(level) && dataLabelsInOneButNotTheOther[level].Count != 0)
+            if (null != dataLabelsInOneButNotTheOther && dataLabelsInOneButNotTheOther.TryGetValue(level, out var value) && value.Count != 0)
             {
-                inWhichTemplate.Add(type, DictionaryFilterByType(dataLabelsInOneButNotTheOther[level], type));
+                inWhichTemplate.Add(type, DictionaryFilterByType(value, type));
             }
         }
 
