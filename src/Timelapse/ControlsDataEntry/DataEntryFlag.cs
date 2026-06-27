@@ -165,10 +165,7 @@ namespace Timelapse.ControlsDataEntry
             popupText.IsChecked = value;
             PopupPreview.IsOpen = true;
             Border cbborder = (Border)popupText.Template.FindName("checkBoxBorder", popupText);
-            if (cbborder != null)
-            {
-                cbborder.Background = Constant.Control.QuickPasteFieldHighlightBrush;
-            }
+            cbborder?.Background = Constant.Control.QuickPasteFieldHighlightBrush;
         }
 
         public override void HidePreviewControlValue()

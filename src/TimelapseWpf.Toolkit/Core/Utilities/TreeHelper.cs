@@ -14,8 +14,8 @@
 
 using System;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Controls.Primitives;
+using System.Windows.Media;
 
 namespace TimelapseWpf.Toolkit.Core.Utilities
 {

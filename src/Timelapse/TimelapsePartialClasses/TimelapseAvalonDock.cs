@@ -1,11 +1,11 @@
-﻿using System;
+﻿using AvalonDock;
+using AvalonDock.Controls;
+using AvalonDock.Layout;
+using System;
 using System.ComponentModel;
 using System.Linq;
 using Timelapse.Constant;
 using Timelapse.DebuggingSupport;
-using AvalonDock;
-using AvalonDock.Controls;
-using AvalonDock.Layout;
 
 // ReSharper disable once CheckNamespace
 namespace Timelapse

@@ -12,9 +12,9 @@
 
   ***********************************************************************************/
 
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows;
 using TimelapseWpf.Toolkit.Core.Utilities;
 
 namespace TimelapseWpf.Toolkit

@@ -14,11 +14,11 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using TimelapseWpf.Toolkit.Core.Utilities;
-using System.Collections.Generic;
 using TimelapseWpf.Toolkit.Primitives;
 
 namespace TimelapseWpf.Toolkit

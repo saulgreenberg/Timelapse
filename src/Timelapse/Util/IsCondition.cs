@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
-using Microsoft.Win32;
 using Timelapse.Constant;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;

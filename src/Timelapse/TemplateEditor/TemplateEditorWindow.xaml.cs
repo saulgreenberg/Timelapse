@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AvalonDock.Layout;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
@@ -13,7 +14,6 @@ using Timelapse.Dialog;
 using Timelapse.State;
 using Timelapse.Util;
 using TimelapseTemplateEditor.EditorCode;
-using AvalonDock.Layout;
 
 namespace TimelapseTemplateEditor
 {

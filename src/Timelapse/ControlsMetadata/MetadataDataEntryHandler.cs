@@ -8,9 +8,9 @@ using System.Windows.Input;
 using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
-using Timelapse.Dialog;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
+using Timelapse.Dialog;
 using Timelapse.Util;
 using TimelapseWpf.Toolkit;
 using TimelapseWpf.Toolkit.Primitives;
@@ -225,30 +225,21 @@ namespace Timelapse.ControlsMetadata
                 dateTimeCustom.ContentControl.ContextMenu = menu;
                 // We also need to set the dateTimePicker's TextBox as otherwise the standard copy/paste will be displayed
                 TextBox tb = VisualChildren.GetVisualChild<TextBox>(dateTimeCustom.ContentControl);
-                if (tb != null)
-                {
-                    tb.ContextMenu = menu;
-                }
+                tb?.ContextMenu = menu;
             }
             else if (control is MetadataDataEntryDate date)
             {
                 date.ContentControl.ContextMenu = menu;
                 // We also need to set the dateTimePicker's TextBox as otherwise the standard copy/paste will be displayed
                 TextBox tb = VisualChildren.GetVisualChild<TextBox>(date.ContentControl);
-                if (tb != null)
-                {
-                    tb.ContextMenu = menu;
-                }
+                tb?.ContextMenu = menu;
             }
             else if (control is MetadataDataEntryTime time)
             {
                 time.ContentControl.ContextMenu = menu;
                 // We also need to set the dateTimePicker's TextBox as otherwise the standard copy/paste will be displayed
                 TextBox tb = VisualChildren.GetVisualChild<TextBox>(time.ContentControl);
-                if (tb != null)
-                {
-                    tb.ContextMenu = menu;
-                }
+                tb?.ContextMenu = menu;
             }
             else if (control is MetadataDataEntryFlag flag)
             {
@@ -330,10 +321,7 @@ namespace Timelapse.ControlsMetadata
 
             // Enable Copy menu if
             // - its not empty / white space and not in the overview with different contents (i.e., ellipsis is showing)
-            if (null != menuItemCopyToClipboard)
-            {
-                menuItemCopyToClipboard.IsEnabled = !(string.IsNullOrWhiteSpace(control.Content) || control.Content == Unicode.Ellipsis);
-            }
+            menuItemCopyToClipboard?.IsEnabled = !(string.IsNullOrWhiteSpace(control.Content) || control.Content == Unicode.Ellipsis);
 
             // Enable Paste menu only if
             // - the clipboard is not empty or white space, 

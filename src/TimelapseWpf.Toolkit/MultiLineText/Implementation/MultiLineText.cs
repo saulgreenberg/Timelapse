@@ -5,8 +5,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Interop;
+using System.Windows.Media;
 
 // Disable CS8632 - The annotation for nullable reference types should only be used in code within a #nullable annotations context.
 #nullable enable

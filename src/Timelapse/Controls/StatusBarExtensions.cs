@@ -17,10 +17,7 @@ namespace Timelapse.Controls
             public void SetMessage(string message)
             {
                 StatusBarItem item = (StatusBarItem)statusBar.Items[11];
-                if (item != null)
-                {
-                    item.Content = message;
-                }
+                item?.Content = message;
             }
 
             public void ClearMessage()
@@ -31,19 +28,19 @@ namespace Timelapse.Controls
             public void SetCurrentFile(int currentImage)
             {
                 StatusBarItem item = (StatusBarItem)statusBar.Items[1];
-                if (item != null) item.Content = currentImage.ToString();
+                item?.Content = currentImage.ToString();
             }
 
             public void SetCount(int selectedImageCount)
             {
                 StatusBarItem item = (StatusBarItem)statusBar.Items[3];
-                if (item != null) item.Content = selectedImageCount.ToString();
+                item?.Content = selectedImageCount.ToString();
             }
 
             public void SetView(string view)
             {
                 StatusBarItem item = (StatusBarItem)statusBar.Items[6];
-                if (item != null) item.Content = view;
+                item?.Content = view;
             }
 
             public string SetSort(string primarySortTerm, bool primarySortTermIsAscending, string secondarySortTerm, bool secondarySortTermIsAscending)
@@ -58,10 +55,7 @@ namespace Timelapse.Controls
                 // Note that this should not happen
                 if (string.IsNullOrEmpty(primarySortTerm))
                 {
-                    if (item != null)
-                    {
-                        item.Content = "Unknown";
-                    }
+                    item?.Content = "Unknown";
                     return "Unknown";
                 }
 
@@ -78,10 +72,7 @@ namespace Timelapse.Controls
                 //{
                 //    message.Text += " (default)";
                 //}
-                if (item != null)
-                {
-                    item.Content = message;
-                }
+                item?.Content = message;
                 return message.Text;
             }
         }

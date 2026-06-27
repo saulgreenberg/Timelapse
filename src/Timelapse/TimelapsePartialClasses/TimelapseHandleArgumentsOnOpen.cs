@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Timelapse.Controls;
-using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 
 namespace Timelapse

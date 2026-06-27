@@ -15,8 +15,8 @@
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using TimelapseWpf.Toolkit.Primitives;
 #if VS2008
 using Microsoft.Windows.Controls;

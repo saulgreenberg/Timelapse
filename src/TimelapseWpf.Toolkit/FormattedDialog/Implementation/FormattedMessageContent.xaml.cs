@@ -1,12 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace TimelapseWpf.Toolkit
 {

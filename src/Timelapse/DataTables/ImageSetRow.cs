@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.Data;
-using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Extensions;

@@ -13,9 +13,9 @@
   ***********************************************************************************/
 
 using System;
-using System.Windows;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Windows;
 
 namespace TimelapseWpf.Toolkit.Core
 {

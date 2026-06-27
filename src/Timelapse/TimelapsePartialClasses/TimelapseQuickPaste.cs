@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Windows;
-using Newtonsoft.Json;
 using Timelapse.ControlsDataEntry;
 using Timelapse.Enums;
 using Timelapse.Extensions;
@@ -69,11 +69,8 @@ namespace Timelapse
 
         private void QuickPasteWindowTerminate()
         {
-            if (quickPasteWindow != null)
-            {
-                quickPasteWindow.Close();
-                quickPasteWindow = null;
-            }
+            quickPasteWindow?.Close();
+            quickPasteWindow = null;
         }
         #endregion
 

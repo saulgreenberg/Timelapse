@@ -1,4 +1,7 @@
-﻿using System;
+﻿using AvalonDock;
+using AvalonDock.Layout;
+using AvalonDock.Layout.Serialization;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,9 +13,6 @@ using System.Xml;
 using Timelapse.Constant;
 using Timelapse.DebuggingSupport;
 using Timelapse.Util;
-using AvalonDock;
-using AvalonDock.Layout;
-using AvalonDock.Layout.Serialization;
 using Application = System.Windows.Application;
 
 namespace Timelapse.Extensions

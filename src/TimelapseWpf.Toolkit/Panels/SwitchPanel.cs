@@ -22,8 +22,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Threading;
-using TimelapseWpf.Toolkit.Media.Animation;
 using TimelapseWpf.Toolkit.Core.Utilities;
+using TimelapseWpf.Toolkit.Media.Animation;
 
 namespace TimelapseWpf.Toolkit.Panels
 {

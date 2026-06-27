@@ -13,8 +13,8 @@
   ***********************************************************************************/
 
 using System;
-using System.Windows.Data;
 using System.Globalization;
+using System.Windows.Data;
 using System.Windows.Media;
 
 namespace TimelapseWpf.Toolkit.Core.Converters

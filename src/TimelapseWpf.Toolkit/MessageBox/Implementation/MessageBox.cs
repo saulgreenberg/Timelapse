@@ -13,16 +13,16 @@
   ***********************************************************************************/
 
 using System;
+using System.Diagnostics;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Media;
 using System.Windows.Input;
-using System.Text;
-using TimelapseWpf.Toolkit.Primitives;
-using System.Diagnostics;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using TimelapseWpf.Toolkit.Primitives;
 
 namespace TimelapseWpf.Toolkit
 {

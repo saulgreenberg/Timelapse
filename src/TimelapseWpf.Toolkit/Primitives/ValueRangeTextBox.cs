@@ -13,13 +13,13 @@
   ***********************************************************************************/
 
 using System;
-using System.Windows.Controls;
-using System.Windows;
-using System.Windows.Input;
-using System.Globalization;
-using System.ComponentModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using TimelapseWpf.Toolkit.Core;
 using TimelapseWpf.Toolkit.Core.Utilities;
 

@@ -233,11 +233,8 @@ namespace Timelapse.ExifTool
         //detect if process was killed
         private void ProcExited(object sender, EventArgs e)
         {
-            if (_proc != null)
-            {
-                _proc.Dispose();
-                _proc = null;
-            }
+            _proc?.Dispose();
+            _proc = null;
 
             Status = ExeStatus.Stopped;
 

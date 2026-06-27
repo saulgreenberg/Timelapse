@@ -15,8 +15,8 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
-using TimelapseWpf.Toolkit.Core.Utilities;
 using TimelapseWpf.Toolkit.Core;
+using TimelapseWpf.Toolkit.Core.Utilities;
 
 namespace TimelapseWpf.Toolkit.Zoombox
 {

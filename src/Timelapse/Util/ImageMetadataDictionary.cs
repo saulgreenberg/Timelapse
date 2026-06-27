@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using MetadataExtractor;
+using System.Collections.Generic;
 using System.IO;
-using MetadataExtractor;
 using Timelapse.DataStructures;
 using Directory = MetadataExtractor.Directory;
 

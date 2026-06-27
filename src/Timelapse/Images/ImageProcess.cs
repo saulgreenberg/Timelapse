@@ -1,10 +1,10 @@
-﻿using System.Drawing;
+﻿using SixLabors.ImageSharp.Formats.Bmp;
+using SixLabors.ImageSharp.Processing;
+using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Formats.Bmp;
 using SixLaborsImage = SixLabors.ImageSharp.Image;
 using SystemDrawingImage = System.Drawing.Image;
 using SystemDrawingPoint = System.Drawing.Point;

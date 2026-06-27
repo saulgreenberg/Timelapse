@@ -21,8 +21,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-using TimelapseWpf.Toolkit.Primitives;
 using TimelapseWpf.Toolkit.Core.Utilities;
+using TimelapseWpf.Toolkit.Primitives;
 
 namespace TimelapseWpf.Toolkit
 {

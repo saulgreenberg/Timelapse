@@ -12,14 +12,14 @@
 
   ***********************************************************************************/
 
-using System.Security;
-using System.Windows;
+using System;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security;
+using System.Text;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace TimelapseWpf.Toolkit
 {

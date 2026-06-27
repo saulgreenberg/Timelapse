@@ -403,7 +403,7 @@ namespace TimelapseWpf.Toolkit
     // - dictionary (multiple values), then add it if it meets certain conditions
     public void AutoCompletionsAddValuesIfNeeded(string value)
     {
-      Autocompletions ??= new();
+      Autocompletions ??= [];
 
       // Only add if we haven't hit the maximum size
       // This prevents unbounded memory growth with large datasets
@@ -420,7 +420,7 @@ namespace TimelapseWpf.Toolkit
       // If no autocompletions provided or empty, initialize empty dictionary
       if (autocompletions == null || autocompletions.Count == 0)
       {
-        Autocompletions ??= new();
+        Autocompletions ??= [];
         return;
       }
 
@@ -432,7 +432,7 @@ namespace TimelapseWpf.Toolkit
       {
         // Too many unique values - skip bulk loading
         // Preserve any existing user-typed values
-        Autocompletions ??= new();
+        Autocompletions ??= [];
         return;
       }
 

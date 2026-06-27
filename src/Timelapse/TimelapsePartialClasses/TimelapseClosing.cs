@@ -1,6 +1,6 @@
-﻿using System.Windows;
+﻿using Newtonsoft.Json;
+using System.Windows;
 using System.Windows.Input;
-using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.Enums;

@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
-using Microsoft.Win32;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;

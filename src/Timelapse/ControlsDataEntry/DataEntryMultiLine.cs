@@ -4,11 +4,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Timelapse.Constant;
 using Timelapse.ControlsCore;
-using TimelapseWpf.Toolkit;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Util;
+using TimelapseWpf.Toolkit;
 
 namespace Timelapse.ControlsDataEntry
 {

@@ -200,7 +200,7 @@ namespace TimelapseWpf.Toolkit.Panels
       Dictionary<string, Rect> knownLocations = null;
       if (beginAnimation && _knownIDs.Count > 0)
       {
-        knownLocations = new();
+        knownLocations = [];
         foreach (KeyValuePair<string, FrameworkElement> entry in _knownIDs)
         {
           GeneralTransform transform = entry.Value.TransformToAncestor(SwitchParent);
@@ -285,7 +285,7 @@ namespace TimelapseWpf.Toolkit.Panels
 
     // track our topmost ancestor that is the direct child of the SwitchPanel
     internal UIElement _switchRoot;
-    internal Dictionary<string, FrameworkElement> _knownIDs = new();
+    internal Dictionary<string, FrameworkElement> _knownIDs = [];
 
     private readonly ContentPresenter _contentPresenter = new();
     private bool _isMeasured;

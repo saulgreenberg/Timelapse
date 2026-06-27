@@ -15,8 +15,8 @@
 using System;
 using System.ComponentModel;
 using System.Windows;
-using TimelapseWpf.Toolkit.Media.Animation;
 using TimelapseWpf.Toolkit.Core;
+using TimelapseWpf.Toolkit.Media.Animation;
 
 namespace TimelapseWpf.Toolkit.Panels
 {

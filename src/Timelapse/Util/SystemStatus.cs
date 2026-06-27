@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Win32;
 
 namespace Timelapse.Util
 {

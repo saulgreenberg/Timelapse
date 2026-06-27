@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
-using Newtonsoft.Json;
 using Timelapse.Dialog;
 using Timelapse.Util;
 

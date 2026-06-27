@@ -3,8 +3,8 @@ using System.Linq;
 using System.Windows.Controls;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
-using Timelapse.Dialog;
 using Timelapse.DebuggingSupport;
+using Timelapse.Dialog;
 using TimelapseTemplateEditor.EditorCode;
 using Control = Timelapse.Constant.Control;
 

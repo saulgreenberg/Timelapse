@@ -1,4 +1,5 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,7 +8,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
@@ -956,10 +956,7 @@ public class SQLiteWrapper
 
                     transaction = connection.BeginTransaction();
 
-                    if (progress != null)
-                    {
-                        progress.Report(new(0, progressString, false, true));
-                    }
+                    progress?.Report(new(0, progressString, false, true));
 
                     using SQLiteCommand command = new(connection);
                     command.Transaction = transaction;

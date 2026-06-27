@@ -1,10 +1,10 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using Timelapse.ControlsCore;
-using TimelapseWpf.Toolkit;
 using Timelapse.ControlsDataEntry;
 using Timelapse.DataTables;
 using Timelapse.Enums;
+using TimelapseWpf.Toolkit;
 
 namespace Timelapse.ControlsMetadata
 {

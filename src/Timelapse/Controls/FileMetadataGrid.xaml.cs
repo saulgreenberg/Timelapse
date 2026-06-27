@@ -160,7 +160,7 @@ namespace Timelapse.Controls
             InitializeComponent();
 
             // Initializations...
-            metadataDictionary = new Dictionary<string, ImageMetadata>();
+            metadataDictionary = [];
             DictDataLabel_Label = [];
         }
 

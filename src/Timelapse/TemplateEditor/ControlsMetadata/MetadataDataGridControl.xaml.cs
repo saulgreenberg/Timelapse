@@ -52,8 +52,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         {
             this.DoLayoutUpdated(true);
             _hostWindow = Window.GetWindow(this);
-            if (_hostWindow != null)
-                _hostWindow.AddHandler(UIElement.PreviewMouseDownEvent, new MouseButtonEventHandler(HostWindow_PreviewMouseDown), true);
+            _hostWindow?.AddHandler(UIElement.PreviewMouseDownEvent, new MouseButtonEventHandler(HostWindow_PreviewMouseDown), true);
         }
 
         private void DataGrid_OnUnloaded(object sender, RoutedEventArgs e)

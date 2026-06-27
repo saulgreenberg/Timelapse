@@ -21,9 +21,9 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using TimelapseWpf.Toolkit.Media.Animation;
-using TimelapseWpf.Toolkit.Core.Utilities;
 using TimelapseWpf.Toolkit.Core;
+using TimelapseWpf.Toolkit.Core.Utilities;
+using TimelapseWpf.Toolkit.Media.Animation;
 
 namespace TimelapseWpf.Toolkit.Panels
 {
@@ -935,7 +935,7 @@ namespace TimelapseWpf.Toolkit.Panels
       }
 
       // now create a dictionary of locations for ID'd elements
-      Dictionary<string, Rect> result = new();
+      Dictionary<string, Rect> result = [];
       foreach (KeyValuePair<string, FrameworkElement> entry in presenter._knownIDs)
       {
         DependencyObject ancestor = VisualTreeHelper.GetParent(entry.Value);

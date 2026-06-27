@@ -15,9 +15,9 @@
 using System;
 using System.Globalization;
 using System.Windows;
-using TimelapseWpf.Toolkit.Primitives;
-using TimelapseWpf.Toolkit.Core.Utilities;
 using System.Windows.Input;
+using TimelapseWpf.Toolkit.Core.Utilities;
+using TimelapseWpf.Toolkit.Primitives;
 // ReSharper disable StringCompareIsCultureSpecific.2
 
 namespace TimelapseWpf.Toolkit

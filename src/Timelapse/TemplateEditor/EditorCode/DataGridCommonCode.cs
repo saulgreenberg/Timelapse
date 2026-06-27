@@ -220,10 +220,7 @@ namespace TimelapseTemplateEditor.EditorCode
                                 else if (controlType == DatabaseColumn.DateTime) cell.ToolTip = "DateTime field is filled in automatically by the system with the creation time of the image or video file";
                                 else if (controlType == DatabaseColumn.DeleteFlag) cell.ToolTip = "DeleteFlag field is a standaard Timelapse control used to mark image or video files for later deletion";
                                 Border border = VisualChildren.GetVisualChild<Border>(comboBox);
-                                if (null != border)
-                                {
-                                    border.Background = EditorConstant.NotEditableCellColor;
-                                }
+                                border?.Background = EditorConstant.NotEditableCellColor;
                             }
                         }
 

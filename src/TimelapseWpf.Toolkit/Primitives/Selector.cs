@@ -14,15 +14,15 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Reflection;
 using TimelapseWpf.Toolkit.Core.Utilities;
 
 namespace TimelapseWpf.Toolkit.Primitives

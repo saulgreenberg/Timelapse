@@ -209,7 +209,7 @@ namespace TimelapseWpf.Toolkit
 
     private static Dictionary<string, string> GetDateParts( DateTime currentDate, CultureInfo cultureInfo )
     {
-      Dictionary<string, string> dateParts = new();
+      Dictionary<string, string> dateParts = [];
       var dateTimeSeparators = new[] { ",", " ", "-", ".", "/", cultureInfo.DateTimeFormat.DateSeparator, cultureInfo.DateTimeFormat.TimeSeparator };
       var dateFormatParts = cultureInfo.DateTimeFormat.ShortDatePattern.Split( dateTimeSeparators, StringSplitOptions.RemoveEmptyEntries ).ToList();
       dateFormatParts.ForEach( item =>

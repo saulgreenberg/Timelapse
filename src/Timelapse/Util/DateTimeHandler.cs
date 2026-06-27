@@ -1,11 +1,11 @@
-﻿using System;
+﻿using MetadataExtractor;
+using MetadataExtractor.Formats.Exif;
+using MetadataExtractor.Formats.Exif.Makernotes;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using MetadataExtractor;
-using MetadataExtractor.Formats.Exif;
-using MetadataExtractor.Formats.Exif.Makernotes;
 using Timelapse.Constant;
 using MetadataDirectory = MetadataExtractor.Directory;
 namespace Timelapse.Util

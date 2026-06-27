@@ -1,4 +1,7 @@
-﻿using System;
+﻿using MetadataExtractor;
+using MetadataExtractor.Formats.Exif;
+using NReco.VideoConverter;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -7,9 +10,6 @@ using System.Threading;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using MetadataExtractor;
-using MetadataExtractor.Formats.Exif;
-using NReco.VideoConverter;
 using Timelapse.Constant;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;

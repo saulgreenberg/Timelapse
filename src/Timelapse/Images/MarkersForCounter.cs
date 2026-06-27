@@ -1,8 +1,8 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
-using Newtonsoft.Json;
 using Timelapse.DebuggingSupport;
 
 namespace Timelapse.Images

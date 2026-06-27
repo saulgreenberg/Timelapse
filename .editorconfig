@@ -130,3 +130,13 @@ resharper_enforce_if_statement_braces_highlighting = hint
 resharper_enforce_while_statement_braces_highlighting = hint
 resharper_remove_redundant_braces_highlighting = hint
 resharper_suggest_discard_declaration_var_style_highlighting = none
+
+[*.cs]
+# Core Null-checking preferences
+dotnet_style_null_checking__is_null_check_preference = true:warning
+csharp_style_conditional_delegate_call = true:warning
+
+# Explicitly trigger cleanups for unsimplified expressions
+dotnet_diagnostic.IDE0029.severity = warning
+dotnet_diagnostic.IDE0030.severity = warning
+dotnet_diagnostic.IDE0270.severity = warning

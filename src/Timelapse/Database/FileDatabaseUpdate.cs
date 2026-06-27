@@ -280,10 +280,7 @@ namespace Timelapse.Database
 
                 // Update bci directly — we're on the UI thread here, so direct assignment renders
                 // immediately once the await below yields back to the dispatcher.
-                if (bci != null)
-                {
-                    bci.Message = $"Updating the database for {count:N0} files...";
-                }
+                bci?.Message = $"Updating the database for {count:N0} files...";
 
                 // Wrapping Database.Update in Task.Run serves two purposes:
                 // 1. The await yields to the dispatcher, allowing the message above to render.
@@ -299,10 +296,7 @@ namespace Timelapse.Database
                     return;
                 }
 
-                if (bci != null)
-                {
-                    bci.Reset(false);
-                }
+                bci?.Reset(false);
             }
             finally
             {
