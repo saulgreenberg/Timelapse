@@ -483,7 +483,7 @@ namespace Timelapse
                 {
                     Source = videoRow.LoadVideoBitmap(this.RootPathToImages, null, ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseHeight, videoPositionInSeconds, out bool isCorruptOrMissing)
                 };
-                if (isCorruptOrMissing || frame.Source is not BitmapImage bitmapImage)
+                if (isCorruptOrMissing || !(frame.Source is BitmapImage bitmapImage))
                 {
                     Dialogs.MenuEditExtractVideoFrameProblem(this, "Timelapse was unable to get it from the video file.");
                     return;
@@ -609,7 +609,7 @@ namespace Timelapse
                 // get list of all images marked for deletion in the current seletion
                 using (FileTable filetable = DataHandler.FileDatabase.SelectFilesMarkedForDeletion())
                 {
-                    filesToDelete = [.. filetable];
+                    filesToDelete = filetable.ToList();
                 }
 
                 for (int index = filesToDelete.Count - 1; index >= 0; index--)

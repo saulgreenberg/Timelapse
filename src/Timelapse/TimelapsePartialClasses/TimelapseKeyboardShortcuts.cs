@@ -95,7 +95,7 @@ namespace Timelapse
                     }
                     if (key.StartsWith("NumPad"))
                     {
-                        key = key[6..];
+                        key = key.Remove(0, 6);
                     }
                     if (Int32.TryParse(key, out int shortcutIndex) && shortcutIndex != 0)
                     {

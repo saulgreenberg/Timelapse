@@ -76,7 +76,10 @@ namespace Timelapse
                 MarkableCanvas.SwitchToImageView();
 
                 // We could invalidate the cache here, but it will be reset anyways when images are loaded. 
-                DataHandler?.IsProgrammaticControlUpdate = false;
+                if (DataHandler != null)
+                {
+                    DataHandler.IsProgrammaticControlUpdate = false;
+                }
 
                 // We also need to do a bit of cleanup of UI elements that make no sense when there are no images to show.
                 QuickPasteWindowHide();
@@ -99,7 +102,10 @@ namespace Timelapse
             // for the bitmap caching logic below to work this should be the only place where code in TimelapseWindow moves the image enumerator
             if (DataHandler.ImageCache.TryMoveToFile(fileIndex, forceUpdate, out bool newFileToDisplayTemp) == false)
             {
-                DataHandler?.IsProgrammaticControlUpdate = false;
+                if (DataHandler != null)
+                {
+                    DataHandler.IsProgrammaticControlUpdate = false;
+                }
                 // We used to throw a new exception, but lets see what happens if we just return instead.
                 // i.e., lets just abort.
                 // throw new Exception(String.Format("in FileShow: possible problem with fileIndex value is {0}, where its not a valid row index in the image table.", fileIndex));

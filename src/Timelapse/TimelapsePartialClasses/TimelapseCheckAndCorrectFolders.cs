@@ -23,7 +23,7 @@ namespace Timelapse
         #region Private Methods - CheckAndUpdateRootFolderIfNeeded
         // Get the root folder name from the database, and check to see if its the same as the actual root folder.
         // If not, update it. 
-        private static void CheckAndUpdateRootFolderIfNeeded(FileDatabase fileDatabase)
+        private void CheckAndUpdateRootFolderIfNeeded(FileDatabase fileDatabase)
         {
             // Check the arguments for null 
             if (fileDatabase == null)
@@ -159,7 +159,7 @@ namespace Timelapse
         {
             List<object> allRelativePaths = fileDatabase.GetDistinctValuesInColumn(DBTables.FileData, DatabaseColumn.RelativePath);
             List<string> missingRelativePaths = [];
-            foreach (string relativePath in allRelativePaths.Cast<string>())
+            foreach (string relativePath in allRelativePaths)
             {
                 string path = Path.Combine(fileDatabase.RootPathToImages, relativePath);
                 if (!Directory.Exists(path))

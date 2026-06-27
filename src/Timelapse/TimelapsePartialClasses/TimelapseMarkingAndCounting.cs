@@ -89,7 +89,7 @@ namespace Timelapse
             if (markersForCounter != null)
             {
                 markersForCounter.RemoveMarker(e.Marker);
-                if (!markersOnCurrentFile.Any(x => x.Markers.Count > 0))
+                if (0 == markersOnCurrentFile.Count(x => x.Markers.Count > 0))
                 {
                     DataHandler.FileDatabase.MarkersRemoveMarkerRow(DataHandler.ImageCache.Current.ID);
                 }
@@ -146,7 +146,7 @@ namespace Timelapse
 
                 // Insert markers into the MarkersTable if all markers are empty,
                 // which should only occur if the current file has no markers associated with it.
-                if (!markersOnCurrentFile.Any(e => e.Markers.Count > 0))
+                if (0 == markersOnCurrentFile.Count(e => e.Markers.Count > 0))
                 {
                     // As there is no row in the marker table with that ID, an empty row (with [] values) will be added to the database
                     // The Markers list held by the database will be updated accordingly after this IF section

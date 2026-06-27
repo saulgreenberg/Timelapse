@@ -8,11 +8,11 @@ namespace TimelapseTemplateEditor.Standards
     public static class CamtrapDPStandard
     {
         // Name of this standard
-        public static readonly string Standard = Timelapse.Constant.Standards.CamtrapDPStandard;
+        public static string Standard = Timelapse.Constant.Standards.CamtrapDPStandard;
 
         // The standard specification: a list of StandardsRow, common species (used by one row), and level aliases
         #region The Alias specification associated with each level
-        public static readonly Dictionary<int, string> Aliases = new()
+        public static Dictionary<int, string> Aliases = new()
         {
             {1, "DataPackage"},
             {2, "Deployments"},
@@ -20,7 +20,7 @@ namespace TimelapseTemplateEditor.Standards
         #endregion
 
         #region CamtrapDP Folder Metadata as a Row List
-        public static readonly List<StandardsRow> FolderMetadataRows =
+        public static List<StandardsRow> FolderMetadataRows =
         [
             #region Level 1: DataPackage
             //
@@ -527,7 +527,7 @@ namespace TimelapseTemplateEditor.Standards
 
         #region Level 0: Media and Observations
 
-        public static readonly List<StandardsRow> ImageTemplateRows =
+        public static List<StandardsRow> ImageTemplateRows =
         [
             new(Control.Note, 0, "", "Media Id", CamtrapDPConstants.Media.MediaID,
                 $"Unique identifier of the media file.{Environment.NewLine}" +

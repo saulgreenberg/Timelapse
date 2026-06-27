@@ -220,7 +220,7 @@ namespace Timelapse.Database
                     {
                         List<string> ddbDatabaseChoices = Choices.ChoicesFromJson(ddbControl.List).GetAsListWithOptionalEmptyAsNewLine;
                         List<string> tdbChoices = Choices.ChoicesFromJson(tdbControl.List).GetAsListWithOptionalEmptyAsNewLine;
-                        List<string> tdbChoiceValuesThatAreAbsent = [.. ddbDatabaseChoices.Except(tdbChoices)];
+                        List<string> tdbChoiceValuesThatAreAbsent = ddbDatabaseChoices.Except(tdbChoices).ToList();
                         if (tdbChoiceValuesThatAreAbsent.Count > 0)
                         {
                             // Yes. Add a warning that the removed values not being displayable in the Choice control's menu
@@ -369,7 +369,7 @@ namespace Timelapse.Database
 
                         List<string> ddbDatabaseChoices = Choices.ChoicesFromJson(ddbControl.List).GetAsListWithOptionalEmptyAsNewLine;
                         List<string> tdbChoices = Choices.ChoicesFromJson(tdbControl.List).GetAsListWithOptionalEmptyAsNewLine;
-                        List<string> tdbChoiceValuesThatAreAbsent = [.. ddbDatabaseChoices.Except(tdbChoices)];
+                        List<string> tdbChoiceValuesThatAreAbsent = ddbDatabaseChoices.Except(tdbChoices).ToList();
                         if (tdbChoiceValuesThatAreAbsent.Count > 0)
                         {
                             AddStringToDictionaryWithListStringByLevel(templateSyncResults.ControlSynchronizationWarningsByLevel, tdbLevel,

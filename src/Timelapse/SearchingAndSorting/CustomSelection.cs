@@ -189,9 +189,9 @@ namespace Timelapse.SearchingAndSorting
 
             // Collect all the non-standard search terms which the user currently selected as UseForSearching
             // ReSharper disable once PossibleMultipleEnumeration
-            IEnumerable<SearchTerm> nonStandardSearchTerms = [.. SearchTerms.Except(unorderedStandardSearchTerms)];
+            IEnumerable<SearchTerm> nonStandardSearchTerms = SearchTerms.Except(unorderedStandardSearchTerms).ToList();
             // Finally, concat the two lists together to collect all the correctly ordered search terms into a single list
-            SearchTerms = [.. standardSearchTerms, .. nonStandardSearchTerms];
+            SearchTerms = standardSearchTerms.Concat(nonStandardSearchTerms).ToList();
         }
         #endregion
 
@@ -375,18 +375,29 @@ namespace Timelapse.SearchingAndSorting
         // e.g., \u003d is the symbol for '='
         public static string TermToSqlOperator(string expression)
         {
-            return expression switch
+            switch (expression)
             {
-                SearchTermOperator.Equal => "=",
-                SearchTermOperator.NotEqual => "<>",
-                SearchTermOperator.LessThan => "<",
-                SearchTermOperator.GreaterThan => ">",
-                SearchTermOperator.LessThanOrEqual => "<=",
-                SearchTermOperator.GreaterThanOrEqual => ">=",
-                SearchTermOperator.Glob or SearchTermOperator.Includes => SearchTermOperator.Glob,
-                SearchTermOperator.NotGlob or SearchTermOperator.Excludes => " NOT GLOB ",
-                _ => string.Empty,
-            };
+                case SearchTermOperator.Equal:
+                    return "=";
+                case SearchTermOperator.NotEqual:
+                    return "<>";
+                case SearchTermOperator.LessThan:
+                    return "<";
+                case SearchTermOperator.GreaterThan:
+                    return ">";
+                case SearchTermOperator.LessThanOrEqual:
+                    return "<=";
+                case SearchTermOperator.GreaterThanOrEqual:
+                    return ">=";
+                case SearchTermOperator.Glob:
+                case SearchTermOperator.Includes:
+                    return SearchTermOperator.Glob;
+                case SearchTermOperator.NotGlob:
+                case SearchTermOperator.Excludes:
+                    return " NOT GLOB ";
+                default:
+                    return string.Empty;
+            }
         }
         #endregion
     }

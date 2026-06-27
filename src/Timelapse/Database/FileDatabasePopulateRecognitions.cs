@@ -71,7 +71,7 @@ namespace Timelapse.Database
             foreach (ImageRow image in FileTable)
             {
                 // Get the highest confidence bounding box, if any, for the current file
-                BoundingBox bestBoundingBox = TimelapseWindow.GetHighestConfidenceBoundingBoxForCurrentFile(image.ID);
+                BoundingBox bestBoundingBox = GlobalReferences.MainWindow.GetHighestConfidenceBoundingBoxForCurrentFile(image.ID);
                 
                 if (bestBoundingBox == null)
                 {

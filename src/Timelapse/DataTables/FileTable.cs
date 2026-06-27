@@ -14,13 +14,18 @@ namespace Timelapse.DataTables
         private static ImageRow CreateRow(DataRow row)
         {
             // Return a image row or video row if its an image or video file respectively (as identified by its suffix)
-            return FilesFolders.GetFileTypeByItsExtension(row.GetStringField(DatabaseColumn.File)) switch
+            switch (FilesFolders.GetFileTypeByItsExtension(row.GetStringField(DatabaseColumn.File)))
             {
-                FileExtensionEnum.IsImage => new(row),
-                FileExtensionEnum.IsVideo => new VideoRow(row),
-                _ => throw new NotSupportedException(
-                                        $"Unhandled extension for file '{row.GetStringField(DatabaseColumn.File)}'."),// This should never be reached
-            };
+                case FileExtensionEnum.IsImage:
+                    return new(row);
+                case FileExtensionEnum.IsVideo:
+                    return new VideoRow(row);
+                case FileExtensionEnum.IsNotImageOrVideo:
+                default:
+                    // This should never be reached
+                    throw new NotSupportedException(
+                        $"Unhandled extension for file '{row.GetStringField(DatabaseColumn.File)}'.");
+            }
         }
 
         public ImageRow NewRow(FileInfo file)

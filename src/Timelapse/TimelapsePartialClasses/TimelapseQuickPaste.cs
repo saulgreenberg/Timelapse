@@ -69,8 +69,11 @@ namespace Timelapse
 
         private void QuickPasteWindowTerminate()
         {
-            quickPasteWindow?.Close();
-            quickPasteWindow = null;
+            if (quickPasteWindow != null)
+            {
+                quickPasteWindow.Close();
+                quickPasteWindow = null;
+            }
         }
         #endregion
 

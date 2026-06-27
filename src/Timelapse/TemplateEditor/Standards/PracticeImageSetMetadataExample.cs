@@ -7,7 +7,7 @@ namespace TimelapseTemplateEditor.Standards
     {
         // The standard specification: a list of StandardsRow, common species (used by one row), and level aliases
         #region The Alias specification associated with each level
-        public static readonly Dictionary<int, string> Aliases = new()
+        public static Dictionary<int, string> Aliases = new()
         {
             {1, "Project"},
             {2, "Station"},
@@ -16,7 +16,7 @@ namespace TimelapseTemplateEditor.Standards
         #endregion
 
         #region List of common species
-        public static readonly List<string> SpeciesCommonList =
+        public static List<string> SpeciesCommonList =
         [
             "bear",
             "bighorn sheep",
@@ -39,7 +39,7 @@ namespace TimelapseTemplateEditor.Standards
 
         #region PracticeImageSet Folder Metadata as a Row List
 
-        public static readonly List<StandardsRow> FolderMetadataRows =
+        public static List<StandardsRow> FolderMetadataRows =
         [
             #region Level 1: Project
             new(
@@ -159,7 +159,7 @@ namespace TimelapseTemplateEditor.Standards
 
         #region Practice Image Set:Image template as a Row List
 
-        public static readonly List<StandardsRow> ImageTemplateRows =
+        public static List<StandardsRow> ImageTemplateRows =
         [
             new(
                 Control.FixedChoice, 1, "", "Species", "img_species",

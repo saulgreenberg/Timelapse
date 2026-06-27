@@ -39,7 +39,7 @@ namespace Timelapse.DataStructures
                 {
                     tagList.Add(item.MetadataTag);
                 }
-                return [.. tagList];
+                return tagList.ToArray();
             }
         }
     }

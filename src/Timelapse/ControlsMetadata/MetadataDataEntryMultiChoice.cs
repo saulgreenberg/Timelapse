@@ -190,7 +190,7 @@ namespace Timelapse.ControlsMetadata
             }
         }
 
-        private static bool IsFirstItemFocused(WatermarkCheckComboBox checkComboBox)
+        private bool IsFirstItemFocused(WatermarkCheckComboBox checkComboBox)
         {
             // Try to find the popup and the items within it
             var popup = checkComboBox.Template?.FindName("PART_Popup", checkComboBox) as System.Windows.Controls.Primitives.Popup;
@@ -207,7 +207,8 @@ namespace Timelapse.ControlsMetadata
             }
 
             // Get the focused element
-            if (Keyboard.FocusedElement is not DependencyObject focusedElement)
+            var focusedElement = Keyboard.FocusedElement as DependencyObject;
+            if (focusedElement == null)
             {
                 return false;
             }

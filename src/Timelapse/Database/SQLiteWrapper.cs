@@ -118,7 +118,7 @@ public class SQLiteWrapper
             {
                 query += $"{column} {Sql.Comma}{Environment.NewLine}";                                 // "columnname TEXT DEFAULT 'value',\n" or similar
             }
-            query = query[..(query.Length - Sql.Comma.Length - Environment.NewLine.Length)];          // remove last comma / new line
+            query = query.Remove(query.Length - Sql.Comma.Length - Environment.NewLine.Length);          // remove last comma / new line
             query += $"{Sql.CloseParenthesis} {Sql.Semicolon}";                                          // );
             return ExecuteNonQueryWithRollback(query);
         }
@@ -601,7 +601,7 @@ public class SQLiteWrapper
             }
 
             const int maxClausesPerQuery = 500;
-            List<long> sorted = [.. listOfIDs.OrderBy(id => id)];
+            List<long> sorted = listOfIDs.OrderBy(id => id).ToList();
             List<string> queries = [];
             int startIndex = 0;
             while (startIndex < sorted.Count)
@@ -893,9 +893,7 @@ public class SQLiteWrapper
         /// connection closes, so no explicit DETACH is needed on failure.
         /// </summary>
         private SqlOperationResult ExecuteNonQueryWithRollbackCore(
-#pragma warning disable CA1859 // Use concrete types when possible for improved performance
             IReadOnlyList<string> statements,
-#pragma warning restore CA1859 // Use concrete types when possible for improved performance
             IProgress<ProgressBarArguments> progress = null,
             string progressString = "",
             int progressFrequency = 0,
@@ -958,7 +956,10 @@ public class SQLiteWrapper
 
                     transaction = connection.BeginTransaction();
 
-                    progress?.Report(new(0, progressString, false, true));
+                    if (progress != null)
+                    {
+                        progress.Report(new(0, progressString, false, true));
+                    }
 
                     using SQLiteCommand command = new(connection);
                     command.Transaction = transaction;
@@ -1235,7 +1236,7 @@ public class SQLiteWrapper
                 string createSql = $"{Sql.CreateTable} {destTable} {Sql.OpenParenthesis} {Environment.NewLine}";
                 foreach (SchemaColumnDefinition column in columnDefinitions)
                     createSql += $"{column} {Sql.Comma}{Environment.NewLine}";
-                createSql = createSql[..(createSql.Length - Sql.Comma.Length - Environment.NewLine.Length)];
+                createSql = createSql.Remove(createSql.Length - Sql.Comma.Length - Environment.NewLine.Length);
                 createSql += $"{Sql.CloseParenthesis} {Sql.Semicolon}";
 
                 using SQLiteTransaction transaction = connection.BeginTransaction();
@@ -1343,6 +1344,7 @@ public class SQLiteWrapper
 
         public bool SchemaIsColumnInTable(string sourceTable, string currentColumnName)
         {
+#pragma warning disable CS0168 // Variable is declared but never used
             for (int attempt = 0; ; attempt++)
             {
                 try
@@ -1369,6 +1371,7 @@ public class SQLiteWrapper
                     return false;
                 }
             }
+#pragma warning restore CS0168 // Variable is declared but never used
         }
 
         // This method will create a column in a table of type TEXT, where it is added to its end
@@ -1899,7 +1902,7 @@ public class SQLiteWrapper
         //       if all are contiguos, only the Between clause is used
         public static string BuildWhereListofIds(string IDColumnName, List<long> listOfIDs)
         {
-            List<long> sorted = [.. listOfIDs.OrderBy(id => id)];
+            List<long> sorted = listOfIDs.OrderBy(id => id).ToList();
             if (sorted.Count == 0)
             {
                 return string.Empty;

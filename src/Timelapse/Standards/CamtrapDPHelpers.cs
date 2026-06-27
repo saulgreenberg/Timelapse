@@ -20,190 +20,207 @@ namespace Timelapse.Standards
 
         public static bool IsMediaField(string fieldName)
         {
-            return fieldName switch
+            switch (fieldName)
             {
-                CamtrapDPConstants.Media.MediaID or 
-                    CamtrapDPConstants.Media.DeploymentID or 
-                    CamtrapDPConstants.Media.CaptureMethod or 
-                    CamtrapDPConstants.Media.Timestamp or 
-                    CamtrapDPConstants.Media.FilePath or 
-                    CamtrapDPConstants.Media.FilePublic or 
-                    CamtrapDPConstants.Media.FileName or 
-                    CamtrapDPConstants.Media.FileMediatype or 
-                    CamtrapDPConstants.Media.ExifData or 
-                    CamtrapDPConstants.Media.Favorite or 
-                    CamtrapDPConstants.Media.MediaComments => true,
-                _ => false,
-            };
+                case CamtrapDPConstants.Media.MediaID:
+                case CamtrapDPConstants.Media.DeploymentID:
+                case CamtrapDPConstants.Media.CaptureMethod:
+                case CamtrapDPConstants.Media.Timestamp:
+                case CamtrapDPConstants.Media.FilePath:
+                case CamtrapDPConstants.Media.FilePublic:
+                case CamtrapDPConstants.Media.FileName:
+                case CamtrapDPConstants.Media.FileMediatype:
+                case CamtrapDPConstants.Media.ExifData:
+                case CamtrapDPConstants.Media.Favorite:
+                case CamtrapDPConstants.Media.MediaComments:
+                    return true;
+            }
+
+            return false;
         }
 
         // true if the Observations's datalabel should not be editable in the template
         public static bool IsObservationsField(string fieldName)
         {
-            return fieldName switch
+            switch (fieldName)
             {
-                CamtrapDPConstants.Observations.ObservationID or 
-                    CamtrapDPConstants.Observations.DeploymentID or 
-                    CamtrapDPConstants.Observations.MediaID or 
-                    CamtrapDPConstants.Observations.EventID or 
-                    CamtrapDPConstants.Observations.EventStart or 
-                    CamtrapDPConstants.Observations.EventEnd or 
-                    CamtrapDPConstants.Observations.ObservationLevel or 
-                    CamtrapDPConstants.Observations.ObservationType or 
-                    CamtrapDPConstants.Observations.CameraSetupType or 
-                    CamtrapDPConstants.Observations.ScientificName or 
-                    CamtrapDPConstants.Observations.Count or 
-                    CamtrapDPConstants.Observations.LifeStage or 
-                    CamtrapDPConstants.Observations.Sex or 
-                    CamtrapDPConstants.Observations.Behavior or 
-                    CamtrapDPConstants.Observations.IndividualID or 
-                    CamtrapDPConstants.Observations.IndividualPositionRadius or 
-                    CamtrapDPConstants.Observations.IndividualPositionAngle or 
-                    CamtrapDPConstants.Observations.IndividualSpeed or 
-                    CamtrapDPConstants.Observations.BboxX or 
-                    CamtrapDPConstants.Observations.BboxY or 
-                    CamtrapDPConstants.Observations.BboxWidth or 
-                    CamtrapDPConstants.Observations.BboxHeight or 
-                    CamtrapDPConstants.Observations.ClassificationMethod or 
-                    CamtrapDPConstants.Observations.ClassificationTimestamp or 
-                    CamtrapDPConstants.Observations.ClassificationProbability or 
-                    CamtrapDPConstants.Observations.ClassifiedBy or 
-                    CamtrapDPConstants.Observations.ObservationTags or 
-                    CamtrapDPConstants.Observations.ObservationComments => true,
-                _ => false,
-            };
+                case CamtrapDPConstants.Observations.ObservationID:
+                case CamtrapDPConstants.Observations.DeploymentID:
+                case CamtrapDPConstants.Observations.MediaID:
+                case CamtrapDPConstants.Observations.EventID:
+                case CamtrapDPConstants.Observations.EventStart:
+                case CamtrapDPConstants.Observations.EventEnd:
+                case CamtrapDPConstants.Observations.ObservationLevel:
+                case CamtrapDPConstants.Observations.ObservationType:
+                case CamtrapDPConstants.Observations.CameraSetupType:
+                case CamtrapDPConstants.Observations.ScientificName:
+                case CamtrapDPConstants.Observations.Count:
+                case CamtrapDPConstants.Observations.LifeStage:
+                case CamtrapDPConstants.Observations.Sex:
+                case CamtrapDPConstants.Observations.Behavior:
+                case CamtrapDPConstants.Observations.IndividualID:
+                case CamtrapDPConstants.Observations.IndividualPositionRadius:
+                case CamtrapDPConstants.Observations.IndividualPositionAngle:
+                case CamtrapDPConstants.Observations.IndividualSpeed:
+                case CamtrapDPConstants.Observations.BboxX:
+                case CamtrapDPConstants.Observations.BboxY:
+                case CamtrapDPConstants.Observations.BboxWidth:
+                case CamtrapDPConstants.Observations.BboxHeight:
+                case CamtrapDPConstants.Observations.ClassificationMethod:
+                case CamtrapDPConstants.Observations.ClassificationTimestamp:
+                case CamtrapDPConstants.Observations.ClassificationProbability:
+                case CamtrapDPConstants.Observations.ClassifiedBy:
+                case CamtrapDPConstants.Observations.ObservationTags:
+                case CamtrapDPConstants.Observations.ObservationComments:
+                    return true;
+            }
+
+            return false;
         }
         public static bool IsMediaObservationsFieldNonEditableDefault(string dataLabel)
         {
-            return dataLabel switch
+            switch (dataLabel)
             {
-                CamtrapDPConstants.Media.DeploymentID or 
-                    CamtrapDPConstants.Media.MediaID or 
-                    CamtrapDPConstants.Media.Timestamp or 
-                    CamtrapDPConstants.Media.FilePath or 
-                    CamtrapDPConstants.Media.FileName or 
-                    CamtrapDPConstants.Media.FileMediatype => true,
-                _ => false,
-            };
+                case CamtrapDPConstants.Media.DeploymentID:
+                case CamtrapDPConstants.Media.MediaID:
+                case CamtrapDPConstants.Media.Timestamp:
+                case CamtrapDPConstants.Media.FilePath:
+                case CamtrapDPConstants.Media.FileName:
+                case CamtrapDPConstants.Media.FileMediatype:
+                    return true;
+            }
+
+            return false;
         }
 
         // true if its a  data package's datalabel 
         public static bool IsDataPackageField(string dataLabel)
         {
-            return dataLabel switch
+            switch (dataLabel)
             {
-                CamtrapDPConstants.DataPackage.Resources.Deployment_name 
-                    or CamtrapDPConstants.DataPackage.Resources.Deployment_path
-                    or CamtrapDPConstants.DataPackage.Resources.Deployment_schema 
-                    or CamtrapDPConstants.DataPackage.Resources.Media_name
-                    or CamtrapDPConstants.DataPackage.Resources.Media_path 
-                    or CamtrapDPConstants.DataPackage.Resources.Media_schema
-                    or CamtrapDPConstants.DataPackage.Resources.Observations_name 
-                    or CamtrapDPConstants.DataPackage.Resources.Observations_path
-                    or CamtrapDPConstants.DataPackage.Resources.Observations_schema 
-                    or CamtrapDPConstants.DataPackage.Resources.Resource_profile
-                    or CamtrapDPConstants.DataPackage.Project.Acronym 
-                    or CamtrapDPConstants.DataPackage.Project.CaptureMethod 
-                    or CamtrapDPConstants.DataPackage.Project.Description
-                    or CamtrapDPConstants.DataPackage.Project.Id 
-                    or CamtrapDPConstants.DataPackage.Project.IndividualAnimals
-                    or CamtrapDPConstants.DataPackage.Project.ObservationLevel 
-                    or CamtrapDPConstants.DataPackage.Project.Path
-                    or CamtrapDPConstants.DataPackage.Project.SamplingDesign 
-                    or CamtrapDPConstants.DataPackage.Project.Title 
-                    or CamtrapDPConstants.DataPackage.Temporal.End
-                    or CamtrapDPConstants.DataPackage.Temporal.Start 
-                    or CamtrapDPConstants.DataPackage.BibliographicCitation 
-                    or CamtrapDPConstants.DataPackage.Contributors
-                    or CamtrapDPConstants.DataPackage.CoordinatePrecision 
-                    or CamtrapDPConstants.DataPackage.Created 
-                    or CamtrapDPConstants.DataPackage.Description
-                    or CamtrapDPConstants.DataPackage.Homepage 
-                    or CamtrapDPConstants.DataPackage.IdAlias 
-                    or CamtrapDPConstants.DataPackage.Image
-                    or CamtrapDPConstants.DataPackage.Keywords 
-                    or CamtrapDPConstants.DataPackage.Licenses 
-                    or CamtrapDPConstants.DataPackage.Name
-                    or CamtrapDPConstants.DataPackage.Profile 
-                    or CamtrapDPConstants.DataPackage.References 
-                    or CamtrapDPConstants.DataPackage.RelatedIdentifiers
-                    or CamtrapDPConstants.DataPackage.Sources 
-                    or CamtrapDPConstants.DataPackage.Spatial or CamtrapDPConstants.DataPackage.Taxonomic
-                    or CamtrapDPConstants.DataPackage.Title 
-                    or CamtrapDPConstants.DataPackage.Version => true,
-                _ => false
-            };
+                case CamtrapDPConstants.DataPackage.Resources.Deployment_name:
+                case CamtrapDPConstants.DataPackage.Resources.Deployment_path:
+                case CamtrapDPConstants.DataPackage.Resources.Deployment_schema:
+                case CamtrapDPConstants.DataPackage.Resources.Media_name:
+                case CamtrapDPConstants.DataPackage.Resources.Media_path:
+                case CamtrapDPConstants.DataPackage.Resources.Media_schema:
+                case CamtrapDPConstants.DataPackage.Resources.Observations_name:
+                case CamtrapDPConstants.DataPackage.Resources.Observations_path:
+                case CamtrapDPConstants.DataPackage.Resources.Observations_schema:
+                case CamtrapDPConstants.DataPackage.Resources.Resource_profile:
+                case CamtrapDPConstants.DataPackage.Project.Acronym:
+                case CamtrapDPConstants.DataPackage.Project.CaptureMethod:
+                case CamtrapDPConstants.DataPackage.Project.Description:
+                case CamtrapDPConstants.DataPackage.Project.Id:
+                case CamtrapDPConstants.DataPackage.Project.IndividualAnimals:
+                case CamtrapDPConstants.DataPackage.Project.ObservationLevel:
+                case CamtrapDPConstants.DataPackage.Project.Path:
+                case CamtrapDPConstants.DataPackage.Project.SamplingDesign:
+                case CamtrapDPConstants.DataPackage.Project.Title:
+                case CamtrapDPConstants.DataPackage.Temporal.End:
+                case CamtrapDPConstants.DataPackage.Temporal.Start:
+                case CamtrapDPConstants.DataPackage.BibliographicCitation:
+                case CamtrapDPConstants.DataPackage.Contributors:
+                case CamtrapDPConstants.DataPackage.CoordinatePrecision:
+                case CamtrapDPConstants.DataPackage.Created:
+                case CamtrapDPConstants.DataPackage.Description:
+                case CamtrapDPConstants.DataPackage.Homepage:
+                case CamtrapDPConstants.DataPackage.IdAlias:
+                case CamtrapDPConstants.DataPackage.Image:
+                case CamtrapDPConstants.DataPackage.Keywords:
+                case CamtrapDPConstants.DataPackage.Licenses:
+                case CamtrapDPConstants.DataPackage.Name:
+                case CamtrapDPConstants.DataPackage.Profile:
+                case CamtrapDPConstants.DataPackage.References:
+                case CamtrapDPConstants.DataPackage.RelatedIdentifiers:
+                case CamtrapDPConstants.DataPackage.Sources:
+                case CamtrapDPConstants.DataPackage.Spatial:
+                case CamtrapDPConstants.DataPackage.Taxonomic:
+                case CamtrapDPConstants.DataPackage.Title:
+                case CamtrapDPConstants.DataPackage.Version:
+                    return true;
+            }
+
+            return false;
+
         }
 
         // true if the data package's Default value should not be editable in the template
         public static bool IsDataPackageFieldNonEditableDefault(string dataLabel)
         {
-            return dataLabel switch
+            switch (dataLabel)
             {
-                CamtrapDPConstants.DataPackage.Resources.Deployment_name 
-                    or CamtrapDPConstants.DataPackage.Resources.Deployment_path 
-                    or CamtrapDPConstants.DataPackage.Resources.Deployment_schema 
-                    or CamtrapDPConstants.DataPackage.Resources.Media_name 
-                    or CamtrapDPConstants.DataPackage.Resources.Media_path 
-                    or CamtrapDPConstants.DataPackage.Resources.Media_schema 
-                    or CamtrapDPConstants.DataPackage.Resources.Observations_name 
-                    or CamtrapDPConstants.DataPackage.Resources.Observations_path 
-                    or CamtrapDPConstants.DataPackage.Resources.Observations_schema 
-                    or CamtrapDPConstants.DataPackage.Resources.Resource_profile 
-                    or CamtrapDPConstants.DataPackage.Project.Id 
-                    or CamtrapDPConstants.DataPackage.Contributors 
-                    or CamtrapDPConstants.DataPackage.IdAlias 
-                    or CamtrapDPConstants.DataPackage.Licenses 
-                    or CamtrapDPConstants.DataPackage.Profile 
-                    or CamtrapDPConstants.DataPackage.RelatedIdentifiers 
-                    or CamtrapDPConstants.DataPackage.References 
-                    or CamtrapDPConstants.DataPackage.Sources 
-                    or CamtrapDPConstants.DataPackage.Spatial 
-                    or CamtrapDPConstants.DataPackage.Taxonomic 
-                    or CamtrapDPConstants.DataPackage.Version => true,
-                _ => false,
-            };
+                case CamtrapDPConstants.DataPackage.Resources.Deployment_name:
+                case CamtrapDPConstants.DataPackage.Resources.Deployment_path:
+                case CamtrapDPConstants.DataPackage.Resources.Deployment_schema:
+                case CamtrapDPConstants.DataPackage.Resources.Media_name:
+                case CamtrapDPConstants.DataPackage.Resources.Media_path:
+                case CamtrapDPConstants.DataPackage.Resources.Media_schema:
+                case CamtrapDPConstants.DataPackage.Resources.Observations_name:
+                case CamtrapDPConstants.DataPackage.Resources.Observations_path:
+                case CamtrapDPConstants.DataPackage.Resources.Observations_schema:
+                case CamtrapDPConstants.DataPackage.Resources.Resource_profile:
+                case CamtrapDPConstants.DataPackage.Project.Id:
+                case CamtrapDPConstants.DataPackage.Contributors:
+                case CamtrapDPConstants.DataPackage.IdAlias:
+                case CamtrapDPConstants.DataPackage.Licenses:
+                case CamtrapDPConstants.DataPackage.Profile:
+                case CamtrapDPConstants.DataPackage.RelatedIdentifiers:
+                case CamtrapDPConstants.DataPackage.References:
+                case CamtrapDPConstants.DataPackage.Sources:
+                case CamtrapDPConstants.DataPackage.Spatial:
+                case CamtrapDPConstants.DataPackage.Taxonomic:
+                case CamtrapDPConstants.DataPackage.Version:
+                    return true;
+            }
+
+            return false;
         }
 
         // true if its a  data package's datalabel 
         public static bool IsDeploymentField(string dataLabel)
         {
-            return dataLabel switch
+            switch (dataLabel)
             {
-                CamtrapDPConstants.Deployment.BaitUse 
-                    or CamtrapDPConstants.Deployment.CameraDelay 
-                    or CamtrapDPConstants.Deployment.CameraDepth 
-                    or CamtrapDPConstants.Deployment.CameraHeading 
-                    or CamtrapDPConstants.Deployment.CameraHeight 
-                    or CamtrapDPConstants.Deployment.CameraID 
-                    or CamtrapDPConstants.Deployment.CameraModel 
-                    or CamtrapDPConstants.Deployment.CameraTilt 
-                    or CamtrapDPConstants.Deployment.CoordinateUncertainty 
-                    or CamtrapDPConstants.Deployment.DeploymentComments 
-                    or CamtrapDPConstants.Deployment.DeploymentEnd 
-                    or CamtrapDPConstants.Deployment.DeploymentGroups 
-                    or CamtrapDPConstants.Deployment.DeploymentID 
-                    or CamtrapDPConstants.Deployment.DeploymentStart 
-                    or CamtrapDPConstants.Deployment.DeploymentTags 
-                    or CamtrapDPConstants.Deployment.DetectionDistance 
-                    or CamtrapDPConstants.Deployment.FeatureType 
-                    or CamtrapDPConstants.Deployment.Habitat 
-                    or CamtrapDPConstants.Deployment.Latitude 
-                    or CamtrapDPConstants.Deployment.LocationID 
-                    or CamtrapDPConstants.Deployment.LocationName 
-                    or CamtrapDPConstants.Deployment.Longitude 
-                    or CamtrapDPConstants.Deployment.SetupBy 
-                    or CamtrapDPConstants.Deployment.TimestampIssues => true,
-                _ => false,
-            };
+                case CamtrapDPConstants.Deployment.BaitUse:
+                case CamtrapDPConstants.Deployment.CameraDelay:
+                case CamtrapDPConstants.Deployment.CameraDepth:
+                case CamtrapDPConstants.Deployment.CameraHeading:
+                case CamtrapDPConstants.Deployment.CameraHeight:
+                case CamtrapDPConstants.Deployment.CameraID:
+                case CamtrapDPConstants.Deployment.CameraModel:
+                case CamtrapDPConstants.Deployment.CameraTilt:
+                case CamtrapDPConstants.Deployment.CoordinateUncertainty:
+                case CamtrapDPConstants.Deployment.DeploymentComments:
+                case CamtrapDPConstants.Deployment.DeploymentEnd:
+                case CamtrapDPConstants.Deployment.DeploymentGroups:
+                case CamtrapDPConstants.Deployment.DeploymentID:
+                case CamtrapDPConstants.Deployment.DeploymentStart:
+                case CamtrapDPConstants.Deployment.DeploymentTags:
+                case CamtrapDPConstants.Deployment.DetectionDistance:
+                case CamtrapDPConstants.Deployment.FeatureType:
+                case CamtrapDPConstants.Deployment.Habitat:
+                case CamtrapDPConstants.Deployment.Latitude:
+                case CamtrapDPConstants.Deployment.LocationID:
+                case CamtrapDPConstants.Deployment.LocationName:
+                case CamtrapDPConstants.Deployment.Longitude:
+                case CamtrapDPConstants.Deployment.SetupBy:
+                case CamtrapDPConstants.Deployment.TimestampIssues:
+                    return true;
+            }
+
+            return false;
+
         }
         public static bool IsDeploymentFieldNonEditableDefault(string dataLabel)
         {
-            return dataLabel switch
+            switch (dataLabel)
             {
-                CamtrapDPConstants.Deployment.DeploymentID => true,
-                _ => false,
-            };
+                case CamtrapDPConstants.Deployment.DeploymentID:
+                    return true;
+            }
+
+            return false;
         }
 
         #region Get a bounding box around the various deployment's lat/long coordinates

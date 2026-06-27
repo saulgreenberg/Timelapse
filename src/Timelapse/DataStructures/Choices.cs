@@ -77,7 +77,7 @@ namespace Timelapse.DataStructures
             choiceText = TrimLinesAndRemoveEmptyLines(choiceText);
             List<string> choiceList = string.IsNullOrWhiteSpace(choiceText)
                 ? []
-                : [.. choiceText.Split(NewLineDelimiter, StringSplitOptions.None)];
+                : choiceText.Split(NewLineDelimiter, StringSplitOptions.None).ToList();
             ChoicesInternal = new();
             ChoiceList = choiceList;
             IncludeEmptyChoice = includeEmptyChoice;

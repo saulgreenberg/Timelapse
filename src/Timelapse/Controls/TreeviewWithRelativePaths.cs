@@ -79,7 +79,7 @@ namespace Timelapse.Controls
         private PathItem GetPathItemFromPath(string path)
         {
             this.DontInvoke = true;
-            PathItem pathItem = ItemProvider.Search(this.ItemList, path);
+            PathItem pathItem = this.ItemProvider.Search(this.ItemList, path);
             this.DontInvoke = false;
             return pathItem;
         }
@@ -178,7 +178,7 @@ namespace Timelapse.Controls
             this.DontInvoke = false;
         }
 
-        private static void CollapseAllRecursive(TreeViewItem treeViewItem)
+        private void CollapseAllRecursive(TreeViewItem treeViewItem)
         {
             treeViewItem.IsExpanded = false;
             treeViewItem.IsSelected = false;
@@ -204,7 +204,7 @@ namespace Timelapse.Controls
         }
 
         // Unselect all items in the tree
-        private static void UnselectAllRecursive(TreeViewItem treeViewItem)
+        private void UnselectAllRecursive(TreeViewItem treeViewItem)
         {
             if (treeViewItem == null) return;
 
@@ -251,7 +251,7 @@ namespace Timelapse.Controls
 
         // Recursively search the list for the node that represents the path
         // null if there is no match
-        internal static PathItem Search(List<Item> items, string path)
+        internal PathItem Search(List<Item> items, string path)
         {
             string head = Util.FilesFolders.GetRelativePathRootFolder(path);
             string tail = Util.FilesFolders.GetRelativePathSubFolder(path);
@@ -269,7 +269,7 @@ namespace Timelapse.Controls
         }
 
         // Given a list of paths, return a hierarchical data structure representing the path elements as a tree
-        private static List<Item> GetItems(List<string> paths, string pathToHere)
+        private List<Item> GetItems(List<string> paths, string pathToHere)
         {
             List<ListItem> listItems = SplitIntoListsByRoot(paths);
             List<Item> items = [];
@@ -292,7 +292,7 @@ namespace Timelapse.Controls
         // e.g a, a/b, a/b/c, a/b/d, c, c/d, will be compile into two lists:
         //     a, a/b, a/b/c, a/b/d
         //     c, c/d,
-        private static List<ListItem> SplitIntoListsByRoot(List<string> paths)
+        private List<ListItem> SplitIntoListsByRoot(List<string> paths)
         {
             List<ListItem> splitLists = [];
             ListItem commonRootPathList = new();

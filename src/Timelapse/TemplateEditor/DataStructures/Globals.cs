@@ -8,7 +8,7 @@ namespace TimelapseTemplateEditor.EditorCode
     public static class Globals
     {
         // Globals to allow access to variables in the main program
-        public static TemplateEditorWindow Root { get; set; }
+        public static TemplateEditorWindow Root;
         public static TemplateEditorWindow RootEditor => EditorConstant.templateEditorWindow;
         public static CommonDatabase TemplateDatabase => EditorConstant.templateEditorWindow?.templateDatabase;
         public static TemplateDataGridControl TemplateDataGridControl => TemplateUI?.TemplateDataGridControl;

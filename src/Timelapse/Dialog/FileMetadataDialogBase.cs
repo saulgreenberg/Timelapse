@@ -74,7 +74,7 @@ namespace Timelapse.Dialog
         /// Configures the auto-generated columns for feedback DataGrid.
         /// Sets proper headers for feedback display.
         /// </summary>
-        protected static void ConfigureFeedbackDataGridColumns(DataGrid feedbackGrid)
+        protected void ConfigureFeedbackDataGridColumns(DataGrid feedbackGrid)
         {
             // Find columns by binding path and set headers
             foreach (var column in feedbackGrid.Columns)
@@ -106,7 +106,7 @@ namespace Timelapse.Dialog
         /// <summary>
         /// Updates the feedback grid display based on show-all vs show-errors-only mode.
         /// </summary>
-        protected static void UpdateFeedbackGridDisplay(
+        protected void UpdateFeedbackGridDisplay(
             DataGrid feedbackGrid,
             ObservableCollection<FileMetadataFeedbackRow> allFeedbackData,
             bool showEverything)

@@ -187,7 +187,10 @@ namespace Timelapse.Database
         // Given a range of selected files, update the field identified by dataLabel with the given value
         public async Task UpdateFiles(string value, string dataLabel, int fromIndex, int toIndex)
         {
-            ArgumentOutOfRangeException.ThrowIfNegative(fromIndex);
+            if (fromIndex < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(fromIndex));
+            }
             if (toIndex < fromIndex || toIndex > CountAllCurrentlySelectedFiles - 1)
             {
                 throw new ArgumentOutOfRangeException(nameof(toIndex));
@@ -277,7 +280,10 @@ namespace Timelapse.Database
 
                 // Update bci directly — we're on the UI thread here, so direct assignment renders
                 // immediately once the await below yields back to the dispatcher.
-                bci?.Message = $"Updating the database for {count:N0} files...";
+                if (bci != null)
+                {
+                    bci.Message = $"Updating the database for {count:N0} files...";
+                }
 
                 // Wrapping Database.Update in Task.Run serves two purposes:
                 // 1. The await yields to the dispatcher, allowing the message above to render.
@@ -293,7 +299,10 @@ namespace Timelapse.Database
                     return;
                 }
 
-                bci?.Reset(false);
+                if (bci != null)
+                {
+                    bci.Reset(false);
+                }
             }
             finally
             {

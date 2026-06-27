@@ -47,7 +47,7 @@ namespace Timelapse.ControlsMetadata
         // Delegate to core for navigation key handling
         private void ContentControl_PreviewKeyDown(object sender, KeyEventArgs keyEvent)
         {
-            FlagControlCore.HandleNavigationKeys(keyEvent, false);
+            core.HandleNavigationKeys(keyEvent, false);
         }
         #endregion
 
@@ -55,7 +55,7 @@ namespace Timelapse.ControlsMetadata
         public override void SetContentAndTooltip(string value)
         {
             // Ensure that we always have a valid true/false value, wehre anything other than true is considered false. 
-            bool newBoolValue = null != value && value.Equals(BooleanValue.True, System.StringComparison.CurrentCultureIgnoreCase);
+            bool newBoolValue = null != value && value.ToLower() == BooleanValue.True;
 
             // The checkbox will be checked depending on whether the value is true or false 
             // and the tooltip will be set to true or false

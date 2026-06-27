@@ -19,10 +19,10 @@ namespace Timelapse.Util
         //Helper methods for various CSVReader/Writers including Standard-specific CSV writers
         #region Read Csv helpers. 
         // Read in the CSV file. Return false if there is a problem in reading the CSV file or if the CSV file is empty
-        public static CSVReadingResult TryReadingCSVFile(string filePath, out List<List<string>> parsedFile, List<string> importErrors,
-            IProgress<ProgressBarArguments> progress, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate, CancellationToken token)
+        public static CSVReadingResult TryReadingCSVFile(string filePath, out List<List<string>> parsedFile, List<string> importErrors, 
+            IProgress<ProgressBarArguments> progress, CancellationToken token, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate)
         {
-            parsedFile = CSVFileReadAndParseAsListOfRows(filePath, progress, reportAfter, message, cancelEnabled, isIndeterminate, token);
+            parsedFile = CSVFileReadAndParseAsListOfRows(filePath, progress, token, reportAfter, message, cancelEnabled, isIndeterminate);
             if (token.IsCancellationRequested)
             {
                 return CSVReadingResult.Cancelled;
@@ -53,8 +53,8 @@ namespace Timelapse.Util
         }
 
         // Parse the rows in a CSV file and return it as a list of lines, each line being a list of values in a csv row
-        public static List<List<string>> CSVFileReadAndParseAsListOfRows(string path,
-            IProgress<ProgressBarArguments> progress, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate, CancellationToken token)
+        public static List<List<string>> CSVFileReadAndParseAsListOfRows(string path, 
+            IProgress<ProgressBarArguments> progress, CancellationToken token, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate)
         {
             try
             {
@@ -92,7 +92,7 @@ namespace Timelapse.Util
                     if (fields != null)
                     {
                         // Convert to list just like the original code: parts.ToList()
-                        List<string> rowFields = [.. fields];
+                        List<string> rowFields = fields.ToList();
                         parsedRows.Add(rowFields);
                     }
                 }
@@ -106,7 +106,7 @@ namespace Timelapse.Util
         }
 
         // Get all the data rows from the CSV file. Each dictionary entry is a row with a list of matching  CSV column Headers and column value 
-        public static List<Dictionary<string, string>> GetAllDataRows(List<string> dataLabelsFromCSV, List<List<string>> parsedFile, IProgress<ProgressBarArguments> progress, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate, CancellationToken token)
+        public static List<Dictionary<string, string>> GetAllDataRows(List<string> dataLabelsFromCSV, List<List<string>> parsedFile, IProgress<ProgressBarArguments> progress, CancellationToken token, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate)
         {
             List<Dictionary<string, string>> rowDictionaryList = [];
 
@@ -223,7 +223,7 @@ namespace Timelapse.Util
             {
                 return null;
             }
-            return [.. commaSeparatedList.Split(',').Select(s => s.Trim()).Select(s => Regex.Replace(s, @"\s+", " ")).Where(s => !string.IsNullOrEmpty(s))];
+            return commaSeparatedList.Split(',').Select(s => s.Trim()).Select(s => Regex.Replace(s, @"\s+", " ")).Where(s => !string.IsNullOrEmpty(s)).ToList();
         }
         #endregion
     }

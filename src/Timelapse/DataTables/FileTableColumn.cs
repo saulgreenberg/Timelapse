@@ -44,19 +44,39 @@ namespace Timelapse.DataTables
             // Check the arguments for null 
             ThrowIf.IsNullArgument(control, nameof(control));
 
-            return control.Type switch
+            switch (control.Type)
             {
-                Control.Note or Control.AlphaNumeric or Control.MultiLine or DatabaseColumn.File or DatabaseColumn.RelativePath => new FileTableNoteColumn(control),
-                Control.Counter or Control.IntegerAny or Control.IntegerPositive => new FileTableCounterColumn(control),
-                Control.DecimalAny or Control.DecimalPositive => new FileTableDecimalColumn(control),
-                DatabaseColumn.DateTime => new FileTableDateTimeColumn(control),
-                DatabaseColumn.DeleteFlag or Control.Flag => new FileTableFlagColumn(control),
-                Control.FixedChoice or Control.MultiChoice => new FileTableChoiceColumn(control),
-                Control.DateTime_ => new FileTableDateTimeColumn(control),
-                Control.Date_ => new FileTableDateColumn(control),
-                Control.Time_ => new FileTableTimeColumn(control),
-                _ => null,
-            };
+                case Control.Note:
+                case Control.AlphaNumeric:
+                case Control.MultiLine:
+                case DatabaseColumn.File:
+                case DatabaseColumn.RelativePath:
+                    return new FileTableNoteColumn(control);
+                case Control.Counter:
+                case Control.IntegerAny:
+                case Control.IntegerPositive:
+                    return new FileTableCounterColumn(control);
+                case Control.DecimalAny:
+                case Control.DecimalPositive:
+                    return new FileTableDecimalColumn(control);
+                case DatabaseColumn.DateTime:
+                    return new FileTableDateTimeColumn(control);
+                case DatabaseColumn.DeleteFlag:
+                case Control.Flag:
+                    return new FileTableFlagColumn(control);
+                case Control.FixedChoice:
+                case Control.MultiChoice:
+                    return new FileTableChoiceColumn(control);
+                case Control.DateTime_:
+                    return new FileTableDateTimeColumn(control);
+                case Control.Date_:
+                    return new FileTableDateColumn(control);
+                case Control.Time_:
+                    return new FileTableTimeColumn(control);
+                default:
+                    return null;
+                    //throw new NotSupportedException(String.Format("Unhandled control type {0}.", control.Type));
+            }
         }
         #endregion
     }

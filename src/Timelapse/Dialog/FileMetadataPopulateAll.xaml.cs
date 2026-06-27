@@ -163,7 +163,7 @@ namespace Timelapse.Dialog
 
                     var metadata = metadataToolSelected == MetadataToolEnum.MetadataExtractor
                         ? ImageMetadataDictionary.LoadMetadata(image.GetFilePath(FileDatabase.RootPathToImages))
-                        : Controls.FileMetadataGrid.ExifToolManager.FetchExifFrom(image.GetFilePath(FileDatabase.RootPathToImages), tags);
+                        : MetadataGrid.ExifToolManager.FetchExifFrom(image.GetFilePath(FileDatabase.RootPathToImages), tags);
 
                     if (IsReadyToRefresh())
                     {

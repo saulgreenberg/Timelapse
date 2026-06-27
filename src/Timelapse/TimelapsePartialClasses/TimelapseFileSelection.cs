@@ -50,15 +50,27 @@ namespace Timelapse
             }
 
             // Set a string to indicate the current selection
-            var status = selection switch
+            string status;
+            switch (selection)
             {
-                FileSelectionEnum.All => "All files",
-                FileSelectionEnum.Custom => "Custom selection",
-                FileSelectionEnum.MarkedForDeletion => "Files marked for deletion",
-                FileSelectionEnum.Folders => "Files in a specific folder",
-                FileSelectionEnum.Missing => "Missing files",
-                _ => throw new NotSupportedException($"Unhandled file selection {selection}."),
-            };
+                case FileSelectionEnum.All:
+                    status = "All files";
+                    break;
+                case FileSelectionEnum.Custom:
+                    status = "Custom selection";
+                    break;
+                case FileSelectionEnum.MarkedForDeletion:
+                    status = "Files marked for deletion";
+                    break;
+                case FileSelectionEnum.Folders:
+                    status = "Files in a specific folder";
+                    break;
+                case FileSelectionEnum.Missing:
+                    status = "Missing files";
+                    break;
+                default:
+                    throw new NotSupportedException($"Unhandled file selection {selection}.");
+            }
 
             // Allow random sampling after a new selection
             this.MenuItemSelectRandomSample.IsEnabled = true;

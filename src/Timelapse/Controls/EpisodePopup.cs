@@ -339,7 +339,7 @@ namespace Timelapse.Controls
             int height = 480;
             if (sender is Canvas { Tag: not null } canvas)
             {
-                if (canvas.Tag is not ImageRow imageRow)
+                if (!(canvas.Tag is ImageRow imageRow))
                 {
                     return;
                 }

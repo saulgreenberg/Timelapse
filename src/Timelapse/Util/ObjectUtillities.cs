@@ -7,7 +7,7 @@ namespace Timelapse.Util
         public static T DeepClone<T>(this T obj)
         {
             if (obj == null)
-                return default;
+                return default(T);
 
             var json = JsonSerializer.Serialize(obj);
             return JsonSerializer.Deserialize<T>(json);

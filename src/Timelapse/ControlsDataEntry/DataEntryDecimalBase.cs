@@ -93,8 +93,11 @@ namespace Timelapse.ControlsDataEntry
         private void ContentControl_PreviewKeyDown(object sender, KeyEventArgs keyEvent)
         {
             TextBox textBox = ContentControl.Template.FindName("PART_TextBox", ContentControl) as TextBox;
-            // If we are in viewonly state, this ensures that the number textbox can't be edited.
-            textBox?.IsReadOnly = GlobalReferences.TimelapseState.IsViewOnly;
+            if (textBox != null)
+            {
+                // If we are in viewonly state, this ensures that the number textbox can't be edited.
+                textBox.IsReadOnly = GlobalReferences.TimelapseState.IsViewOnly;
+            }
 
             // I'm not sure if this is actually needed, as Enter/Return seems to update correctly. But it doesn't hurt...
             // We need to handle Enter/Return key presses here, as otherwise wrong values are displayed in the text box when we hit enter
@@ -178,10 +181,7 @@ namespace Timelapse.ControlsDataEntry
 
         public void SetContentAndTooltip(string value, bool forceUpdate)
         {
-            if (forceUpdate)
-            {
-                SetContentAndTooltip(int.MaxValue.ToString());
-            }
+            SetContentAndTooltip(int.MaxValue.ToString());
             SetContentAndTooltip(value);
         }
 
@@ -209,21 +209,30 @@ namespace Timelapse.ControlsDataEntry
             {
                 // We have a valid value, so reset the control and watermark
                 ContentControl.AllowSpin = true;
-                WatermarkTextBox?.Watermark = string.Empty;
+                if (WatermarkTextBox != null)
+                {
+                    WatermarkTextBox.Watermark = string.Empty;
+                }
                 value = value.Trim();
                 
                 // The value is non-null, so its either a number or blank.
                 // If its a number, just set it to that number
                 if (Double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double doubleValue))
                 {
-                    WatermarkTextBox?.Text = doubleValue.ToString(CultureInfo.InvariantCulture);
+                    if (WatermarkTextBox != null)
+                    {
+                        WatermarkTextBox.Text = doubleValue.ToString(CultureInfo.InvariantCulture);
+                    }
                     ContentControl.Value = doubleValue;
                 }
                 else
                 {
                     // If its not a number, blank out the text
                     ContentControl.Text = string.Empty;
-                    WatermarkTextBox?.Text = value;
+                    if (WatermarkTextBox != null)
+                    {
+                        WatermarkTextBox.Text = value;
+                    }
                 }
             }
             ContentControl.ToolTip = value ?? "Edit to change the " + Label + " for all selected images";
@@ -295,7 +304,10 @@ namespace Timelapse.ControlsDataEntry
             {
                 // We should never get this, as checks for the input will have already been done, including empty input as handled above
                 Dialogs.InvalidDataFieldInput(GlobalReferences.MainWindow, AllowPositiveNumbersOnly ? Control.DecimalPositive : Control.DecimalAny, Content);
-                args?.Handled = true;
+                if (args != null)
+                {
+                    args.Handled = true;
+                }
                 return false;
             }
             if (null == ContentControl.Value)

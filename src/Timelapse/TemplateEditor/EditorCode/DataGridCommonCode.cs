@@ -220,7 +220,10 @@ namespace TimelapseTemplateEditor.EditorCode
                                 else if (controlType == DatabaseColumn.DateTime) cell.ToolTip = "DateTime field is filled in automatically by the system with the creation time of the image or video file";
                                 else if (controlType == DatabaseColumn.DeleteFlag) cell.ToolTip = "DeleteFlag field is a standaard Timelapse control used to mark image or video files for later deletion";
                                 Border border = VisualChildren.GetVisualChild<Border>(comboBox);
-                                border?.Background = EditorConstant.NotEditableCellColor;
+                                if (null != border)
+                                {
+                                    border.Background = EditorConstant.NotEditableCellColor;
+                                }
                             }
                         }
 
@@ -340,69 +343,88 @@ namespace TimelapseTemplateEditor.EditorCode
             {
 
                 string itemType = (string)item.Content;
-                item.Visibility = type switch
+                switch (type)
                 {
-                    Control.Note or Control.MultiLine => itemType is
-                                                  Control.MultiLine or
-                                                  Control.Note
-                                               ? Visibility.Visible : Visibility.Collapsed,
-                    Control.AlphaNumeric => itemType is
-                                                  Control.MultiLine or
-                                                  Control.Note or
-                                                  Control.AlphaNumeric
-                                                ? Visibility.Visible : Visibility.Collapsed,
-                    Control.IntegerPositive or Control.Counter => itemType is
-                                                Control.Counter or
-                                                Control.IntegerPositive or
-                                                Control.IntegerAny or
-                                                Control.DecimalPositive or
-                                                Control.DecimalAny or
-                                                Control.MultiLine or
-                                                Control.Note or
-                                                Control.AlphaNumeric
-                                                ? Visibility.Visible : Visibility.Collapsed,
-                    Control.IntegerAny => itemType is
-                                              Control.IntegerAny or
-                                              Control.DecimalAny or
-                                              Control.MultiLine or
-                                              Control.Note or
-                                              Control.AlphaNumeric
-                                                ? Visibility.Visible : Visibility.Collapsed,
-                    Control.DecimalPositive => itemType is
-                                              Control.DecimalPositive or
-                                              Control.DecimalAny or
-                                              Control.MultiLine or
-                                              Control.Note
-                                                ? Visibility.Visible : Visibility.Collapsed,
-                    Control.DecimalAny => itemType is
-                                              Control.DecimalAny or
-                                              Control.MultiLine or
-                                              Control.Note
-                                                ? Visibility.Visible : Visibility.Collapsed,
-                    Control.FixedChoice => itemType is
-                                              Control.FixedChoice or
-                                              Control.MultiChoice or
-                                              Control.MultiLine or
-                                              Control.Note
-                                                ? Visibility.Visible : Visibility.Collapsed,
-                    Control.MultiChoice => itemType is
-                                              Control.MultiChoice or
-                                              Control.MultiLine or
-                                              Control.Note
-                                                ? Visibility.Visible : Visibility.Collapsed,
-                    Control.DateTime_ or Control.Date_ or Control.Time_ => itemType is
-                                              Control.MultiLine or
-                                              Control.Note
-                                                ? Visibility.Visible : Visibility.Collapsed,// While it apparantly makes sense to convert between date types, we don't do that as
-                                                                                            // we would then have to go into the database and convert all the values as well.
-                    Control.Flag => itemType is
-                                                Control.Flag or
-                                                Control.MultiLine or
-                                                Control.Note or
-                                                Control.AlphaNumeric
-                                                ? Visibility.Visible : Visibility.Collapsed,
-                    _ => Visibility.Collapsed,
-                };
+                    case Control.Note:
+                    case Control.MultiLine:
+                        item.Visibility = itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                           ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+
+                    case Control.AlphaNumeric:
+                        item.Visibility = itemType == Control.MultiLine ||
+                                          itemType == Control.Note ||
+                                          itemType == Control.AlphaNumeric
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+
+                    case Control.IntegerPositive:
+                    case Control.Counter:
+                        item.Visibility = itemType == Control.Counter ||
+                                          itemType == Control.IntegerPositive ||
+                                          itemType == Control.IntegerAny ||
+                                          itemType == Control.DecimalPositive ||
+                                          itemType == Control.DecimalAny ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note ||
+                                          itemType == Control.AlphaNumeric
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+
+                    case Control.IntegerAny:
+                        item.Visibility = itemType == Control.IntegerAny ||
+                                          itemType == Control.DecimalAny ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note ||
+                                          itemType == Control.AlphaNumeric
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+                    case Control.DecimalPositive:
+                        item.Visibility = itemType == Control.DecimalPositive ||
+                                          itemType == Control.DecimalAny ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+                    case Control.DecimalAny:
+                        item.Visibility = itemType == Control.DecimalAny ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+
+                    case Control.FixedChoice:
+                        item.Visibility = itemType == Control.FixedChoice ||
+                                          itemType == Control.MultiChoice ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+                    case Control.MultiChoice:
+                        item.Visibility = itemType == Control.MultiChoice ||
+                                          itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+
+                    case Control.DateTime_:
+                    case Control.Date_:
+                    case Control.Time_:
+                        // While it apparantly makes sense to convert between date types, we don't do that as
+                        // we would then have to go into the database and convert all the values as well.
+                        item.Visibility = itemType == Control.MultiLine ||
+                                          itemType == Control.Note
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+                    case Control.Flag:
+                        item.Visibility = itemType is Control.Flag or Control.MultiLine or Control.Note or Control.AlphaNumeric
+                            ? Visibility.Visible : Visibility.Collapsed;
+                        break;
+                    default:
+                        item.Visibility = Visibility.Collapsed;
+                        break;
+                }
             }
         }
 

@@ -90,7 +90,7 @@ namespace Timelapse.Extensions
                 {
                     if (valueAsString != null)
                     {
-                        return Enum.Parse<TEnum>(valueAsString);
+                        return (TEnum)Enum.Parse(typeof(TEnum), valueAsString);
                     }
                 }
                 catch

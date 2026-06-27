@@ -28,7 +28,7 @@ namespace Timelapse
         #region Restore a particular window layout as identified in the menu's tag
         private void MenuItemWindowRestore_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not MenuItem mi)
+            if (!(sender is MenuItem mi))
             {
                 TracePrint.NullException(nameof(sender));
                 return;
@@ -39,15 +39,28 @@ namespace Timelapse
             if (null != DataHandler?.FileDatabase?.FileSelectionEnum)
             {
                 // Change the title of the data panel to indicate the selection
-                var status = (DataHandler?.FileDatabase?.FileSelectionEnum) switch
+                string status;
+                switch (DataHandler?.FileDatabase?.FileSelectionEnum)
                 {
-                    FileSelectionEnum.All => "All files",
-                    FileSelectionEnum.Custom => "Custom selection",
-                    FileSelectionEnum.MarkedForDeletion => "Files marked for deletion",
-                    FileSelectionEnum.Folders => "Files in a specific folder",
-                    FileSelectionEnum.Missing => "Missing files",
-                    _ => "",
-                };
+                    case FileSelectionEnum.All:
+                        status = "All files";
+                        break;
+                    case FileSelectionEnum.Custom:
+                        status = "Custom selection";
+                        break;
+                    case FileSelectionEnum.MarkedForDeletion:
+                        status = "Files marked for deletion";
+                        break;
+                    case FileSelectionEnum.Folders:
+                        status = "Files in a specific folder";
+                        break;
+                    case FileSelectionEnum.Missing:
+                        status = "Missing files";
+                        break;
+                    default:
+                        status = "";
+                        break;
+                }
 
                 // Show feedback of the status description in both the status bar and the data entry control panel title
                 StatusBar.SetView(status);
@@ -84,7 +97,7 @@ namespace Timelapse
             // Save the window layout to the registry, where the registry key name is found in the menu tag
             // Note that the data entry control panel must be visible in order to save its location.
             // So if its not visible, temporarily make it visible.
-            if (sender is not MenuItem mi)
+            if (!(sender is MenuItem mi))
             {
                 TracePrint.NullException(nameof(sender));
                 return;
