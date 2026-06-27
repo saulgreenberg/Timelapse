@@ -208,7 +208,7 @@ namespace Timelapse
             {
                 return;
             }
-            if (!(sender is TreeViewWithRelativePaths TreeViewWithRelativePaths))
+            if (sender is not TreeViewWithRelativePaths TreeViewWithRelativePaths)
             {
                 return;
             }

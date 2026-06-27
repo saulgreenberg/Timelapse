@@ -483,7 +483,7 @@ namespace Timelapse
                 {
                     Source = videoRow.LoadVideoBitmap(this.RootPathToImages, null, ImageDisplayIntentEnum.Persistent, ImageDimensionEnum.UseHeight, videoPositionInSeconds, out bool isCorruptOrMissing)
                 };
-                if (isCorruptOrMissing || !(frame.Source is BitmapImage bitmapImage))
+                if (isCorruptOrMissing || frame.Source is not BitmapImage bitmapImage)
                 {
                     Dialogs.MenuEditExtractVideoFrameProblem(this, "Timelapse was unable to get it from the video file.");
                     return;

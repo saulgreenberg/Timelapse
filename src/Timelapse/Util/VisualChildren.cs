@@ -42,7 +42,7 @@ namespace Timelapse.Util
             {
                 var child = VisualTreeHelper.GetChild(parent, i);
                 // If the child is not of the request child type child
-                if (!(child is T t))
+                if (child is not T t)
                 {
                     // recursively drill down the tree
                     foundChild = GetVisualChild<T>(child, childName);

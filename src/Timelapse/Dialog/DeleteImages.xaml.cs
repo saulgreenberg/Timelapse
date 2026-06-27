@@ -423,7 +423,7 @@ namespace Timelapse.Dialog
         // When the user enters a listbox item, show the image
         private void Lbi_MouseEnter(object sender, MouseEventArgs e)
         {
-            if (!(sender is ListBoxItem lbi))
+            if (sender is not ListBoxItem lbi)
             {
                 return;
             }
@@ -440,7 +440,7 @@ namespace Timelapse.Dialog
         // When the user leaves a listbox item, remove the image
         private void Lbi_MouseLeave(object sender, MouseEventArgs e)
         {
-            if (!(sender is ListBoxItem lbi))
+            if (sender is not ListBoxItem lbi)
             {
                 return;
             }

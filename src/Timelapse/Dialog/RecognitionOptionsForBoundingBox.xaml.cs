@@ -50,7 +50,7 @@ namespace Timelapse.Dialog
 
         private void BoundingBoxDisplayThreshold_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (!(sender is Slider slider))
+            if (sender is not Slider slider)
             {
                 return;
             }

@@ -115,7 +115,7 @@ namespace Timelapse.Dialog
         // When the user enters a listbox item, show the image
         private void Row_MouseEnter(object sender, MouseEventArgs e)
         {
-            if (!(sender is DataGridRow dgr))
+            if (sender is not DataGridRow dgr)
             {
                 return;
             }
@@ -139,7 +139,7 @@ namespace Timelapse.Dialog
         // When the user leaves the row, remove the image
         private void Row_MouseLeave(object sender, MouseEventArgs e)
         {
-            if (!(sender is DataGridRow dgr))
+            if (sender is not DataGridRow dgr)
             {
                 return;
             }

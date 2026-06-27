@@ -303,7 +303,7 @@ namespace Timelapse.Dialog
         // Toggles a more selective match 
         private void CheckBoxStringentMatch_CheckChanged(object sender, RoutedEventArgs e)
         {
-            if (!(sender is CheckBox cb))
+            if (sender is not CheckBox cb)
             {
                 return;
             }

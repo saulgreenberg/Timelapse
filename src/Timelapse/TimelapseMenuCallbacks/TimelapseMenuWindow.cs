@@ -28,7 +28,7 @@ namespace Timelapse
         #region Restore a particular window layout as identified in the menu's tag
         private void MenuItemWindowRestore_Click(object sender, RoutedEventArgs e)
         {
-            if (!(sender is MenuItem mi))
+            if (sender is not MenuItem mi)
             {
                 TracePrint.NullException(nameof(sender));
                 return;
@@ -97,7 +97,7 @@ namespace Timelapse
             // Save the window layout to the registry, where the registry key name is found in the menu tag
             // Note that the data entry control panel must be visible in order to save its location.
             // So if its not visible, temporarily make it visible.
-            if (!(sender is MenuItem mi))
+            if (sender is not MenuItem mi)
             {
                 TracePrint.NullException(nameof(sender));
                 return;
