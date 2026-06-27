@@ -918,8 +918,35 @@ namespace Timelapse.Images
                 {
                     if (zoomIn || VideoPlayer.IsUnScaled == false)
                     {
+                        ctrlScrollOutAtMinZoomStartTime = DateTime.MinValue;
                         VideoPlayer.ScaleVideo(videoMousePosition, zoomIn);
                         SetMagnifiersAccordingToCurrentState(false, true);
+                        lastZoomChangeTime = DateTime.Now;
+                    }
+                    else  // scrolling out at minimum video zoom — mirror image behaviour
+                    {
+                        if (NativeMethods.IsCtrlKeyDown())
+                        {
+                            if (DateTime.Now - lastZoomChangeTime >= TimeSpan.FromMilliseconds(250))
+                            {
+                                ctrlScrollOutAtMinZoomStartTime = DateTime.MinValue;
+                                TryZoomInOrOutVirtualized(false);
+                            }
+                            else if (ctrlScrollOutAtMinZoomStartTime == DateTime.MinValue)
+                            {
+                                ctrlScrollOutAtMinZoomStartTime = DateTime.Now;
+                            }
+                            else if (DateTime.Now - ctrlScrollOutAtMinZoomStartTime >= TimeSpan.FromMilliseconds(250))
+                            {
+                                ctrlScrollOutAtMinZoomStartTime = DateTime.MinValue;
+                                TryZoomInOrOutVirtualized(false);
+                            }
+                        }
+                        else if (DateTime.Now - lastZoomChangeTime >= TimeSpan.FromMilliseconds(500))
+                        {
+                            lastZoomChangeTime = DateTime.Now;
+                            GlobalReferences.MainWindow?.ToastNotifier.ShowInformationByCursor("Use Ctrl-scrollwheel to display the overview at different sizes.");
+                        }
                     }
                 }
                 return;
