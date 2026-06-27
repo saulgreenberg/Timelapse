@@ -79,7 +79,7 @@ namespace Timelapse.Controls
         private PathItem GetPathItemFromPath(string path)
         {
             this.DontInvoke = true;
-            PathItem pathItem = this.ItemProvider.Search(this.ItemList, path);
+            PathItem pathItem = ItemProvider.Search(this.ItemList, path);
             this.DontInvoke = false;
             return pathItem;
         }
@@ -178,7 +178,7 @@ namespace Timelapse.Controls
             this.DontInvoke = false;
         }
 
-        private void CollapseAllRecursive(TreeViewItem treeViewItem)
+        private static void CollapseAllRecursive(TreeViewItem treeViewItem)
         {
             treeViewItem.IsExpanded = false;
             treeViewItem.IsSelected = false;
@@ -204,7 +204,7 @@ namespace Timelapse.Controls
         }
 
         // Unselect all items in the tree
-        private void UnselectAllRecursive(TreeViewItem treeViewItem)
+        private static void UnselectAllRecursive(TreeViewItem treeViewItem)
         {
             if (treeViewItem == null) return;
 
@@ -251,7 +251,7 @@ namespace Timelapse.Controls
 
         // Recursively search the list for the node that represents the path
         // null if there is no match
-        internal PathItem Search(List<Item> items, string path)
+        internal static PathItem Search(List<Item> items, string path)
         {
             string head = Util.FilesFolders.GetRelativePathRootFolder(path);
             string tail = Util.FilesFolders.GetRelativePathSubFolder(path);
@@ -292,7 +292,7 @@ namespace Timelapse.Controls
         // e.g a, a/b, a/b/c, a/b/d, c, c/d, will be compile into two lists:
         //     a, a/b, a/b/c, a/b/d
         //     c, c/d,
-        private List<ListItem> SplitIntoListsByRoot(List<string> paths)
+        private static List<ListItem> SplitIntoListsByRoot(List<string> paths)
         {
             List<ListItem> splitLists = [];
             ListItem commonRootPathList = new();

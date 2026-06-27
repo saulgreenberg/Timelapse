@@ -278,7 +278,7 @@ namespace Timelapse.Util
 
         }
 
-        private Brush GetBackgroundColor(NotificationType type)
+        private static Brush GetBackgroundColor(NotificationType type)
         {
             switch (type)
             {
@@ -295,7 +295,7 @@ namespace Timelapse.Util
             }
         }
 
-        private Brush GetBorderColor(NotificationType type)
+        private static Brush GetBorderColor(NotificationType type)
         {
             switch (type)
             {
@@ -312,7 +312,7 @@ namespace Timelapse.Util
             }
         }
 
-        private Brush GetForegroundColor(NotificationType type)
+        private static Brush GetForegroundColor(NotificationType type)
         {
             switch (type)
             {

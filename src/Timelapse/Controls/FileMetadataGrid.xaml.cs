@@ -52,7 +52,7 @@ namespace Timelapse.Controls
                 : MetadataToolEnum.ExifTool;
 
         // A handle to the ExifTool Manager
-        public ExifToolManager ExifToolManager => GlobalReferences.TimelapseState?.ExifToolManager;
+        public static ExifToolManager ExifToolManager => GlobalReferences.TimelapseState?.ExifToolManager;
 
         // A dictionary derived from the Note fields, where the key is a data field's DataLabel and its value is the Label
         // And empty slot is included

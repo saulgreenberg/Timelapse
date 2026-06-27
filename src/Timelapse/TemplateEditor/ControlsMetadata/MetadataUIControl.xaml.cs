@@ -16,7 +16,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
     public partial class MetadataUIControl
     {
         #region Variables
-        private CommonDatabase TemplateDatabase => Globals.TemplateDatabase;
+        private static CommonDatabase TemplateDatabase => Globals.TemplateDatabase;
         #endregion
 
         #region Constructor and Loading

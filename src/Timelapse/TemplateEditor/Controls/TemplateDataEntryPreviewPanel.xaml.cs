@@ -35,7 +35,7 @@ namespace TimelapseTemplateEditor.Controls
         #endregion
 
         #region Public: Generate the controls to show in the preview panel
-        public void GeneratePreviewControls(WrapPanel parent, DataTableBackedList<ControlRow> templateTable)
+        public static void GeneratePreviewControls(WrapPanel parent, DataTableBackedList<ControlRow> templateTable)
         {
             // used for styling all content and label controls except ComboBoxes since the combo box style is commented out in DataEntryControls.xaml
             // and defined instead in MainWindow.xaml as an exception workaround
@@ -331,7 +331,7 @@ namespace TimelapseTemplateEditor.Controls
             Globals.MouseState.mouseDownStartPosition = e.GetPosition(ControlsPanel);
         }
 
-        private void MouseReleaseWrapper()
+        private static void MouseReleaseWrapper()
         {
 
             Globals.MouseState.isMouseDown = false;
@@ -340,7 +340,7 @@ namespace TimelapseTemplateEditor.Controls
             Globals.MouseState.realMouseDragSource?.ReleaseMouseCapture();
         }
 
-        private void MouseDraggingWrapper(UIElement uiElement)
+        private static void MouseDraggingWrapper(UIElement uiElement)
         {
             Globals.MouseState.isMouseDragging = true;
             Globals.MouseState.realMouseDragSource = uiElement;
@@ -353,7 +353,7 @@ namespace TimelapseTemplateEditor.Controls
         }
 
         // If the drag source isn't a stack panel, set it to the source's parent stack panel
-        private void MouseUpdateDragSourceToStackPanelParentIfNeeded()
+        private static void MouseUpdateDragSourceToStackPanelParentIfNeeded()
         {
             if (Globals.MouseState.realMouseDragSource is not StackPanel)
             {

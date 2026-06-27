@@ -241,7 +241,7 @@ namespace Timelapse.Images
 
         // Given a bounding box, draw it atop the canvas.
         // The width, height, margin and transformGroup are used to adjust how and where the bounding box is drawn in the canvas
-        private void DoDrawBoundingBox(Canvas canvas, BoundingBox bbox, double width, double height, int margin = 0, TransformGroup transformGroup = null)
+        private static void DoDrawBoundingBox(Canvas canvas, BoundingBox bbox, double width, double height, int margin = 0, TransformGroup transformGroup = null)
         {
             // Create a bounding box 
             Rectangle rect = new();

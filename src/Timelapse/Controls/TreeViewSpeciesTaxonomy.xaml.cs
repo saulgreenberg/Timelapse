@@ -116,7 +116,7 @@ namespace Timelapse.Controls
         }
 
         // Public entry point: always expands from the root.
-        private void SetExpansionToDepth(ItemCollection items, int maxDepth)
+        private static void SetExpansionToDepth(ItemCollection items, int maxDepth)
         {
             SetExpansionToDepthRecursive(items, depth: 0, maxDepth);
         }

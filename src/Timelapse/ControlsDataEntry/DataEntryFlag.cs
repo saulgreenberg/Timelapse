@@ -54,7 +54,7 @@ namespace Timelapse.ControlsDataEntry
         // Delegate to core for other basic key handling, e.g. to ignore non-ctl arrow keys which would otherwise tab
         private void ContentControl_PreviewKeyDown(object sender, KeyEventArgs keyEvent)
         {
-            core.HandleNavigationKeys(keyEvent, true);
+            FlagControlCore.HandleNavigationKeys(keyEvent, true);
         }
         #endregion
 

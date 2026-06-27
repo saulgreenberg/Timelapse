@@ -45,8 +45,8 @@ namespace TimelapseTemplateEditor
             templateDatabase.BindToEditorDataGrid(TemplateUI.TemplateDataGridControl.DataGridInstance, Globals.TemplateDataGridControl.TemplateDataGrid_RowChanged);
 
             // Update the user interface specified by the contents of the table
-            Globals.TemplateDataEntryPreviewPanelControl.GeneratePreviewControls(TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, templateDatabase.Controls);
-            Globals.TemplateSpreadsheet.GenerateSpreadsheet();
+            Controls.TemplateDataEntryPreviewPanel.GeneratePreviewControls(TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, templateDatabase.Controls);
+            Controls.TemplateSpreadsheetPreviewControl.GenerateSpreadsheet();
 
             // Enable/disable the various UI elements as needed, including the Add row buttons
             State.RecentlyOpenedTemplateFiles.SetMostRecent(templateDatabaseFilePath);
@@ -136,7 +136,7 @@ namespace TimelapseTemplateEditor
             dataGrid.DataContext = Globals.TemplateDatabase.Controls;
 
             // Update the previews to reflect the added row
-            Globals.TemplateSpreadsheet.GenerateSpreadsheet();
+            Controls.TemplateSpreadsheetPreviewControl.GenerateSpreadsheet();
             if (!TemplateDoUpdateControlOrder())
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false,
@@ -178,8 +178,8 @@ namespace TimelapseTemplateEditor
                 templateDatabase.RemoveControlFromDataTableAndDatabase(new(selectedRowView.Row));
 
                 // Update the view so it reflects the current values in the database
-                Globals.TemplateDataEntryPreviewPanelControl.GeneratePreviewControls(Globals.TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, Globals.TemplateDatabase.Controls);
-                Globals.TemplateSpreadsheet.GenerateSpreadsheet();
+                Controls.TemplateDataEntryPreviewPanel.GeneratePreviewControls(Globals.TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, Globals.TemplateDatabase.Controls);
+                Controls.TemplateSpreadsheetPreviewControl.GenerateSpreadsheet();
                 dataGridBeingUpdatedByCode = false;
             }
         }
@@ -200,7 +200,7 @@ namespace TimelapseTemplateEditor
             dataGridBeingUpdatedByCode = true;
             bool success = templateDatabase.UpdateControlDisplayOrder(Control.ControlOrder, newControlOrderByDataLabel);
             dataGridBeingUpdatedByCode = false;
-            Globals.TemplateDataEntryPreviewPanelControl.GeneratePreviewControls(TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, templateDatabase.Controls); // Ensures that the controls panel updates itself
+            Controls.TemplateDataEntryPreviewPanel.GeneratePreviewControls(TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, templateDatabase.Controls); // Ensures that the controls panel updates itself
             return success;
         }
         #endregion
@@ -211,8 +211,8 @@ namespace TimelapseTemplateEditor
         {
             dataGridBeingUpdatedByCode = true;
             templateDatabase.SyncControlToDatabase(control);
-            Globals.TemplateDataEntryPreviewPanelControl.GeneratePreviewControls(TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, templateDatabase.Controls);
-            Globals.TemplateSpreadsheet.GenerateSpreadsheet();
+            Controls.TemplateDataEntryPreviewPanel.GeneratePreviewControls(TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, templateDatabase.Controls);
+            Controls.TemplateSpreadsheetPreviewControl.GenerateSpreadsheet();
             dataGridBeingUpdatedByCode = false;
         }
 

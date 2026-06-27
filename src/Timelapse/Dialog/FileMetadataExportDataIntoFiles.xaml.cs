@@ -396,7 +396,7 @@ namespace Timelapse.Dialog
             return dataLabelTypes;
         }
 
-        private bool IsNumericType(string controlType)
+        private static bool IsNumericType(string controlType)
         {
             // These types should have numeric values (not quoted in JSON)
             return controlType == Constant.Control.IntegerAny ||
@@ -515,7 +515,7 @@ namespace Timelapse.Dialog
             return sb.ToString();
         }
 
-        private string SanitizeDataLabelForPerl(string dataLabel)
+        private static string SanitizeDataLabelForPerl(string dataLabel)
         {
             // Replace spaces with underscores
             string sanitized = dataLabel.Replace(" ", "_");
@@ -612,7 +612,7 @@ namespace Timelapse.Dialog
 
                     var rootPath = timelapseWindow.DataHandler.FileDatabase.RootPathToDatabase;
 
-                    batchWriter = GlobalReferences.TimelapseState.ExifToolManager.CreateBatchWriter(configFilePath);
+                    batchWriter = ExifToolManager.CreateBatchWriter(configFilePath);
 
                     for (int i = 0; i < totalCount; i++)
                     {
@@ -800,10 +800,10 @@ namespace Timelapse.Dialog
                 }
 
                 // Start ExifTool if not already started
-                MetadataGrid.ExifToolManager.StartIfNotAlreadyStarted();
+                Controls.FileMetadataGrid.ExifToolManager.StartIfNotAlreadyStarted();
 
                 // Fetch metadata using ExifTool directly (don't set viewModel.FilePath to avoid triggering auto-refresh)
-                Dictionary<string, DataStructures.ImageMetadata> allMetadata = MetadataGrid.ExifToolManager.FetchExifFrom(filePath);
+                Dictionary<string, DataStructures.ImageMetadata> allMetadata = Controls.FileMetadataGrid.ExifToolManager.FetchExifFrom(filePath);
 
                 // Filter to only include XMP-TimelapseData entries
                 var filteredMetadata = new System.Collections.ObjectModel.ObservableCollection<Controls.FileMetadataGrid.DataContents>();

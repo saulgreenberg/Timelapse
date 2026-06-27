@@ -23,7 +23,7 @@ namespace Timelapse
         #region Private Methods - CheckAndUpdateRootFolderIfNeeded
         // Get the root folder name from the database, and check to see if its the same as the actual root folder.
         // If not, update it. 
-        private void CheckAndUpdateRootFolderIfNeeded(FileDatabase fileDatabase)
+        private static void CheckAndUpdateRootFolderIfNeeded(FileDatabase fileDatabase)
         {
             // Check the arguments for null 
             if (fileDatabase == null)

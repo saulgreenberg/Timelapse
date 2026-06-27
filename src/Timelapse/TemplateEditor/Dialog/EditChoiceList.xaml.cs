@@ -158,7 +158,7 @@ namespace TimelapseTemplateEditor.Dialog
         }
 
         // Flash the textbox
-        public void FlashContentControl(TextBox tb)
+        public static void FlashContentControl(TextBox tb)
         {
             if (tb != null)
             {

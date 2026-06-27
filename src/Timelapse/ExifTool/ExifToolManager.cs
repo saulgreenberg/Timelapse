@@ -139,7 +139,7 @@ namespace Timelapse.ExifTool
         /// <summary>
         /// Create a batch writer for efficiently writing metadata to many files with custom config
         /// </summary>
-        public ExifToolConfigBatchWriter CreateBatchWriter(string configFilePath)
+        public static ExifToolConfigBatchWriter CreateBatchWriter(string configFilePath)
         {
             var writer = new ExifToolConfigBatchWriter(configFilePath);
             writer.Start();

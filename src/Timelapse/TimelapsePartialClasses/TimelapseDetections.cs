@@ -14,7 +14,7 @@ namespace Timelapse
     public partial class TimelapseWindow
     {
 
-        public BoundingBox GetHighestConfidenceBoundingBoxForCurrentFile(long fileID)
+        public static BoundingBox GetHighestConfidenceBoundingBoxForCurrentFile(long fileID)
         {
             BoundingBoxes bboxes = GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(fileID);
             BoundingBox bestBoundingBox = null;

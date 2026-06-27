@@ -124,8 +124,8 @@ namespace TimelapseTemplateEditor
             Globals.TemplateDatabase.LoadControlsFromTemplateDBSortedByControlOrder();
 
             // Update the data entry previews so they reflects the current values in the database
-            Globals.TemplateDataEntryPreviewPanelControl.GeneratePreviewControls(Globals.TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, Globals.TemplateDatabase.Controls);
-            Globals.TemplateSpreadsheet.GenerateSpreadsheet();
+            TemplateDataEntryPreviewPanel.GeneratePreviewControls(Globals.TemplateUI.TemplateDataEntryPreviewPanel.ControlsPanel, Globals.TemplateDatabase.Controls);
+            TemplateSpreadsheetPreviewControl.GenerateSpreadsheet();
 
             // Ensure the metadata preview panels are all scrolled to the top (which matches the datagrid scrolling position)
             if (null != Globals.Root?.MetadataUI?.MetadataTabs?.Items)

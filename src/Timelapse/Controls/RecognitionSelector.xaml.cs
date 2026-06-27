@@ -1323,7 +1323,7 @@ namespace Timelapse.Controls
 
         }
 
-        private void DataGridEnableState(DataGrid dataGrid, bool enableState, bool mouseState, bool updateCursorToMatchState)
+        private static void DataGridEnableState(DataGrid dataGrid, bool enableState, bool mouseState, bool updateCursorToMatchState)
         {
             if (updateCursorToMatchState)
             {

@@ -47,7 +47,7 @@ namespace Timelapse.ControlsMetadata
         // Delegate to core for navigation key handling
         private void ContentControl_PreviewKeyDown(object sender, KeyEventArgs keyEvent)
         {
-            core.HandleNavigationKeys(keyEvent, false);
+            FlagControlCore.HandleNavigationKeys(keyEvent, false);
         }
         #endregion
 

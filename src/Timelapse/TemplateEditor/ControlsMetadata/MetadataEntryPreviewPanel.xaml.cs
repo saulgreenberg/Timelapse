@@ -407,7 +407,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             Globals.MouseState.mouseDownStartPosition = e.GetPosition(ControlsPanel);
         }
 
-        private void MouseReleaseWrapper()
+        private static void MouseReleaseWrapper()
         {
 
             Globals.MouseState.isMouseDown = false;
@@ -416,7 +416,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             Globals.MouseState.realMouseDragSource?.ReleaseMouseCapture();
         }
 
-        private void MouseDraggingWrapper(UIElement uiElement)
+        private static void MouseDraggingWrapper(UIElement uiElement)
         {
             Globals.MouseState.isMouseDragging = true;
             Globals.MouseState.realMouseDragSource = uiElement;
@@ -429,7 +429,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
         }
 
         // If the drag source isn't a grid, set it to the source's parent stack panel
-        private void MouseUpdateDragSourceToGridParentIfNeeded()
+        private static void MouseUpdateDragSourceToGridParentIfNeeded()
         {
             if (Globals.MouseState.realMouseDragSource is not Grid)
             {

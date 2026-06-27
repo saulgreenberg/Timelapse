@@ -223,12 +223,10 @@ namespace Timelapse.Dialog
                 // Write the FlowDocument to XPS file
                 using (Package package = Package.Open(tempFileName, FileMode.Create, FileAccess.ReadWrite))
                 {
-                    using (XpsDocument xpsDocument = new XpsDocument(package, CompressionOption.NotCompressed))
-                    {
-                        XpsDocumentWriter writer = XpsDocument.CreateXpsDocumentWriter(xpsDocument);
-                        IDocumentPaginatorSource paginator = document;
-                        writer.Write(paginator.DocumentPaginator);
-                    }
+                    using XpsDocument xpsDocument = new XpsDocument(package, CompressionOption.NotCompressed);
+                    XpsDocumentWriter writer = XpsDocument.CreateXpsDocumentWriter(xpsDocument);
+                    IDocumentPaginatorSource paginator = document;
+                    writer.Write(paginator.DocumentPaginator);
                 }
 
                 // Read back the FixedDocumentSequence from the XPS file

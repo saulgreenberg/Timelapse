@@ -167,7 +167,7 @@ namespace Timelapse.Recognition
         /// Keeps the entry with the lowest numerical key, removes others from the dictionary,
         /// and returns a mapping from deleted keys to the kept key.
         /// </summary>
-        private Dictionary<string, string> GetCategoryRemap(Dictionary<string, string> categories)
+        private static Dictionary<string, string> GetCategoryRemap(Dictionary<string, string> categories)
         {
             var remap = new Dictionary<string, string>();
             if (categories == null || categories.Count == 0) return remap;

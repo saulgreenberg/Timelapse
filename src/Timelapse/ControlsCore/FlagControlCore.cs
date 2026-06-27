@@ -35,7 +35,7 @@ namespace Timelapse.ControlsCore
         // are not quite the same as other controls. In particular, 
         // - arrow keys without the control key down are ignores (otherwise they would act as tabs)
         // Other key presses are then passed on to DataEntryControlBase
-        public void HandleNavigationKeys(KeyEventArgs keyEvent, bool isDataEntry)
+        public static void HandleNavigationKeys(KeyEventArgs keyEvent, bool isDataEntry)
         {
             if (keyEvent.Key is Key.Right or Key.Left or Key.Up or Key.Down)
             {

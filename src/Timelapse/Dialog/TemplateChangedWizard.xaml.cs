@@ -401,7 +401,7 @@ namespace Timelapse.Dialog
             => TextBlockAddHeader(tb, text, 12);
 
         // Insert a bolded textblock (a header) with the indicated font
-        private void TextBlockAddHeader(TextBlock tb, string text, int fontSize)
+        private static void TextBlockAddHeader(TextBlock tb, string text, int fontSize)
         {
             tb.Inlines.Add(new Run
             {
@@ -413,7 +413,7 @@ namespace Timelapse.Dialog
 
         // Insert a Linebreak and Unbolded string  (usually a set of sequential lines)
         private void TextBlockAddPlainLine(TextBlock tb, string text) => TextBlockAddPlainLine(tb, text, true);
-        private void TextBlockAddPlainLine(TextBlock tb, string text, bool insertNewLine)
+        private static void TextBlockAddPlainLine(TextBlock tb, string text, bool insertNewLine)
         {
             tb.Inlines.Add(new Run
             {
@@ -607,7 +607,7 @@ namespace Timelapse.Dialog
 
 
         // General form for above: a textblock in a given row, column, and columnspan
-        private void CreateRow(Grid grid, TextBlock tb, int row, int column = 0, int columnspan = 6)
+        private static void CreateRow(Grid grid, TextBlock tb, int row, int column = 0, int columnspan = 6)
         {
             // Create a new row definition
             RowDefinition rd = new()
