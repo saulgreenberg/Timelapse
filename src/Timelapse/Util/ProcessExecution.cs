@@ -79,7 +79,7 @@ namespace Timelapse.Util
         public static bool TryProcessRunCommand(string cmd)
         {
             //cmd = @"/c echo foo";
-            Process process = new()
+            using Process process = new()
             {
                 StartInfo = new()
                 {
