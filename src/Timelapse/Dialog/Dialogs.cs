@@ -3304,17 +3304,17 @@ namespace Timelapse.Dialog
             if (detectionDuplicates)
             {
                 details += "[li]Detecton category duplicates:";
-                foreach (var item in detectionCategoryDuplicates)
+                foreach (var (Value, Count) in detectionCategoryDuplicates)
                 {
-                    details += $"[li 2]{item.Value} appears {item.Count} times";
+                    details += $"[li 2]{Value} appears {Count} times";
                 }
             }
             if (classificationDuplicates)
             {
                 details += "[li]Classification category duplicates:";
-                foreach (var item in classificationCategoryDuplicates)
+                foreach (var (Value, Count) in classificationCategoryDuplicates)
                 {
-                    details += $"[li 2]{item.Value} appears {item.Count} times";
+                    details += $"[li 2]{Value} appears {Count} times";
                 }
             }
 

@@ -4,5 +4,5 @@
 // a specific target and scoped to a namespace, type, member, etc.
 
 using System.Diagnostics.CodeAnalysis;
-[assembly: SuppressMessage("Style", "IDE0042:Deconstruct variable declaration", Justification = "<Pending>", Scope = "member", Target = "~M:Timelapse.Dialog.Dialogs.MenuFileRecognitionsContainDuplicateCategoriesDialog(System.Windows.Window,System.Collections.Generic.List{System.ValueTuple{System.String,System.Int32}},System.Collections.Generic.List{System.ValueTuple{System.String,System.Int32}})~System.Nullable{System.Boolean}")]
-[assembly: SuppressMessage("Style", "IDE0057:Use range operator", Justification = "<Pending>", Scope = "member", Target = "~M:Timelapse.Database.SQLiteWrapper.SchemaAlterTableWithNewColumnDefinitions(System.String,System.Collections.Generic.List{Timelapse.Database.SchemaColumnDefinition})~Timelapse.Database.SqlOperationResult")]
+[assembly: SuppressMessage("Style", "IDE0290:Use primary constructor", Justification = "Not sure of consequences of using this.")]
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0057:Use range operator", Justification = "Range operator is less readable.")]

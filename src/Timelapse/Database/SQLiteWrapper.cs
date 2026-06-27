@@ -892,6 +892,7 @@ public class SQLiteWrapper
         /// on the still-open connection. SQLite auto-detaches any attached databases when the
         /// connection closes, so no explicit DETACH is needed on failure.
         /// </summary>
+        #pragma warning disable CA1859 // IReadOnlyList is appropriate here; SQLite I/O dwarfs any dispatch overhead
         private SqlOperationResult ExecuteNonQueryWithRollbackCore(
             IReadOnlyList<string> statements,
             IProgress<ProgressBarArguments> progress = null,
@@ -900,6 +901,7 @@ public class SQLiteWrapper
             int busyTimeoutMs = 0,
             IReadOnlyList<string> preTransactionStatements = null,
             IReadOnlyList<string> postTransactionStatements = null)
+        #pragma warning restore CA1859
         {
             if (statements == null || statements.Count == 0)
             {
@@ -1341,7 +1343,6 @@ public class SQLiteWrapper
 
         public bool SchemaIsColumnInTable(string sourceTable, string currentColumnName)
         {
-#pragma warning disable CS0168 // Variable is declared but never used
             for (int attempt = 0; ; attempt++)
             {
                 try
@@ -1368,7 +1369,6 @@ public class SQLiteWrapper
                     return false;
                 }
             }
-#pragma warning restore CS0168 // Variable is declared but never used
         }
 
         // This method will create a column in a table of type TEXT, where it is added to its end
