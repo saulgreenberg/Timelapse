@@ -601,7 +601,7 @@ public class SQLiteWrapper
             }
 
             const int maxClausesPerQuery = 500;
-            List<long> sorted = listOfIDs.OrderBy(id => id).ToList();
+            List<long> sorted = [.. listOfIDs.OrderBy(id => id)];
             List<string> queries = [];
             int startIndex = 0;
             while (startIndex < sorted.Count)
@@ -1899,7 +1899,7 @@ public class SQLiteWrapper
         //       if all are contiguos, only the Between clause is used
         public static string BuildWhereListofIds(string IDColumnName, List<long> listOfIDs)
         {
-            List<long> sorted = listOfIDs.OrderBy(id => id).ToList();
+            List<long> sorted = [.. listOfIDs.OrderBy(id => id)];
             if (sorted.Count == 0)
             {
                 return string.Empty;

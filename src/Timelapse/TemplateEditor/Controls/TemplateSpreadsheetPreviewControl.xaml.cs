@@ -26,7 +26,7 @@ namespace TimelapseTemplateEditor.Controls
         // Generate the spreadsheet, adjusting the DateTime visibility as needed
         public void GenerateSpreadsheet()
         {
-            List<ControlRow> controlsInSpreadsheetOrder = Globals.TemplateDatabase.Controls.OrderBy(control => control.SpreadsheetOrder).ToList();
+            List<ControlRow> controlsInSpreadsheetOrder = [.. Globals.TemplateDatabase.Controls.OrderBy(control => control.SpreadsheetOrder)];
             Globals.TemplateUI.TemplateSpreadsheetPreviewControl.SpreadsheetPreview.Columns.Clear();
 
             // Now generate the spreadsheet columns as needed. 

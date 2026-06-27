@@ -377,8 +377,8 @@ namespace Timelapse.Standards
         private void VernacularButton_Closed(object sender, RoutedEventArgs e)
         {
             SetVernacularItemsListFromStringList(
-                TBVernacularItemsEditor.Text.Split([Environment.NewLine],
-                StringSplitOptions.None).ToList());
+                [.. TBVernacularItemsEditor.Text.Split([Environment.NewLine],
+                StringSplitOptions.None)]);
             DataGrid_Refresh();
         }
         #endregion

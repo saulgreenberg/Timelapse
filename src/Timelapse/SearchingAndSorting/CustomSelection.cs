@@ -191,7 +191,7 @@ namespace Timelapse.SearchingAndSorting
             // ReSharper disable once PossibleMultipleEnumeration
             IEnumerable<SearchTerm> nonStandardSearchTerms = SearchTerms.Except(unorderedStandardSearchTerms).ToList();
             // Finally, concat the two lists together to collect all the correctly ordered search terms into a single list
-            SearchTerms = standardSearchTerms.Concat(nonStandardSearchTerms).ToList();
+            SearchTerms = [.. standardSearchTerms, .. nonStandardSearchTerms];
         }
         #endregion
 

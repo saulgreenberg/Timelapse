@@ -609,7 +609,7 @@ namespace Timelapse
                 // get list of all images marked for deletion in the current seletion
                 using (FileTable filetable = DataHandler.FileDatabase.SelectFilesMarkedForDeletion())
                 {
-                    filesToDelete = filetable.ToList();
+                    filesToDelete = [.. filetable];
                 }
 
                 for (int index = filesToDelete.Count - 1; index >= 0; index--)

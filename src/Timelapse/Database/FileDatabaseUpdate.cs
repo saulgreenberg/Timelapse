@@ -187,10 +187,7 @@ namespace Timelapse.Database
         // Given a range of selected files, update the field identified by dataLabel with the given value
         public async Task UpdateFiles(string value, string dataLabel, int fromIndex, int toIndex)
         {
-            if (fromIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(fromIndex));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegative(fromIndex);
             if (toIndex < fromIndex || toIndex > CountAllCurrentlySelectedFiles - 1)
             {
                 throw new ArgumentOutOfRangeException(nameof(toIndex));

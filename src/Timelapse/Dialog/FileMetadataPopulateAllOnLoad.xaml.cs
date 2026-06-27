@@ -113,7 +113,7 @@ namespace Timelapse.Dialog
         }
         private void Done_Click(object sender, RoutedEventArgs e)
         {
-            ImageMetadataOnLoad.SelectedImageMetadataDataLabels = MetadataGrid.SelectedMetadata.ToList();
+            ImageMetadataOnLoad.SelectedImageMetadataDataLabels = [.. MetadataGrid.SelectedMetadata];
             ImageMetadataOnLoad.MetadataToolSelected = MetadataGrid.MetadataToolSelected;
             DialogResult = true;
         }

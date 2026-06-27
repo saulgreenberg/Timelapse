@@ -79,7 +79,7 @@ namespace Timelapse.Images
             int toFrame = displayedVideoFrame + frameWindow;
 
             // Sort the boxes. Note that its likely that the Boxes are already sorted, so this should be fast.
-            List<BoundingBox> sortedBoxes = Boxes.OrderBy(s => s.FrameNumber).ToList();
+            List<BoundingBox> sortedBoxes = [.. Boxes.OrderBy(s => s.FrameNumber)];
 
             // Find the index of the frame containing bounding boxes that is closest to the displayedVideoFrame
             // As we do something different if its a frame before vs. after the displayed video Frame, we 

@@ -30,7 +30,7 @@ namespace TimelapseTemplateEditor.ControlsMetadata
                 return;
             }
             if (false == Globals.TemplateDatabase.MetadataControlsByLevel.ContainsKey(ParentTab.Level)) return;
-            List<MetadataControlRow> controlsInSpreadsheetOrder = Globals.TemplateDatabase.MetadataControlsByLevel[ParentTab.Level].OrderBy(control => control.SpreadsheetOrder).ToList();
+            List<MetadataControlRow> controlsInSpreadsheetOrder = [.. Globals.TemplateDatabase.MetadataControlsByLevel[ParentTab.Level].OrderBy(control => control.SpreadsheetOrder)];
             SpreadsheetPreview.Columns.Clear();
 
             // Now generate the spreadsheet columns as needed. 

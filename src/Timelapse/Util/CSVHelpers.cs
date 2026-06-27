@@ -92,7 +92,7 @@ namespace Timelapse.Util
                     if (fields != null)
                     {
                         // Convert to list just like the original code: parts.ToList()
-                        List<string> rowFields = fields.ToList();
+                        List<string> rowFields = [.. fields];
                         parsedRows.Add(rowFields);
                     }
                 }
@@ -223,7 +223,7 @@ namespace Timelapse.Util
             {
                 return null;
             }
-            return commaSeparatedList.Split(',').Select(s => s.Trim()).Select(s => Regex.Replace(s, @"\s+", " ")).Where(s => !string.IsNullOrEmpty(s)).ToList();
+            return [.. commaSeparatedList.Split(',').Select(s => s.Trim()).Select(s => Regex.Replace(s, @"\s+", " ")).Where(s => !string.IsNullOrEmpty(s))];
         }
         #endregion
     }

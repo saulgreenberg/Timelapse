@@ -279,7 +279,7 @@ namespace Timelapse.Dialog
             return await Task.Run(() =>
             {
                 // The selected files to check
-                List<ImageRow> selectedFiles = fileDatabase.FileTable.ToList();
+                List<ImageRow> selectedFiles = [.. fileDatabase.FileTable];
                 List<ColumnTuplesWithWhere> filesToUpdate = [];
                 int fileIndex = 0;
                 // ReSharper disable once ConditionIsAlwaysTrueOrFalse

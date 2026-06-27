@@ -388,7 +388,7 @@ namespace Timelapse.Controls
                 RelayoutForAnchor(fileIndex);
         }
 
-        public List<int> GetSelected() => selectedIndices.ToList();
+        public List<int> GetSelected() => [.. selectedIndices];
 
         public int SelectedCount() => selectedIndices.Count;
 
@@ -696,9 +696,7 @@ namespace Timelapse.Controls
             CancelUpdate();
 
             // Snapshot visible cells for the worker — safe to iterate off-thread
-            List<ThumbnailInCell> cellsToLoad = pool
-                .Where(c => c.Visibility == Visibility.Visible && c.ImageRow != null)
-                .ToList();
+            List<ThumbnailInCell> cellsToLoad = [.. pool.Where(c => c.Visibility == Visibility.Visible && c.ImageRow != null)];
 
             if (cellsToLoad.Count == 0) return;
 

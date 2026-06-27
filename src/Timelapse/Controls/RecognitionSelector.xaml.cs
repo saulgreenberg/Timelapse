@@ -931,9 +931,7 @@ namespace Timelapse.Controls
                 // The selection was done by the user, so clear the taxon node text so the Taxon tree does not show a preselected item 
                 this.RecognitionSelections.SelectedTaxonNode = string.Empty;
             }
-            List<string> classificationCategoryLabels = DataGridClassifications.SelectedItems.OfType<CategoryCount>()
-                .Select(cc => cc.Category)
-                .ToList();
+            List<string> classificationCategoryLabels = [.. DataGridClassifications.SelectedItems.OfType<CategoryCount>().Select(cc => cc.Category)];
 
             if (classificationCategoryLabels.Count > 0)
             {
@@ -1120,9 +1118,7 @@ namespace Timelapse.Controls
             }
 
             // Get the current Classification selection, if any
-            List<string> classificationCategoryLabels = DataGridClassifications.SelectedItems.OfType<CategoryCount>()
-                .Select(cc => cc.Category)
-                .ToList();
+            List<string> classificationCategoryLabels = [.. DataGridClassifications.SelectedItems.OfType<CategoryCount>().Select(cc => cc.Category)];
 
             // Compose the argument and send the event
             RecognitionSelectionChangedEventArgs e = new(detectionCategoryLabel, classificationCategoryLabels, refreshRecognitionCountsRequired,

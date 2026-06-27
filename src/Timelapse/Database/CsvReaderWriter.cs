@@ -46,7 +46,7 @@ namespace Timelapse.Database
                     using StreamWriter fileWriter = new(filePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8);
                     // Get all data labels except those excluded from export (via a false ExportToCSV field)
                     List<string> dataLabelsToExport =
-                        database.GetDataLabelsExceptIDInSpreadsheetOrderFromControls().Except(database.GetDataLabelsToExcludeFromExport()).ToList();
+                        [.. database.GetDataLabelsExceptIDInSpreadsheetOrderFromControls().Except(database.GetDataLabelsToExcludeFromExport())];
 
                     // Write the header as defined by the data labels in the template file (skipping the ones we don't use)
                     // If the data label is an empty string, we use the label instead.
@@ -504,7 +504,7 @@ namespace Timelapse.Database
                     return (CSVReadingResult.Cancelled, importErrors);
                 }
                 // Now that we have a parsed file, get its headers, which we will use as DataLabels
-                List<string> dataLabelsFromCSV = parsedFile[0].Where(s => !string.IsNullOrWhiteSpace(s)).Distinct().ToList();
+                List<string> dataLabelsFromCSV = [.. parsedFile[0].Where(s => !string.IsNullOrWhiteSpace(s)).Distinct()];
 
                 // Part 2b. Abort if required CSV column are missing or there is a problem matching the CSV file headers against the DB headers.
                 if (false == VerifyCSVHeaders(fileDatabase, dataLabelsFromCSV, importErrors))
@@ -543,7 +543,7 @@ namespace Timelapse.Database
                 List<string> databaseDuplicates = fileDatabase.GetDistinctRelativePathFileCombinationsDuplicates();
 
                 // Sort the rowDictionaryList so that duplicates in the CSV file (with the same relative path / File name) are in order, one after the other.
-                List<Dictionary<string, string>> sortedRowDictionaryList = rowDictionaryList.OrderBy(dict => dict["RelativePath"]).ThenBy(dict => dict["File"]).ToList();
+                List<Dictionary<string, string>> sortedRowDictionaryList = [.. rowDictionaryList.OrderBy(dict => dict["RelativePath"]).ThenBy(dict => dict["File"])];
                 int sortedRowDictionaryListCount = sortedRowDictionaryList.Count;
 
                 // Create the data structure for the query
@@ -847,7 +847,7 @@ namespace Timelapse.Database
             dataLabelsFromDB.Add(ControlDeprecated.ImageQuality);
 
             // Get the data labels from the csv file
-            List<string> dataLabelsInHeaderButNotFileDatabase = dataLabelsFromCSV.Except(dataLabelsFromDB).ToList();
+            List<string> dataLabelsInHeaderButNotFileDatabase = [.. dataLabelsFromCSV.Except(dataLabelsFromDB)];
 
             // Abort if the File and Relative Path columns are missing from the CSV file 
             // While the CSV data labels can be a subset of the DB data labels,
@@ -1020,7 +1020,7 @@ namespace Timelapse.Database
                                 if (false == string.IsNullOrWhiteSpace(content))
                                 {
                                     Choices choices = Choices.ChoicesFromJson(controlRow.List);
-                                    List<string> contentList = content.Split(',').ToList();
+                                    List<string> contentList = [.. content.Split(',')];
                                     //contentList.RemoveAt(0);
                                     foreach (string item in contentList)
                                     {

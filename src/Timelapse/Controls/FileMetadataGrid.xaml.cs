@@ -142,7 +142,7 @@ namespace Timelapse.Controls
                 {
                     tagList.Add(item.MetadataTag);
                 }
-                return tagList.ToArray();
+                return [.. tagList];
             }
         }
 

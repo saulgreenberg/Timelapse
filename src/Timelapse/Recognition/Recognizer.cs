@@ -93,19 +93,17 @@ namespace Timelapse.Recognition
 
             // 5. Check for duplicate categories.
 
-            DetectionDuplicates = detection_categories.Values
+            DetectionDuplicates = [.. detection_categories.Values
             .GroupBy(v => v)                   // Group by the value string
             .Where(g => g.Count() > 1)         // Only keep values that appear more than once
-            .Select(g => (g.Key, g.Count()))   // Create a tuple of (Value, Count)
-            .ToList();
+            .Select(g => (g.Key, g.Count()))];
 
             if (classification_categories is not { Count: 0 })
             {
-                ClassificationDuplicates = classification_categories.Values
+                ClassificationDuplicates = [.. classification_categories.Values
                 .GroupBy(v => v)                   // Group by the value string
                 .Where(g => g.Count() > 1)         // Only keep values that appear more than once
-                .Select(g => (g.Key, g.Count()))   // Create a tuple of (Value, Count)
-                .ToList();
+                .Select(g => (g.Key, g.Count()))];
             }
 
             if (DetectionDuplicates is { Count: > 0 } || ClassificationDuplicates is { Count: > 0 })
