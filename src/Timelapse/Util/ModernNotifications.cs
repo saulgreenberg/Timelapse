@@ -15,7 +15,7 @@ namespace Timelapse.Util
     /// Modern notification system using native Windows-style notifications
     /// Replaces the old ToastNotifications library
     /// </summary>
-    public class ModernNotifier(Window owner)
+    public partial class ModernNotifier(Window owner)
     {
         private Popup _currentPopup;
 
@@ -321,8 +321,9 @@ namespace Timelapse.Util
             return owner.PointFromScreen(new Point(p.X, p.Y));
         }
 
-        [DllImport("user32.dll")]
-        private static extern bool GetCursorPos(out NativePoint pt);
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool GetCursorPos(out NativePoint pt);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct NativePoint { public int X, Y; }
