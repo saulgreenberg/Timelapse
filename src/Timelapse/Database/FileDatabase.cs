@@ -2651,8 +2651,9 @@ namespace Timelapse.Database
                     CreateClassificationCategoriesDictionaryIfNeeded();
                     return RecognizerImportResultEnum.Success;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    AppLog.Error("RecognizerImport: Failed to import recognizer data.", ex);
                     return RecognizerImportResultEnum.Failure;
                 }
             }).ConfigureAwait(true);
@@ -3429,9 +3430,10 @@ namespace Timelapse.Database
                 return FileSelectionEnum.All;
             }
 
-            catch
+            catch (Exception ex)
             {
                 // Something blew up. Use the default
+                AppLog.Error("CustomSelectionRestore: Failed to deserialize custom selection; reverted to All.", ex);
                 CustomSelection = new(Controls);
                 return FileSelectionEnum.All;
             }

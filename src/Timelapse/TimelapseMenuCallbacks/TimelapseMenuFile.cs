@@ -133,6 +133,7 @@ namespace Timelapse
             }
             catch (Exception ex)
             {
+                AppLog.Error("MenuItemLoadImages: Unhandled exception while loading image set.", ex);
                 TracePrint.CatchException(ex.Message);
             }
         }
@@ -224,6 +225,7 @@ namespace Timelapse
             }
             catch (Exception ex)
             {
+                AppLog.Error("MenuItemRecentImageSet: Unhandled exception while loading recent image set.", ex);
                 TracePrint.CatchException(ex.Message);
             }
         }
@@ -278,6 +280,7 @@ namespace Timelapse
             }
             catch (Exception ex)
             {
+                AppLog.Error("MenuItemCreateEmptyDatabase: Unhandled exception while creating empty database for merging.", ex);
                 TracePrint.CatchException(ex.Message);
             }
         }
@@ -328,6 +331,7 @@ namespace Timelapse
             }
             catch (Exception ex)
             {
+                AppLog.Error("MenuItemCheckInDatabases: Unhandled exception during database check-in.", ex);
                 TracePrint.CatchException(ex.Message);
             }
         }
@@ -410,6 +414,7 @@ namespace Timelapse
             }
             catch (Exception ex)
             {
+                AppLog.Error("MenuItemExportCsv: Unhandled exception during CSV export.", ex);
                 TracePrint.CatchException(ex.Message);
             }
         }
@@ -525,6 +530,7 @@ namespace Timelapse
             }
             catch (Exception ex)
             {
+                AppLog.Error("MenuItemImportFromCsv: Unhandled exception during CSV import.", ex);
                 TracePrint.CatchException(ex.Message);
             }
         }
@@ -749,9 +755,10 @@ namespace Timelapse
                 BusyCancelIndicator.IsBusy = false;
                 Dialogs.AllDataExportedToCSV(this, csvExportFolder, filesToBeWritten, true);
             }
-            catch
+            catch (Exception ex)
             {
                 // Can't write the spreadsheet file
+                AppLog.Error("MenuItemExportAllFilesToCsv: Failed to export data files to CSV.", ex);
                 BusyCancelIndicator.IsBusy = false;
                 Dialogs.FileCantOpen(GlobalReferences.MainWindow, csvExportFolder, true);
             }

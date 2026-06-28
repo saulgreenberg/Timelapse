@@ -274,6 +274,7 @@ namespace Timelapse
             }
             catch (Exception ex)
             {
+                AppLog.Error("Window_Loaded: Unhandled exception in HandleArgumentsOnOpenAsync.", ex);
                 TracePrint.CatchException(ex.Message);
             }
         }
@@ -915,6 +916,7 @@ namespace Timelapse
             }
             catch (Exception ex)
             {
+                AppLog.Error("HelpDocument_Drop: Unhandled exception in drag-and-drop handler.", ex);
                 TracePrint.CatchException(ex.Message);
             }
         }

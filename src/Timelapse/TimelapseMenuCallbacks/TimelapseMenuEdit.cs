@@ -514,8 +514,9 @@ namespace Timelapse
                     Dialogs.MenuEditExtractVideoFrameProblem(this, "While Timelapse created the frame as a file, it couldn't create the data record for it");
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                AppLog.Error("MenuItemExtractVideoFrame: Unhandled exception during video frame extraction.", ex);
                 Dialogs.MenuEditExtractVideoFrameProblem(this, "Its not clear what went wrong. However, your data should be unchanged.");
             }
         }
