@@ -2,7 +2,9 @@ using System;
 using System.Threading;
 using System.Windows;
 using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
+using Timelapse.Util;
 
 namespace Timelapse.Database
 {
@@ -115,6 +117,7 @@ namespace Timelapse.Database
 
             Application.Current.Dispatcher.Invoke(() =>
             {
+                AppLog.Error($"Timelapse v{VersionChecks.GetTimelapseCurrentVersionNumber()}: SQLite operation failed ({result.Context}). Showing shutdown dialog.", result.Exception);
                 Dialog.ExceptionShutdownDialog dialog = new ExceptionShutdownDialog(
                     GlobalReferences.MainWindow,
                     new UnhandledExceptionEventArgs(result.Exception, false), result);

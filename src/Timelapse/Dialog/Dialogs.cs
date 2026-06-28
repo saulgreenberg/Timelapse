@@ -4431,7 +4431,7 @@ namespace Timelapse.Dialog
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
                 Owner = owner,
-                DialogTitle = "Timelapse needs to shut down - Issue writing data.",
+                DialogTitle = $"Timelapse v{VersionChecks.GetTimelapseCurrentVersionNumber()} needs to shut down - Issue writing data.",
                 Icon = DialogIconType.Error,
                 Problem = $"Timelapse tried to write data to the Timelapse {typeOfFile}, but couldn't. Shutting down is a precaution against data loss." ,
                 Reason = "Expand the [e]Details[/e] section below for reasons as to why this could happen.",

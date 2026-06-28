@@ -58,10 +58,11 @@ namespace Timelapse.Dialog
                               $"[ni] If your data file was damaged(rare), you may be able to restore as saved version from the [i]Backup[/i] folder.";
             string separator = $"{Environment.NewLine}--------------------------{ Environment.NewLine}"
             ;
+            string version = $"v{VersionChecks.GetTimelapseCurrentVersionNumber()}";
             if (IsSqlLiteError)
             {
                 ContinueButton.Visibility = Visibility.Visible;
-                Message.DialogTitle = "Timelapse had problems with the last database request.";
+                Message.DialogTitle = $"Timelapse {version} had problems with the last database request.";
 
                 Message.Problem = "Timelapse had problems executing the last database request. Please help us fix it! ";
                 Message.Solution = emailText
@@ -72,7 +73,7 @@ namespace Timelapse.Dialog
             else
             {
                 ContinueButton.Visibility = Visibility.Collapsed;
-                Message.DialogTitle = "Timelapse needs to close. Please report this error";
+                Message.DialogTitle = $"Timelapse {version} needs to close. Please report this error";
                 Message.Problem = "Timelapse encountered a problem, likely due to a bug. Please help us fix it!";
                 Message.Solution = emailText
                                    + selectText
