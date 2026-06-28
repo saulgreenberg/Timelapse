@@ -69,6 +69,28 @@ namespace Timelapse.Constant
         public static readonly SolidColorBrush MintyGreen = new(Color.FromArgb(255, 200, 251, 200));
         public static readonly SolidColorBrush VeryLightGrey = Brushes.Gainsboro;
         public static readonly SolidColorBrush PaleWhite = Brushes.Ivory;
+        public static readonly SolidColorBrush VeryDarkGray = new(Color.FromRgb(58, 58, 58));
+
+        public static class Notification
+        {
+            public static readonly SolidColorBrush BackgroundInformation = new(Color.FromRgb(217, 237, 247));
+            public static readonly SolidColorBrush BackgroundSuccess     = new(Color.FromRgb(223, 240, 216));
+            public static readonly SolidColorBrush BackgroundWarning     = new(Color.FromRgb(252, 248, 227));
+            public static readonly SolidColorBrush BackgroundError       = new(Color.FromRgb(248, 215, 218));
+            public static readonly SolidColorBrush BackgroundNeutral     = new(Color.FromRgb(248, 249, 250));
+
+            public static readonly SolidColorBrush BorderInformation = new(Color.FromRgb(174, 213, 129));
+            public static readonly SolidColorBrush BorderSuccess      = new(Color.FromRgb(155, 204, 145));
+            public static readonly SolidColorBrush BorderWarning      = new(Color.FromRgb(255, 193,   7));
+            public static readonly SolidColorBrush BorderError        = new(Color.FromRgb(220,  53,  69));
+            public static readonly SolidColorBrush BorderNeutral      = new(Color.FromRgb(108, 117, 125));
+
+            public static readonly SolidColorBrush ForegroundInformation = new(Color.FromRgb( 13, 110, 180));
+            public static readonly SolidColorBrush ForegroundSuccess      = new(Color.FromRgb( 25, 135,  84));
+            public static readonly SolidColorBrush ForegroundWarning      = new(Color.FromRgb(102,  77,   3));
+            public static readonly SolidColorBrush ForegroundError        = new(Color.FromRgb(114,  28,  36));
+            public static readonly SolidColorBrush ForegroundNeutral      = new(Color.FromRgb( 33,  37,  41));
+        }
     }
     public static class Control
     {

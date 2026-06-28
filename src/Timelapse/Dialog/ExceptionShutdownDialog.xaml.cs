@@ -23,7 +23,7 @@ namespace Timelapse.Dialog
         #region Constructor, Loaded
         public ExceptionShutdownDialog(Window owner, UnhandledExceptionEventArgs unhandledExceptionArgs, SqlOperationResult sqlOperatonResult = null)
         {
-            // Check the arguments for null
+            // Check the arguments for nullYes
             ThrowIf.IsNullArgument(unhandledExceptionArgs, nameof(unhandledExceptionArgs));
 
             Owner = owner;

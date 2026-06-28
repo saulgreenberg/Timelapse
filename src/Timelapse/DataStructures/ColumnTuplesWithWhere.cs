@@ -71,46 +71,46 @@ namespace Timelapse.DataStructures
         // Long: ID = Long
         public void SetWhere(long id)
         {
-            Where = DatabaseColumn.ID + " = " + id;
+            Where = DatabaseColumn.ID + Sql.Equal + id;
         }
 
         // ColumnTuple: columnName = Value
         public void SetWhere(ColumnTuple columnTuple)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(columnTuple, nameof(columnTuple));
-            Where = $"{columnTuple.Name} = {Sql.Quote(columnTuple.Value)}";
+            Where = $"{columnTuple.Name}{Sql.Equal}{Sql.Quote(columnTuple.Value)}";
         }
 
         // ColumnTuple: columnName = field
         public void SetWhere(ColumnTuple columnTuple, string field)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(columnTuple, nameof(columnTuple));
 
-            Where = $"{columnTuple.Name} = {Sql.Quote(field)}";
+            Where = $"{columnTuple.Name}{Sql.Equal}{Sql.Quote(field)}";
         }
 
         // FILE = file AND RELATIVEPATH = relativePath
         public void SetWhere(string relativePath, string file)
         {
-            Where = $"{DatabaseColumn.File} = {Sql.Quote(file)}";
-            Where += $" AND {DatabaseColumn.RelativePath} = {Sql.Quote(relativePath)}";
+            Where = $"{DatabaseColumn.File}{Sql.Equal}{Sql.Quote(file)}";
+            Where += $"{Sql.And}{DatabaseColumn.RelativePath}{Sql.Equal}{Sql.Quote(relativePath)}";
         }
 
         // FILE = file
         public void SetWhere(string file)
         {
-            Where = $"{DatabaseColumn.File} = {Sql.Quote(file)}";
+            Where = $"{DatabaseColumn.File}{Sql.Equal}{Sql.Quote(file)}";
         }
 
         // ColumnTuple: columnName <> field
         public void SetWhereNotEquals(ColumnTuple columnTuple, string field)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(columnTuple, nameof(columnTuple));
 
-            Where = $"{columnTuple.Name} <> {Sql.Quote(field)}";
+            Where = $"{columnTuple.Name}{Sql.NotEqual}{Sql.Quote(field)}";
         }
         #endregion
     }

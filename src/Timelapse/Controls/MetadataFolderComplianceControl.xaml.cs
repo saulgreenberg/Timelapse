@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using Timelapse.Constant;
 using Timelapse.ControlsMetadata;
 using Timelapse.Database;
 using Timelapse.DataTables;
@@ -446,7 +447,7 @@ namespace Timelapse.Controls
             {
                 Text = alias,
                 FontStyle = FontStyles.Italic,
-                Foreground = !string.IsNullOrWhiteSpace(warning) ? Brushes.Crimson : (SolidColorBrush)new BrushConverter().ConvertFromString("#FF3A3A3A") //Brushes.DarkSlateGray
+                Foreground = !string.IsNullOrWhiteSpace(warning) ? Brushes.Crimson : Colours.VeryDarkGray
 
             });
             Grid.SetColumn(tbLevelAliasName, 2);

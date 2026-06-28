@@ -442,7 +442,7 @@ public class SQLiteWrapper
             query += $"{Sql.OnConflict} {Sql.OpenParenthesis} {primaryKeyTuple.Name} {Sql.CloseParenthesis} {Sql.DoUpdate} {Sql.Set}";   // On Conflict (<primaryKeyTuple.Name>) Do Update Set
             foreach (ColumnTuple ct in columnTuples)
             {
-                query += $" {ct.Name} = {Sql.Quote(ct.Value)}{Sql.Comma}";
+                query += $" {ct.Name}{Sql.Equal}{Sql.Quote(ct.Value)}{Sql.Comma}";
             }
             query = query[..^Sql.Comma.Length]; // Remove the last comma
             query += $"{Sql.Where} {primaryKeyTuple.Name} {Sql.Equal} {primaryKeyTuple.Value}";
@@ -568,7 +568,7 @@ public class SQLiteWrapper
             ThrowIf.IsNullArgument(columnToUpdate, nameof(columnToUpdate));
 
             string query = Sql.Update + tableName + Sql.Set;
-            query += $" {columnToUpdate.Name} = {Sql.Quote(columnToUpdate.Value)}";
+            query += $" {columnToUpdate.Name}{Sql.Equal}{Sql.Quote(columnToUpdate.Value)}";
             return ExecuteNonQueryWithRollback(query);
         }
 
@@ -607,7 +607,7 @@ public class SQLiteWrapper
             while (startIndex < sorted.Count)
             {
                 string whereClause = BuildWhereListofIds(IDColumnName, sorted, startIndex, maxClausesPerQuery, out int nextIndex);
-                queries.Add($"{Sql.Update}{tableName}{Sql.Set}{columnName} = {Sql.Quote(value)}{Sql.Where}{whereClause}");
+                queries.Add($"{Sql.Update}{tableName}{Sql.Set}{columnName}{Sql.Equal}{Sql.Quote(value)}{Sql.Where}{whereClause}");
                 startIndex = nextIndex;
             }
 
@@ -636,11 +636,11 @@ public class SQLiteWrapper
                 // we have to cater to different formats for integers, NULLS and strings...
                 if (column.Value == null)
                 {
-                    query += $" {column.Name} = {Sql.Null}{Sql.Comma}";
+                    query += $" {column.Name}{Sql.Equal}{Sql.Null}{Sql.Comma}";
                 }
                 else
                 {
-                    query += $" {column.Name} = {Sql.Quote(column.Value)}{Sql.Comma}";
+                    query += $" {column.Name}{Sql.Equal}{Sql.Quote(column.Value)}{Sql.Comma}";
                 }
             }
             query = query[..^Sql.Comma.Length]; // Remove the last comma
@@ -1934,7 +1934,7 @@ public class SQLiteWrapper
 
             if (singles.Count == 1)
             {
-                conditions.Add($"{IDColumnName} = {singles[0]}");
+                conditions.Add($"{IDColumnName}{Sql.Equal}{singles[0]}");
             }
             else if (singles.Count > 1)
             {
@@ -1966,8 +1966,8 @@ public class SQLiteWrapper
                 }
 
                 conditions.Add(rangeEnd > rangeStart
-                    ? $"{IDColumnName} BETWEEN {rangeStart} AND {rangeEnd}"
-                    : $"{IDColumnName} = {rangeStart}");
+                    ? $"{IDColumnName}{Sql.Between}{rangeStart}{Sql.And}{rangeEnd}"
+                    : $"{IDColumnName}{Sql.Equal}{rangeStart}");
                 i++;
             }
 

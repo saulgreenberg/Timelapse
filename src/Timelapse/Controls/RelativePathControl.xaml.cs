@@ -11,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Colours = Timelapse.Constant.Colours;
 using Timelapse.Database;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
@@ -1391,7 +1392,7 @@ namespace Timelapse.Controls
                 Text = text,
                 Foreground = containsPhotos
                     ? Brushes.Black
-                    : (SolidColorBrush)new BrushConverter().ConvertFromString("#FF3A3A3A") //Brushes.DarkSlateGray
+                    : Colours.VeryDarkGray
             };
             sp.Children.Add(image);
             sp.Children.Add(tb);

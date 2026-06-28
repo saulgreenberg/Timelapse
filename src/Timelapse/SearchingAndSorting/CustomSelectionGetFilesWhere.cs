@@ -229,7 +229,7 @@ namespace Timelapse.SearchingAndSorting
                 else
                 {
                     // If we are using detections, then we have to qualify the data label e.g., DataTable.X
-                    string dataLabel = RecognitionSelections.UseRecognition ? DBTables.FileData + "." + searchTerm.DataLabel : searchTerm.DataLabel;
+                    string dataLabel = RecognitionSelections.UseRecognition ? DBTables.FileData + Sql.Dot + searchTerm.DataLabel : searchTerm.DataLabel;
 
                     // Check to see if the search term is querying for an empty string
                     if (string.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == SearchTermOperator.Equal)
@@ -244,7 +244,7 @@ namespace Timelapse.SearchingAndSorting
                         Debug.Assert(searchTerm.DatabaseValue!.Contains("\"") == false,
                             $"Search term '{searchTerm.DatabaseValue}' contains quotation marks and could be used for SQL injection.");
                         if (dataLabel == DatabaseColumn.RelativePath ||
-                            dataLabel == DBTables.FileData + "." + DatabaseColumn.RelativePath)
+                            dataLabel == DBTables.FileData + Sql.Dot + DatabaseColumn.RelativePath)
                         {
                             // Special case for RelativePath and DataTable.RelativePath, 
                             // as we want to return images not only in the relative path folder, but its subfolder as well.
@@ -254,13 +254,13 @@ namespace Timelapse.SearchingAndSorting
                             whereForTerm += Sql.OpenParenthesis + term1 + Sql.Or + term2 + Sql.CloseParenthesis;
                         }
                         else if ((dataLabel == DatabaseColumn.DateTime ||
-                                  dataLabel == DBTables.FileData + "." + DatabaseColumn.DateTime) && false == UseTimeInsteadOfDate)
+                                  dataLabel == DBTables.FileData + Sql.Dot + DatabaseColumn.DateTime) && false == UseTimeInsteadOfDate)
                         {
                             // Custom search by date only (regardless of time of day): this form matches only the Date portion of the DateTime
                             whereForTerm = SqlPhrase.DataLabelDateTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
                         }
                         else if ((dataLabel == DatabaseColumn.DateTime ||
-                                  dataLabel == DBTables.FileData + "." + DatabaseColumn.DateTime) && UseTimeInsteadOfDate)
+                                  dataLabel == DBTables.FileData + Sql.Dot + DatabaseColumn.DateTime) && UseTimeInsteadOfDate)
                         {
                             // Custom search by time only (regardless of date): this form matches only the Time portion of the DateTime
                             whereForTerm = SqlPhrase.DataLabelTimeOperatorValue(dataLabel, TermToSqlOperator(searchTerm.Operator), searchTerm.DatabaseValue);
@@ -392,7 +392,7 @@ namespace Timelapse.SearchingAndSorting
                 default:
                     return false;
             }
-            string dataLabel = useFullyQualifiedDataLabel ? DBTables.FileData + "." + st1.DataLabel : st1.DataLabel;
+            string dataLabel = useFullyQualifiedDataLabel ? DBTables.FileData + Sql.Dot + st1.DataLabel : st1.DataLabel;
             expression = Sql.OpenParenthesis
                 + SqlPhrase.DataLabelTimeOperatorValue(dataLabel, TermToSqlOperator(st1.Operator), st1.DatabaseValue)
                 + Sql.Or

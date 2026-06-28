@@ -562,7 +562,7 @@ namespace Timelapse.Database
             long removedSpreadsheetOrder = controlToRemove.SpreadsheetOrder;
 
             // drop the control from the database and data table
-            string where = DatabaseColumn.ID + " = " + controlToRemove.ID;
+            string where = DatabaseColumn.ID + Sql.Equal + controlToRemove.ID;
             SqlOperationResult deleteControlResult = Database.DeleteRows(DBTables.Template, where);
             if (!deleteControlResult.Success)
             {

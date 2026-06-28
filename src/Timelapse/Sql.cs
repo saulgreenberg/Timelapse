@@ -147,7 +147,7 @@ namespace Timelapse
         public const string SelectNameFromPragmaTableInfo = Select + Name + From + " PRAGMA_TABLE_INFO ";
         public const string SelectNameFromSqliteMasterWhereTypeEqualTableAndNameEquals = Select + Name + From + SqlMaster + Where + TypeEqualsTable + And + Name + Equal;
         public const string SelectCountFromSqliteMasterWhereTypeEqualIndexAndNameEquals = SelectCountStarFrom + SqlMaster + Where + TypeEqualsIndex + And + Name + Equal;
-        public static string SelectSqlFromSqliteMasterWhereTypeEqualTableAndNameEquals = $"{Select} sql {From} {SqlMaster} {Where} {TypeEqualsTable} {And} {Name} {Equal}";
+        public static readonly string SelectSqlFromSqliteMasterWhereTypeEqualTableAndNameEquals = $"{Select} sql {From} {SqlMaster} {Where} {TypeEqualsTable} {And} {Name} {Equal}";
         public const string Semicolon = " ; ";
         public const string Set = " SET ";
         public const string SqlMaster = " sqlite_master ";
@@ -374,7 +374,7 @@ namespace Timelapse
                 phrase = Sql.SelectOne;
             }
             return phrase + Sql.From + DBTables.Detections + Sql.InnerJoin + DBTables.FileData +
-                    Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID + Sql.Equal + DBTables.Detections + "." + DetectionColumns.ImageID;
+                    Sql.On + DBTables.FileData + Sql.Dot + DatabaseColumn.ID + Sql.Equal + DBTables.Detections + Sql.Dot + DetectionColumns.ImageID;
         }
 
         /// <summary>
@@ -480,7 +480,7 @@ namespace Timelapse
         /// <returns>Detections.Category = detectionCategory</returns>
         public static string DetectionCategoryEqualsDetectionCategory(string detectionCategory)
         {
-            return DBTables.Detections + "." + DetectionColumns.Category + Sql.Equal + detectionCategory;
+            return DBTables.Detections + Sql.Dot + DetectionColumns.Category + Sql.Equal + detectionCategory;
         }
 
         /// <summary>
@@ -491,7 +491,7 @@ namespace Timelapse
         ///
         public static string ClassificationsCategoryEqualsClassificationCategory(string classificationCategory)
         {
-            return DBTables.Detections + "." + DetectionColumns.Classification + Sql.Equal + classificationCategory;
+            return DBTables.Detections + Sql.Dot + DetectionColumns.Classification + Sql.Equal + classificationCategory;
         }
 
         /// <summary>
@@ -502,9 +502,9 @@ namespace Timelapse
         /// <returns>Group By Detections.Id Having Max ( Detections.conf ) BETWEEN lowerBound AND upperBound</returns>
         public static string GroupByDetectionsIdHavingMaxDetectionsConf(double lowerBound, double upperBound)
         {
-            return Sql.GroupBy + DBTables.Detections + "." + DetectionColumns.ImageID +
+            return Sql.GroupBy + DBTables.Detections + Sql.Dot + DetectionColumns.ImageID +
                 Sql.Having + Sql.Max +
-                Sql.OpenParenthesis + DBTables.Detections + "." + DetectionColumns.Conf + Sql.CloseParenthesis +
+                Sql.OpenParenthesis + DBTables.Detections + Sql.Dot + DetectionColumns.Conf + Sql.CloseParenthesis +
                 Sql.Between + lowerBound.ToString(CultureInfo.InvariantCulture) + Sql.And + upperBound.ToString(CultureInfo.InvariantCulture);
         }
 

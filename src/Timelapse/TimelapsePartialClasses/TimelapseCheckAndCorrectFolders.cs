@@ -159,7 +159,7 @@ namespace Timelapse
         {
             List<object> allRelativePaths = fileDatabase.GetDistinctValuesInColumn(DBTables.FileData, DatabaseColumn.RelativePath);
             List<string> missingRelativePaths = [];
-            foreach (string relativePath in allRelativePaths)
+            foreach (string relativePath in allRelativePaths.Cast<string>())
             {
                 string path = Path.Combine(fileDatabase.RootPathToImages, relativePath);
                 if (!Directory.Exists(path))

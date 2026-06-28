@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Windows;
+using Timelapse.Constant;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
@@ -278,55 +279,40 @@ namespace Timelapse.Util
 
         }
 
-        private static Brush GetBackgroundColor(NotificationType type)
+        private static SolidColorBrush GetBackgroundColor(NotificationType type)
         {
-            switch (type)
+            return type switch
             {
-                case NotificationType.Information:
-                    return new SolidColorBrush(Color.FromRgb(217, 237, 247)); // Light blue
-                case NotificationType.Success:
-                    return new SolidColorBrush(Color.FromRgb(223, 240, 216)); // Light green
-                case NotificationType.Warning:
-                    return new SolidColorBrush(Color.FromRgb(252, 248, 227)); // Light yellow
-                case NotificationType.Error:
-                    return new SolidColorBrush(Color.FromRgb(248, 215, 218)); // Light red
-                default:
-                    return new SolidColorBrush(Color.FromRgb(248, 249, 250)); // Light gray
-            }
+                NotificationType.Information => Colours.Notification.BackgroundInformation,
+                NotificationType.Success     => Colours.Notification.BackgroundSuccess,
+                NotificationType.Warning     => Colours.Notification.BackgroundWarning,
+                NotificationType.Error       => Colours.Notification.BackgroundError,
+                _                            => Colours.Notification.BackgroundNeutral
+            };
         }
 
-        private static Brush GetBorderColor(NotificationType type)
+        private static SolidColorBrush GetBorderColor(NotificationType type)
         {
-            switch (type)
+            return type switch
             {
-                case NotificationType.Information:
-                    return new SolidColorBrush(Color.FromRgb(174, 213, 129)); // Blue
-                case NotificationType.Success:
-                    return new SolidColorBrush(Color.FromRgb(155, 204, 145)); // Green
-                case NotificationType.Warning:
-                    return new SolidColorBrush(Color.FromRgb(255, 193, 7)); // Yellow
-                case NotificationType.Error:
-                    return new SolidColorBrush(Color.FromRgb(220, 53, 69)); // Red
-                default:
-                    return new SolidColorBrush(Color.FromRgb(108, 117, 125)); // Gray
-            }
+                NotificationType.Information => Colours.Notification.BorderInformation,
+                NotificationType.Success     => Colours.Notification.BorderSuccess,
+                NotificationType.Warning     => Colours.Notification.BorderWarning,
+                NotificationType.Error       => Colours.Notification.BorderError,
+                _                            => Colours.Notification.BorderNeutral
+            };
         }
 
-        private static Brush GetForegroundColor(NotificationType type)
+        private static SolidColorBrush GetForegroundColor(NotificationType type)
         {
-            switch (type)
+            return type switch
             {
-                case NotificationType.Information:
-                    return new SolidColorBrush(Color.FromRgb(13, 110, 180)); // Dark blue
-                case NotificationType.Success:
-                    return new SolidColorBrush(Color.FromRgb(25, 135, 84)); // Dark green
-                case NotificationType.Warning:
-                    return new SolidColorBrush(Color.FromRgb(102, 77, 3)); // Dark yellow
-                case NotificationType.Error:
-                    return new SolidColorBrush(Color.FromRgb(114, 28, 36)); // Dark red
-                default:
-                    return new SolidColorBrush(Color.FromRgb(33, 37, 41)); // Dark gray
-            }
+                NotificationType.Information => Colours.Notification.ForegroundInformation,
+                NotificationType.Success     => Colours.Notification.ForegroundSuccess,
+                NotificationType.Warning     => Colours.Notification.ForegroundWarning,
+                NotificationType.Error       => Colours.Notification.ForegroundError,
+                _                            => Colours.Notification.ForegroundNeutral
+            };
         }
 
         private Point GetCursorPosRelativeToOwner()

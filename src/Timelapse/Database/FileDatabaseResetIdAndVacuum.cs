@@ -157,9 +157,9 @@ namespace Timelapse.Database
                 //     SET Id = (SELECT new_id FROM tmpIDMapping WHERE old_id = MarkersTable.Id)
                 $@"
                 {Sql.Update} {DBTables.Markers}
-                    {Sql.Set} {DatabaseColumn.ID} = (
+                    {Sql.Set} {DatabaseColumn.ID}{Sql.Equal}(
                         {Sql.Select} new_id {Sql.From} {tmpIDMapping}
-                        {Sql.Where} old_id = MarkersTable.ID)",
+                        {Sql.Where} old_id{Sql.Equal}MarkersTable.ID)",
                 // Reset the AUTOINCREMENT counter for MarkersTable for the same reason as DataTable above.
 
                 $"UPDATE sqlite_sequence SET seq = (SELECT MAX({DatabaseColumn.ID}) FROM {DBTables.Markers}) WHERE name = {Sql.Quote(DBTables.Markers)}"

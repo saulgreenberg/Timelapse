@@ -1255,8 +1255,8 @@ namespace Timelapse.Database
         {
             return Database.ScalarGetScalarFromSelectAsLong(
                 $"SELECT {DatabaseColumn.ID} FROM {DBTables.FileData}" +
-                $"{Sql.Where} {DatabaseColumn.RelativePath} = {Sql.Quote(relativePath ?? string.Empty)}" +
-                $"{Sql.And} {DatabaseColumn.File} = {Sql.Quote(file)}");
+                $"{Sql.Where}{DatabaseColumn.RelativePath}{Sql.Equal}{Sql.Quote(relativePath ?? string.Empty)}" +
+                $"{Sql.And}{DatabaseColumn.File}{Sql.Equal}{Sql.Quote(file)}");
         }
 
         // Return the RelativePath and File for the DataTable entry with the given ID,
@@ -1265,7 +1265,7 @@ namespace Timelapse.Database
         {
             DataTable result = Database.GetDataTableFromSelect(
                 $"SELECT {DatabaseColumn.RelativePath}, {DatabaseColumn.File} FROM {DBTables.FileData}" +
-                $"{Sql.Where} {DatabaseColumn.ID} = {id}");
+                $"{Sql.Where}{DatabaseColumn.ID}{Sql.Equal}{id}");
             if (result?.Rows.Count == 1)
             {
                 return (result.Rows[0][DatabaseColumn.RelativePath] as string,
@@ -1425,7 +1425,7 @@ namespace Timelapse.Database
             List<string> idClauses = [];
             foreach (long fileID in fileIDs)
             {
-                idClauses.Add(DatabaseColumn.ID + " = " + fileID);
+                idClauses.Add(DatabaseColumn.ID + Sql.Equal + fileID);
             }
             // Delete FileData and Markers rows in one transaction so both succeed or both fail
             CreateBackupIfNeeded();
@@ -2233,7 +2233,7 @@ namespace Timelapse.Database
         #region ImageSet manipulation
         private void ImageSetLoadFromDatabase()
         {
-            string imageSetQuery = Sql.SelectStarFrom + DBTables.ImageSet + Sql.Where + DatabaseColumn.ID + " = " + DatabaseValues.ImageSetRowID;
+            string imageSetQuery = Sql.SelectStarFrom + DBTables.ImageSet + Sql.Where + DatabaseColumn.ID + Sql.Equal + DatabaseValues.ImageSetRowID;
             DataTable imageSetTable = Database.GetDataTableFromSelect(imageSetQuery);
             ImageSet = new(imageSetTable.Rows[0]);
             imageSetTable.Dispose();

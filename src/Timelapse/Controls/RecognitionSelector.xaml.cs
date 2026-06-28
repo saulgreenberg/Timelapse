@@ -1771,7 +1771,7 @@ namespace Timelapse.Controls
                            + $"       {thenOneElse0EndAs} \"{has_prefix + kvp.Value}\" {comma} {lf}";
                 }
                 query += $"  {Sql.From} {DBTables.Detections} {lf}"
-                       + $"  {Sql.InnerJoin} {DBTables.FileData} {Sql.On} {dtId} = {detId} {lf}"
+                       + $"  {Sql.InnerJoin} {DBTables.FileData} {Sql.On} {dtId}{Sql.Equal}{detId} {lf}"
                        + $"  {where} {lf}"
                        + $"  {Sql.GroupBy} {detId} {lf}"
                        + $") {lf}"
@@ -2007,12 +2007,12 @@ namespace Timelapse.Controls
                                + $"            {thenOneElse0EndAs} {HasHighConfDetection} {lf}"
                                + $"     {Sql.From} {DBTables.Detections} {lf}"
                                + $"     {Sql.InnerJoin} {tmpTableName3} {lf}"
-                               + $"         {Sql.On} {tmpTableName3}.{ImageId} = {DBTables.Detections}.{DatabaseColumn.ID} {lf}"
+                               + $"         {Sql.On} {tmpTableName3}{Sql.Dot}{ImageId}{Sql.Equal}{DBTables.Detections}{Sql.Dot}{DatabaseColumn.ID} {lf}"
                                + $"     {Sql.InnerJoin} {tmpTableName2} {lf}"
-                               + $"         {Sql.On} {tmpTableName2}.{ImageId} = {DBTables.Detections}.{DatabaseColumn.ID} {lf}"
-                               + $"     {Sql.GroupBy} {DBTables.Detections}.{DatabaseColumn.ID} {lf}"
+                               + $"         {Sql.On} {tmpTableName2}{Sql.Dot}{ImageId}{Sql.Equal}{DBTables.Detections}{Sql.Dot}{DatabaseColumn.ID} {lf}"
+                               + $"     {Sql.GroupBy} {DBTables.Detections}{Sql.Dot}{DatabaseColumn.ID} {lf}"
                                + $"   ) {Sql.As} {PerImageFlags}{lf}"
-                               + $"   {Sql.GroupBy} {PerImageFlags}.{EpisodePrefix}; {lf}{lf}"
+                               + $"   {Sql.GroupBy} {PerImageFlags}{Sql.Dot}{EpisodePrefix}; {lf}{lf}"
                                + $"{Sql.CreateUniqueIndex} {tmpIndex1} {Sql.On} {tmpTableName1} ({EpisodePrefix}); {lf}";
                 return query;
             }
@@ -2062,8 +2062,7 @@ namespace Timelapse.Controls
                                + $"     {Sql.Else} 0 {Sql.End} ) {Sql.As} {CountEmpty} {lf}"
                                + $"{Sql.From} {tmpTable2}{lf}"
                                + $"{Sql.InnerJoin} {tmpTable1}{lf}"
-                               + $"  {Sql.On} {tmpTable1}.{EpisodePrefix} {lf}"
-                               + $"    = {tmpTable2}.{EpisodePrefix}; {lf}";
+                               + $"  {Sql.On} {tmpTable1}{Sql.Dot}{EpisodePrefix}{Sql.Equal}{tmpTable2}{Sql.Dot}{EpisodePrefix}; {lf}";
                 return query;
             }
 
@@ -2118,17 +2117,16 @@ namespace Timelapse.Controls
                                + $"      {tmpTable3}.{EpisodePrefix}{lf}"
                                + $"    {Sql.From} {DBTables.Detections} {lf}"
                                + $"    {Sql.InnerJoin} {tmpTable4}{lf}"
-                               + $"        {Sql.On} {tmpTable4}.{ImageId} = {detId}  {lf}"
+                               + $"        {Sql.On} {tmpTable4}{Sql.Dot}{ImageId}{Sql.Equal}{detId}  {lf}"
                                + $"    {Sql.InnerJoin} {tmpTable3}{lf}"
-                               + $"        {Sql.On} {tmpTable3}.{ImageId} = {detId}  {lf}"
+                               + $"        {Sql.On} {tmpTable3}{Sql.Dot}{ImageId}{Sql.Equal}{detId}  {lf}"
 
                                + $"     {Sql.Where} {detConf} {Sql.Between} {lowerDetectionConfidence} {Sql.And} {higherDetectionConfidence} {lf}"
                                + $") {Sql.As} {DistinctCategoryEpisodes} {lf}"
                                + $"{Sql.InnerJoin} {tmpTable2}{lf}"
-                               + $"        {Sql.On} {tmpTable2}.{EpisodePrefix} {lf}"
-                               + $"         = {DistinctCategoryEpisodes}.{EpisodePrefix}  {lf}"
+                               + $"        {Sql.On} {tmpTable2}{Sql.Dot}{EpisodePrefix}{Sql.Equal}{DistinctCategoryEpisodes}{Sql.Dot}{EpisodePrefix}  {lf}"
 
-                               + $"{Sql.GroupBy} {DistinctCategoryEpisodes}.{DetectionCategory};{lf}"
+                               + $"{Sql.GroupBy} {DistinctCategoryEpisodes}{Sql.Dot}{DetectionCategory};{lf}"
                     ;
                 return query;
             }
@@ -2196,16 +2194,15 @@ namespace Timelapse.Controls
                              + $"    {Sql.From} {DBTables.Detections} {lf}"
 
                              + $"    {Sql.InnerJoin} {tmpTable4}{lf}"
-                             + $"        {Sql.On} {tmpTable4}.{ImageId} = {detId}  {lf}"
+                             + $"        {Sql.On} {tmpTable4}{Sql.Dot}{ImageId}{Sql.Equal}{detId}  {lf}"
                              + $"    {Sql.InnerJoin} {tmpTable3}{lf}"
-                             + $"        {Sql.On} {tmpTable3}.{ImageId} = {detId}  {lf}"
+                             + $"        {Sql.On} {tmpTable3}{Sql.Dot}{ImageId}{Sql.Equal}{detId}  {lf}"
                              + $"     {Sql.Where} {detConf} {Sql.Between} {lowerDetectionConfidence} {Sql.And} {higherDetectionConfidence} {lf}"
                              + $"        {Sql.And} {DBTables.Detections}.{DetectionColumns.ClassificationConf} {Sql.Between} {lowerClassificationConfidence} {Sql.And} {higherClassificationConfidence}{lf}"
                              + $") {Sql.As} {DistinctClassificationEpisodes} {lf}"
                              + $"{Sql.InnerJoin} {tmpTable2}{lf}"
-                             + $"        {Sql.On} {tmpTable2}.{EpisodePrefix} {lf}"
-                             + $"         = {DistinctClassificationEpisodes}.{EpisodePrefix}  {lf}"
-                             + $"{Sql.GroupBy} {DistinctClassificationEpisodes}.{ClassificationCategory};{lf}"
+                             + $"        {Sql.On} {tmpTable2}{Sql.Dot}{EpisodePrefix}{Sql.Equal}{DistinctClassificationEpisodes}{Sql.Dot}{EpisodePrefix}  {lf}"
+                             + $"{Sql.GroupBy} {DistinctClassificationEpisodes}{Sql.Dot}{ClassificationCategory};{lf}"
                     ;
                 return query;
             }
