@@ -221,7 +221,7 @@ namespace Timelapse
             if (Dependencies.AreRequiredBinariesPresent(Assembly.GetExecutingAssembly(), out string missingAssemblies) == false)
             {
                 Dialogs.DependencyFilesMissingDialog(missingAssemblies);
-                AppLog.Error($"Timelapse v{VersionChecks.GetTimelapseCurrentVersionNumber()}: Required binaries missing ({missingAssemblies}). Shutting down.");
+                AppLog.Error($"Required binaries missing ({missingAssemblies}). Shutting down.");
                 Application.Current.Shutdown();
             }
 
@@ -356,7 +356,7 @@ namespace Timelapse
             e.Handled = true;
             if (e.Exception is SqlOperationException sqlEx)
             {
-                AppLog.Error($"Timelapse v{VersionChecks.GetTimelapseCurrentVersionNumber()}: Unhandled dispatcher exception (SQLite). Shutting down.", e.Exception);
+                AppLog.Error("Unhandled dispatcher exception (SQLite). Shutting down.", e.Exception);
                 ExceptionShutdownDialog dialog = new(this, e.Exception, sqlEx.Result);
                 dialog.ShowDialog();
             }
@@ -366,7 +366,7 @@ namespace Timelapse
             }
             else
             {
-                AppLog.Error($"Timelapse v{VersionChecks.GetTimelapseCurrentVersionNumber()}: Unhandled dispatcher exception. Shutting down.", e.Exception);
+                AppLog.Error("Unhandled dispatcher exception. Shutting down.", e.Exception);
                 ExceptionShutdownDialog dialog = new(this, e.Exception);
                 dialog.ShowDialog();
             }
@@ -382,7 +382,7 @@ namespace Timelapse
                 // A typed SQLite failure was thrown deliberately.
                 // sqlEx.Result carries ErrorMessage, FailingStatement, and the original Exception (which includes the sqlException.Message)
                 // for inclusion in a bug-report dialog or email.
-                AppLog.Error($"Timelapse v{VersionChecks.GetTimelapseCurrentVersionNumber()}: Unhandled exception (SQLite). Shutting down.", sqlEx);
+                AppLog.Error("Unhandled exception (SQLite). Shutting down.", sqlEx);
                 ExceptionShutdownDialog dialog = new(this, sqlEx);
                 dialog.ShowDialog();
                 Close();
@@ -394,7 +394,7 @@ namespace Timelapse
             }
             else
             {
-                AppLog.Error($"Timelapse v{VersionChecks.GetTimelapseCurrentVersionNumber()}: Unhandled exception. Shutting down.", e.ExceptionObject as Exception);
+                AppLog.Error("Unhandled exception. Shutting down.", e.ExceptionObject as Exception);
                 ExceptionShutdownDialog dialog = new(this, e);
                 dialog.ShowDialog();
                 // force a shutdown. While some bugs could be recoverable, its dangerous to keep things running.

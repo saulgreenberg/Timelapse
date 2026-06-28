@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using File = Timelapse.Constant.File;
@@ -157,7 +158,8 @@ namespace Timelapse.DebuggingSupport
             if (!_sessionHeaderWritten)
             {
                 const string rule = "=====================================================================";
-                WriteRaw($"{rule}{Environment.NewLine}Session started {_sessionStart:yyyy-MM-dd HH:mm:ss} | {_rootPath}{Environment.NewLine}{rule}");
+                string version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown";
+                WriteRaw($"{rule}{Environment.NewLine}Session started {DateTime.Now:yyyy-MM-dd HH:mm:ss} | Timelapse v{version} | {_rootPath}{Environment.NewLine}{rule}");
                 _sessionHeaderWritten = true;
             }
 

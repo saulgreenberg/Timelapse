@@ -441,8 +441,12 @@
                 </MenuItem>
 
                 <Separator/>
-                <MenuItem Name="MenuItemOpenErrorLog" Header="Open Error Log&#x2026;" Click="MenuItemOpenErrorLog_Click"
-                          ToolTip="The log records certain warnings and errors.&#x0a;If you have any issues, the developer may ask you to send its text to him." />
+                <MenuItem Header="Error Log" ToolTip="The error log records various warnings and errors.">
+                    <MenuItem Name="MenuItemOpenErrorLog" Header="Open Error Log&#x2026;" Click="MenuItemOpenErrorLog_Click"
+                              ToolTip="The log records certain warnings and errors.&#x0a;If you have any issues, the developer may ask you to send its text to him." />
+                    <MenuItem Name="MenuItemEmailErrorLog" Header="Email error log to the Timelapse developer&#x2026;" Click="MenuItemEmailErrorLog_Click"
+                              ToolTip="If you have issues or unexpected crashes, you can email the error log to the Timelapse developer." />
+                </MenuItem>
             </MenuItem>
         </Menu>
         <!--#endregion-->

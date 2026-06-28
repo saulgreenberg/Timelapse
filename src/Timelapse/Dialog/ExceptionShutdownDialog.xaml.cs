@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Data.SQLite;
+using System.IO;
 using System.Windows;
 using Timelapse.Database;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Dialog
@@ -104,6 +106,28 @@ namespace Timelapse.Dialog
             else
             {
                 body += UnhandledExceptionArgs.ExceptionObject.ToString();
+            }
+
+            // Append up to 200 lines from the log file if it exists and is non-empty
+            string logPath = AppLog.DefaultLogFilePath;
+            if (!string.IsNullOrEmpty(logPath) && File.Exists(logPath))
+            {
+                string[] allLines = null;
+                try { allLines = File.ReadAllLines(logPath); }
+                catch { /* leave allLines null */ }
+
+                if (allLines is { Length: > 0 })
+                {
+                    const string indent = "        ";
+                    const string rule   = indent + "------------------------------";
+                    body += Environment.NewLine
+                         + rule + Environment.NewLine
+                         + indent + "Partial contents of the log file" + Environment.NewLine
+                         + rule + Environment.NewLine;
+                    int lineCount = Math.Min(allLines.Length, 200);
+                    for (int i = 0; i < lineCount; i++)
+                        body += allLines[i] + Environment.NewLine;
+                }
             }
 
             ExceptionReport.Text = body;

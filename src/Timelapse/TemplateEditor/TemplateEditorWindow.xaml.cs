@@ -163,7 +163,7 @@ namespace TimelapseTemplateEditor
         // If we get an exception that wasn't handled, show a dialog asking the user to send the bug report to us.
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            AppLog.Error($"Timelapse v{VersionChecks.GetTimelapseCurrentVersionNumber()}: Unhandled exception in Template Editor. Shutting down.", e.ExceptionObject as Exception);
+            AppLog.Error("Unhandled exception in Template Editor. Shutting down.", e.ExceptionObject as Exception);
             ExceptionShutdownDialog dialog = new(this, e);
             dialog.ShowDialog();
             // force a shutdown. While some bugs could be recoverable, its dangerous to keep things running.

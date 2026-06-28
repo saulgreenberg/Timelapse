@@ -204,5 +204,36 @@ namespace Timelapse
             ProcessExecution.TryProcessStart(logPath);
         }
         #endregion
+
+        #region Email Error Log
+        private void MenuItemEmailErrorLog_Click(object sender, RoutedEventArgs e)
+        {
+            string logPath = AppLog.DefaultLogFilePath;
+            if (string.IsNullOrEmpty(logPath) || !File.Exists(logPath))
+            {
+                MessageBox.Show(
+                    "No error log file exists yet. A log is only created if certain (but not all) warnings or errors have occurred.",
+                    "No Error Log", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            string logContents;
+            try { logContents = File.ReadAllText(logPath); }
+            catch { logContents = "(Could not read log file contents)"; }
+
+            string body = "Add details describing the problem you are having, as that will help the Timelapse developer try to figure out what is going on."
+                        + Environment.NewLine + Environment.NewLine
+                        + "--- Timelapse Error Log ---" + Environment.NewLine
+                        + logContents;
+
+            Uri uri = new($"mailto:{Constant.ExternalLinks.EmailAddress}?subject=Timelapse error log&body={Uri.EscapeDataString(body)}");
+            if (!ProcessExecution.TryProcessStart(uri))
+            {
+                MessageBox.Show(
+                    $"Could not open your email client. You can manually send the error log file to {Constant.ExternalLinks.EmailAddress}{Environment.NewLine}Log file: {logPath}",
+                    "Email Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+        #endregion
     }
 }

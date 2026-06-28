@@ -47,17 +47,17 @@ namespace Timelapse
 
         private void MenuItemTestSomeCode_Click(object sender, RoutedEventArgs e)
         {
-            // AppLog examples — open a database first so Initialize has been called
-            AppLog.Warning("This is a test warning");
-            AppLog.Error("This is a test error");
-
+            // Test ExceptionShutdownDialog — shows the dialog with a synthetic exception and log file contents
             try
             {
-                _ = int.Parse("not a number");
+                throw new InvalidOperationException("This is a synthetic test exception to verify ExceptionShutdownDialog.");
             }
             catch (Exception ex)
             {
-                AppLog.Error("Failed to parse integer", ex);
+                AppLog.Error("Test: Synthetic exception to verify ExceptionShutdownDialog.", ex);
+                ExceptionShutdownDialog dialog = new(this, ex);
+                dialog.ShowDialog();
+                // Note: no Close() / Shutdown() here — this is a test only
             }
         }
 
