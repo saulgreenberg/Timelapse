@@ -348,18 +348,17 @@ namespace Timelapse.Database
             }
             if (templateSyncResults.SyncRequiredAsFolderLevelsDiffer && false == templateSyncResults.InfoHierarchyIncompatibleDifferences)
             {
-                SqlOperationResult dropMetaTemplateResult = Database.DropTable(DBTables.MetadataTemplate);
-                if (!dropMetaTemplateResult.Success)
+                SqlOperationResult dropMetaResult = Database.ExecuteNonQueryWithRollback(
+                    [Sql.PragmaForeignKeysOff],
+                    [
+                        Sql.DropTableIfExists + DBTables.MetadataTemplate,
+                        Sql.DropTableIfExists + DBTables.MetadataInfo
+                    ],
+                    [Sql.PragmaForeignKeysOn]);
+                if (!dropMetaResult.Success)
                 {
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (MetadataTemplate)", this.FilePath, dropMetaTemplateResult);
-                    return;
-                }
-                SqlOperationResult dropMetaInfoResult = Database.DropTable(DBTables.MetadataInfo);
-                if (!dropMetaInfoResult.Success)
-                {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
-                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (MetadataInfo)", this.FilePath, dropMetaInfoResult);
+                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (MetadataTemplate/MetadataInfo)", this.FilePath, dropMetaResult);
                     return;
                 }
                 isDatabaseRecreated = true;
