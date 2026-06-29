@@ -199,14 +199,14 @@ namespace Timelapse.ControlsDataEntry
                 // If its a number, just set it to that number
                 if (int.TryParse(value, out int intvalue))
                 {
-                    textBox?.Text = intvalue.ToString();
+                    if (textBox != null) textBox.Text = intvalue.ToString();
                     ContentControl.Value = intvalue;
                 }
                 else
                 {
                     // If its not a number, blank out the text
                     ContentControl.Text = string.Empty;
-                    textBox?.Text = value;
+                    if (textBox != null) textBox.Text = value;
                 }
             }
             ContentControl.ToolTip = value ?? "Edit to change the " + Label + " for all selected images";

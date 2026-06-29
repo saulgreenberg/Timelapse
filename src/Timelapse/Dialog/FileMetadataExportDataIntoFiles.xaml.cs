@@ -9,7 +9,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Timelapse.Constant;
-using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.ExifTool;
 using Timelapse.Util;

@@ -213,14 +213,14 @@ namespace Timelapse.ControlsDataEntry
                 // If its a number, just set it to that number
                 if (Double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double doubleValue))
                 {
-                    WatermarkTextBox?.Text = doubleValue.ToString(CultureInfo.InvariantCulture);
+                    if (WatermarkTextBox != null) WatermarkTextBox.Text = doubleValue.ToString(CultureInfo.InvariantCulture);
                     ContentControl.Value = doubleValue;
                 }
                 else
                 {
                     // If its not a number, blank out the text
                     ContentControl.Text = string.Empty;
-                    WatermarkTextBox?.Text = value;
+                    if (WatermarkTextBox != null) WatermarkTextBox.Text = value;
                 }
             }
             ContentControl.ToolTip = value ?? "Edit to change the " + Label + " for all selected images";

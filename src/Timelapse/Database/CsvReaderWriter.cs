@@ -287,7 +287,7 @@ namespace Timelapse.Database
             {
                 try
                 {
-                progress.Report(new(0, "Writing the CSV file. Please wait", false, true));
+                    progress.Report(new(0, "Writing the CSV file. Please wait", false, true));
 
                     // For every level
                     foreach (MetadataInfoRow infoRow in database.MetadataInfo)

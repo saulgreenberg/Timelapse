@@ -397,7 +397,7 @@ namespace Timelapse
         /// <returns>DataLabel operator "value", e.g., DataLabel > "5"</returns>
         public static string DataLabelOperatorValue(string dataLabel, string mathOperator, string value, string sqlDataType)
         {
-            value = value == null ? string.Empty : value.Trim();
+            value = value?.Trim() ?? string.Empty;
 
             switch (sqlDataType)
             {
@@ -430,14 +430,14 @@ namespace Timelapse
         /// <returns>Match the Date portion only  by extracting the Date from the DateTime string value, e.g., DataLabel operator "value", e.g., Date_(datetime)= Date_('2016-08-19 19:08:22')</returns>
         public static string DataLabelDateTimeOperatorValue(string dataLabel, string mathOperator, string value)
         {
-            value = value == null ? string.Empty : value.Trim();
+            value = value?.Trim() ?? string.Empty;
             return Sql.DateFunction + Sql.OpenParenthesis + dataLabel + Sql.CloseParenthesis + mathOperator + Sql.DateFunction + Sql.OpenParenthesis + Sql.Quote(value) + Sql.CloseParenthesis;
         }
 
         /// <returns>Match the Time portion only  by extracting the Time_ from the DateTime string value, e.g., DataLabel operator "value", e.g., Time_ (datetime) = '19:08:22'</returns>
         public static string DataLabelTimeOperatorValue(string dataLabel, string mathOperator, string value)
         {
-            value = value == null ? string.Empty : value.Trim();
+            value = value?.Trim() ?? string.Empty;
             return Sql.TimeFunction + Sql.OpenParenthesis + dataLabel + Sql.CloseParenthesis + mathOperator + Sql.TimeFunction + Sql.OpenParenthesis + Sql.Quote(value) + Sql.CloseParenthesis;
         }
 
@@ -449,7 +449,7 @@ namespace Timelapse
         // i.e., at the beginning, middle and end plus as exact matches.
         public static string DataLabelOperatorValue(string dataLabel, string mathOperator, string value)
         {
-            value = value == null ? string.Empty : value.Trim();
+            value = value?.Trim() ?? string.Empty;
             if (value == string.Empty)
             {
                 // special case for empty string

@@ -137,9 +137,7 @@ namespace Timelapse.ImageSetLoadingPipeline
                         continue;
                     }
                     // The null portion shouldn't happen
-                    string relativePath = directoryName != null
-                        ? directoryName.Replace(absolutePathPart, string.Empty).TrimEnd(Path.DirectorySeparatorChar)
-                        : string.Empty;
+                    string relativePath = directoryName?.Replace(absolutePathPart, string.Empty).TrimEnd(Path.DirectorySeparatorChar) ?? string.Empty;
 
                     ImageLoader loader = new(relativePath, fileInfo, dataHandler);
 

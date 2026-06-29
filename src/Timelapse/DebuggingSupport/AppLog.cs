@@ -17,9 +17,8 @@ namespace Timelapse.DebuggingSupport
         private const long MaxLogSizeBytes = 2 * 1024 * 1024; // 2 MB — trim threshold
         private const long TrimToBytes     = 1 * 1024 * 1024; // 1 MB — keep this many bytes from the end
 
-        private static string _logFilePath;
+        private static readonly string _logFilePath;
         private static string _rootPath;
-        private static DateTime _sessionStart;
         private static bool _sessionHeaderWritten;
         private static readonly Lock _lock = new();
 
@@ -65,7 +64,6 @@ namespace Timelapse.DebuggingSupport
             }
 
             _rootPath = rootPath;
-            _sessionStart = DateTime.Now;
             _sessionHeaderWritten = false;
 
             // Trim if over the size cap: keep the last 1 MB, starting on a clean line boundary

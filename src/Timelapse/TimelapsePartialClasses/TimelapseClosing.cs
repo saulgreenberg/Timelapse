@@ -63,7 +63,7 @@ namespace Timelapse
             // Reset the rest of the user interface 
             State.Reset();
             DataEntryControlPanel.IsVisible = false;
-            MarkableCanvas.ZoomOutAllTheWay();
+            if (MarkableCanvas != null) MarkableCanvas.ZoomOutAllTheWay();
             FileNavigatorSliderReset();
             EnableOrDisableMenusAndControls();
             CopyPreviousValuesButton.Visibility = Visibility.Collapsed;

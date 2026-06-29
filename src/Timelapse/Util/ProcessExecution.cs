@@ -79,16 +79,15 @@ namespace Timelapse.Util
         public static bool TryProcessRunCommand(string cmd)
         {
             //cmd = @"/c echo foo";
-            using Process process = new()
+            ProcessStartInfo startInfo = new()
             {
-                StartInfo = new()
-                {
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    CreateNoWindow = false,
-                    FileName = "cmd.exe",
-                    Arguments = cmd
-                }
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = false,
+                FileName = "cmd.exe",
+                Arguments = cmd
             };
+            using Process process = new();
+            process.StartInfo = startInfo;
             try
             {
                 return process.Start();
