@@ -30,7 +30,11 @@ namespace Timelapse
                     CloseTimelapseAndSaveState(false);
                 }
 
-                // Dispose the image set, templateDatabase and DataHandler as they will be reset if another next image set is opened. 
+                // Stop the virtual thumbnail grid's background worker and clear its pool before
+                // disposing the data it references, to prevent stale bitmap loads after close.
+                MarkableCanvas?.ThumbnailGridVirtualized?.Reset();
+
+                // Dispose the image set, templateDatabase and DataHandler as they will be reset if another next image set is opened.
                 DataHandler.ImageCache?.Dispose();
                 DataHandler?.Dispose();
                 DataHandler = null;
