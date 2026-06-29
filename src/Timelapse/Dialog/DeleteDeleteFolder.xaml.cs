@@ -45,7 +45,13 @@ namespace Timelapse.Dialog
 
         private void CountButton_Click(object sender, RoutedEventArgs e)
         {
-            int count = Directory.EnumerateFiles(DeletedFolderPath, "*", SearchOption.AllDirectories).Count();
+            int count;
+            try
+            {
+                count = Directory.EnumerateFiles(DeletedFolderPath, "*", SearchOption.AllDirectories).Count();
+            }
+            catch (IOException) { count = 0; }
+            catch (UnauthorizedAccessException) { count = 0; }
             string article = count == 1 ? "is" : "are";
             string suffix = count == 1 ? "" : "s";
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
@@ -57,7 +63,6 @@ namespace Timelapse.Dialog
             };
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
             dialog.BuildAndShowDialog();
-            //MessageBox.Show(this, $"There {article} {count} file{suffix} in the DeletedFiles folder.", "Deleted Folder File Count", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }
