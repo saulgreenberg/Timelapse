@@ -901,7 +901,6 @@ namespace Timelapse.Database
         private static bool VerifyDataInColumns(FileDatabase fileDatabase, List<string> dataLabelsFromCSV, List<Dictionary<string, string>> rowDictionaryList,
             List<string> importErrors, IProgress<ProgressBarArguments> progress, CancellationToken token, int reportAfter, string message, bool cancelEnabled, bool isIndeterminate)
         {
-            //bool abort = false;
             CultureInfo provider = CultureInfo.InvariantCulture;
             // For each column in the CSV file,
             // - get its type from the template
@@ -909,8 +908,9 @@ namespace Timelapse.Database
             // Validation ignored for:
             // - Note, as it can hold any data
             // - File, RelativePath, as that data row would be ignored if it does not create a valid path
-            // - Date/Time/DateTime as they are handled elsewhere 
+            // - Date/Time/DateTime as they are handled elsewhere
             //  - Date, Time formats must match exactl
+            int errorsOnEntry = importErrors.Count; // baseline: errors added by caller before this method
             int rowNumber = 0;
             int numberRowsWithErrors = 0;
             int maxRowsToReportWithErrors = 5;
@@ -1137,7 +1137,7 @@ namespace Timelapse.Database
                 }
             }
 
-            return importErrors.Count == 0; //!abort;
+            return importErrors.Count == errorsOnEntry;
         }
 
         private static string ComposeRowColumnError(string csvHeader, int rowNumber, string content, string expectedFormat)
