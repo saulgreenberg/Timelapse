@@ -285,6 +285,8 @@ namespace Timelapse.Database
             IProgress<ProgressBarArguments> progress = progressHandler;
             return await Task.Run(() =>
             {
+                try
+                {
                 progress.Report(new(0, "Writing the CSV file. Please wait", false, true));
 
                     // For every level
@@ -437,6 +439,11 @@ namespace Timelapse.Database
                     }
 
                     return true;
+                }
+                catch
+                {
+                    return false;
+                }
             }).ConfigureAwait(true);
         }
 
