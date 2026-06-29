@@ -946,6 +946,7 @@ namespace Timelapse.Database
                     }
 
                     ControlRow controlRow = fileDatabase.GetControlFromControls(csvHeader);
+                    if (controlRow == null) continue; // header not in template (deprecated or removed column) — skip
                     string controlRowType = controlRow.Type;
                     if (IsCondition.IsControlType_AnyNonRequired(controlRowType) || controlRowType == DatabaseColumn.DateTime)
                     {
