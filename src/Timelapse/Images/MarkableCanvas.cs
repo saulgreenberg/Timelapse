@@ -688,7 +688,7 @@ namespace Timelapse.Images
         {
             if (ThumbnailGridVirtualized == null)
                 return ThumbnailGridRefreshStatus.Aborted;
-            return ThumbnailGridVirtualized.Refresh(ThumbnailGridVirtualized.Width, ThumbnailGridVirtualized.Height, zoomIn);
+            return ThumbnailGridVirtualized.Refresh(ThumbnailGridVirtualized.ActualWidth, ThumbnailGridVirtualized.ActualHeight, zoomIn);
         }
 
         #region Public / Private methods: Draw Bounding Box

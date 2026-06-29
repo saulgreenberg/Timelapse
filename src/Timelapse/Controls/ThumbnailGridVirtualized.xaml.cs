@@ -242,7 +242,7 @@ namespace Timelapse.Controls
         {
             if (FileTable == null || FileTable.RowCount == 0)
                 return ThumbnailGridRefreshStatus.Aborted;
-            if (newGridWidth <= 0 || newGridHeight <= 0)
+            if (double.IsNaN(newGridWidth) || double.IsNaN(newGridHeight) || newGridWidth <= 0 || newGridHeight <= 0)
                 return ThumbnailGridRefreshStatus.Aborted;
 
             currentGridWidth = newGridWidth;
