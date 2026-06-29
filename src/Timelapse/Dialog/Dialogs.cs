@@ -4495,7 +4495,7 @@ namespace Timelapse.Dialog
             ThrowIf.IsNullArgument(owner, nameof(owner));
             if (!owner.Dispatcher.CheckAccess())
             {
-                owner.Dispatcher.Invoke(() => TimelapseReadErrorNoticeDialog(owner, result, context));
+                owner.Dispatcher.BeginInvoke(() => TimelapseReadErrorNoticeDialog(owner, result, context));
                 return;
             }
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
@@ -4521,6 +4521,7 @@ namespace Timelapse.Dialog
             }
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
             dialog.BuildAndShowDialog();
+            SQLiteWrapper.ResetAllReadErrorState();
         }
         #endregion
     }

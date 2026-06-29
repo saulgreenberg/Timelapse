@@ -166,7 +166,6 @@ namespace Timelapse
             {
                 SqlErrorState.TryRecord(sqlOperationResult, context);
                 Dialogs.TimelapseReadErrorNoticeDialog(GlobalReferences.MainWindow, sqlOperationResult, context);
-                SQLiteWrapper.ResetAllReadErrorState();
             };
 
             // Populate the most recent image set list
