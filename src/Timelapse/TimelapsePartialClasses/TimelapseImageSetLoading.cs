@@ -341,8 +341,8 @@ namespace Timelapse
                 Dialogs.MissingFoldersInformationDialog(this, missingFoldersCount);
             }
 
-            // Set the window's title to include the file name
-            Title = Defaults.MainWindowBaseTitle + " (" + fileDatabase.FilePath + ")";
+            // Set the window's title to include the file path, truncated if over 100 characters
+            Title = Defaults.MainWindowBaseTitle + " (" + Util.FilesFolders.TruncateFileNameForDisplay(fileDatabase.FilePath, 100) + ")";
 
             // Generate and render the data entry, regardless of whether there are actually any files in the files database.
             DataHandler = new(fileDatabase);

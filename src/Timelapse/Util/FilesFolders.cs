@@ -724,6 +724,13 @@ namespace Timelapse.Util
 
         // Truncate a file name for display purposes to fit within the indicated length, adding ellipses as needed, preferably in the path section
         // An example returned value might be: C:\Users\Owner\Deskto…\Test sets\MergeLarge\foo\TimelapseData.ddb
+        // Overload accepting a full file path — splits into directory and filename then delegates.
+        public static string TruncateFileNameForDisplay(string fullPath, int length)
+        {
+            if (string.IsNullOrEmpty(fullPath)) return string.Empty;
+            return TruncateFileNameForDisplay(Path.GetFileName(fullPath), Path.GetDirectoryName(fullPath) ?? string.Empty, length);
+        }
+
         public static string TruncateFileNameForDisplay(string fileName, string path, int length)
         {
             if (fileName == null) return string.Empty;
