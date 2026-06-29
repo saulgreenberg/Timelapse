@@ -79,6 +79,7 @@ namespace Timelapse
 
         #region Private Variables
         private bool disposed;
+        private int _readErrorDialogPending; // 0 = none, 1 = dialog pending or showing; accessed via Interlocked
         private List<MarkersForCounter> markersOnCurrentFile;   // Holds a list of all markers for each counter on the current file
 
         private CommonDatabase templateDatabase;                      // The database that holds the template
@@ -165,7 +166,11 @@ namespace Timelapse
             SQLiteWrapper.OnReadError = (context, sqlOperationResult) =>
             {
                 SqlErrorState.TryRecord(sqlOperationResult, context);
-                Dialogs.TimelapseReadErrorNoticeDialog(GlobalReferences.MainWindow, sqlOperationResult, context);
+                if (Interlocked.CompareExchange(ref _readErrorDialogPending, 1, 0) == 0)
+                {
+                    Dialogs.TimelapseReadErrorNoticeDialog(GlobalReferences.MainWindow, sqlOperationResult, context,
+                        onClose: () => _readErrorDialogPending = 0);
+                }
             };
 
             // Populate the most recent image set list

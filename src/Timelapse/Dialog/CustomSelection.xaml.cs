@@ -1769,6 +1769,7 @@ namespace Timelapse.Dialog
                 // Cancel any previous in-flight count query and start a fresh one.
                 // This prevents a backlog of queries when the user changes criteria rapidly.
                 await countCts.CancelAsync().ConfigureAwait(true);
+                countCts.Dispose();
                 countCts = new CancellationTokenSource();
                 CancellationToken token = countCts.Token;
 

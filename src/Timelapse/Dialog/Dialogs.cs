@@ -4490,12 +4490,12 @@ namespace Timelapse.Dialog
         #endregion
 
         #region TimelapseReadErrorNoticeDialog
-        public static void TimelapseReadErrorNoticeDialog(Window owner, SqlOperationResult result, string context)
+        public static void TimelapseReadErrorNoticeDialog(Window owner, SqlOperationResult result, string context, Action onClose = null)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
             if (!owner.Dispatcher.CheckAccess())
             {
-                owner.Dispatcher.BeginInvoke(() => TimelapseReadErrorNoticeDialog(owner, result, context));
+                owner.Dispatcher.BeginInvoke(() => TimelapseReadErrorNoticeDialog(owner, result, context, onClose));
                 return;
             }
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
@@ -4522,6 +4522,7 @@ namespace Timelapse.Dialog
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
             dialog.BuildAndShowDialog();
             SQLiteWrapper.ResetAllReadErrorState();
+            onClose?.Invoke();
         }
         #endregion
     }
