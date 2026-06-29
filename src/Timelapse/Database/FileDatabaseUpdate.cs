@@ -289,6 +289,7 @@ namespace Timelapse.Database
                 });
                 if (!result.Success)
                 {
+                    bci?.Reset(false);
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFilesCore", this.FilePath, result);
                     return;
                 }
