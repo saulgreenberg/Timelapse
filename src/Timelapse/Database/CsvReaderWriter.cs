@@ -920,7 +920,7 @@ namespace Timelapse.Database
             {
                 if (token.IsCancellationRequested)
                 {
-                    return true;
+                    return false;
                 }
 
                 if (rowNumber % reportAfter == 0)
