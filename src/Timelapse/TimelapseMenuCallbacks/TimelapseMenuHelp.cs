@@ -205,6 +205,16 @@ namespace Timelapse
         }
         #endregion
 
+        #region Email the Timelapse developer - submenu opened
+        private void MenuEmailTimelapseDeveloper_SubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            string logPath = AppLog.DefaultLogFilePath;
+            MenuItemEmailErrorLog.IsEnabled = !string.IsNullOrEmpty(logPath)
+                && File.Exists(logPath)
+                && new FileInfo(logPath).Length > 0;
+        }
+        #endregion
+
         #region Email Error Log
         private void MenuItemEmailErrorLog_Click(object sender, RoutedEventArgs e)
         {

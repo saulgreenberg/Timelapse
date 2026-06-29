@@ -109,15 +109,6 @@
 
                 <Separator />
 
-                <!-- Upgrade Timelapse Files -->
-                <MenuItem Name="MenuItemUpgradeTimelapseFiles" Header="_Upgrade Timelapse files (.tdb/.ddb) to latest version (.tdb/.ddb)&#x2026;" Click="MenuItemUpgradeTimelapseFiles_Click" IsEnabled="true" ToolTip="A dialog that allows you to update old templates (.tdb) and databases (.ddb) to the latest .tdb and .ddb versions">
-                    <MenuItem.Icon>
-                        <Image Source="Icons/ConvertFile_32x.png" />
-                    </MenuItem.Icon>
-                </MenuItem>
-
-                <Separator />
-
                 <!-- Switch to Timelapse -->
                 <MenuItem Name="MenuSwitchToTimelapse" Header="Switch to Timelapse"
                           ToolTip="Switch to Timelapse to load and tag image sets.">
@@ -427,11 +418,17 @@
 
                 <Separator/>
 
-                <MenuItem Name="MenuItemMailToTimelapseDevelopers" Header="Email the Timelapse developer&#x2026;" Click="MenuMailToTimelapseDevelopers_Click" ToolTip="Post an email to the Timelapse developers. Feedback, bug reports, feature requests, etc are all appreciated.">
+                <MenuItem Header="Email the Timelapse developer" ToolTip="Send an email to Saul Greenberg, the Timelapse developer" SubmenuOpened="MenuEmailTimelapseDeveloper_SubmenuOpened">
                     <MenuItem.Icon>
                         <Image Source="Icons/EmailSend_32x.png" />
                     </MenuItem.Icon>
+                    <MenuItem Name="MenuItemMailToTimelapseDevelopers" Header="Compose email&#x2026;" Click="MenuMailToTimelapseDevelopers_Click"
+                              ToolTip="Post an email to the Timelapse developers. Feedback, bug reports, feature requests, etc are all appreciated." />
+                    <MenuItem Name="MenuItemEmailErrorLog" Header="Compose and include error log&#x2026;" Click="MenuItemEmailErrorLog_Click"
+                              ToolTip="If you have issues or unexpected crashes, you can email the error log to the Timelapse developer." />
                 </MenuItem>
+                <MenuItem Name="MenuItemOpenErrorLog" Header="View error log" Click="MenuItemOpenErrorLog_Click"
+                          ToolTip="The log records certain warnings and errors.&#x0a;If you have any issues, the developer may ask you to send its text to him." />
                 <Separator/>
 
                 <MenuItem Name="MenuItemAbout" Header="_About&#x2026;" Click="MenuItemAbout_Click" ToolTip="Displays version information about this program and how to contact its creator">
@@ -440,12 +437,17 @@
                     </MenuItem.Icon>
                 </MenuItem>
 
-                <Separator/>
-                <MenuItem Header="Error Log" ToolTip="The error log records various warnings and errors.">
-                    <MenuItem Name="MenuItemOpenErrorLog" Header="Open Error Log&#x2026;" Click="MenuItemOpenErrorLog_Click"
-                              ToolTip="The log records certain warnings and errors.&#x0a;If you have any issues, the developer may ask you to send its text to him." />
-                    <MenuItem Name="MenuItemEmailErrorLog" Header="Email error log to the Timelapse developer&#x2026;" Click="MenuItemEmailErrorLog_Click"
-                              ToolTip="If you have issues or unexpected crashes, you can email the error log to the Timelapse developer." />
+                <Separator />
+                <MenuItem Header="Utilities">
+                    <!-- Upgrade Timelapse Files -->
+                    <MenuItem Name="MenuItemUpgradeTimelapseFiles" IsEnabled="true"
+                              Header="_Upgrade Timelapse files (.tdb/.ddb) to latest version&#x2026;"
+                              Click="MenuItemUpgradeTimelapseFiles_Click"
+                              ToolTip="A dialog that allows you to update old templates (.tdb) and databases (.ddb) to the latest .tdb and .ddb versions">
+                        <MenuItem.Icon>
+                            <Image Source="Icons/ConvertFile_32x.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
                 </MenuItem>
             </MenuItem>
         </Menu>
