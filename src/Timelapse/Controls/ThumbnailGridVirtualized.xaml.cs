@@ -854,8 +854,8 @@ namespace Timelapse.Controls
                 if (e.ClickCount == 2)
                 {
                     ThumbnailInCell cell = pool.FirstOrDefault(c => c.Visibility == Visibility.Visible && c.FileTableIndex == clickedIdx);
-                    cellHeight = 0;
                     OnDoubleClick(new ThumbnailGridVirtualizedEventArgs(cell?.ImageRow));
+                    cellHeight = 0;
                     e.Handled = true;
                     return;
                 }
