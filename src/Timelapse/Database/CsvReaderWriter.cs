@@ -261,7 +261,7 @@ namespace Timelapse.Database
                     }
                     throw; // Propagate to caller's catch, which shows a dialog with the exception details.
                 }
-            }, token);
+            }, token).ConfigureAwait(true);
 
             // If the export was cancelled, remove the partial file.
             if (!result && token.IsCancellationRequested && File.Exists(filePath))
