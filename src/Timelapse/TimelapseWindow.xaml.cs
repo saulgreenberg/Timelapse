@@ -170,6 +170,11 @@ namespace Timelapse
                 SqlErrorState.TryRecord(sqlOperationResult, context);
                 if (Interlocked.CompareExchange(ref _readErrorDialogPending, 1, 0) == 0)
                 {
+                    string logMessage = $"SQLite read error. Context: {context}.";
+                    if (!string.IsNullOrEmpty(sqlOperationResult?.ErrorMessage)) logMessage += $" DB error: {sqlOperationResult.ErrorMessage}.";
+                    if (!string.IsNullOrEmpty(sqlOperationResult?.FailingStatement)) logMessage += $" SQL: {sqlOperationResult.FailingStatement}.";
+                    if (sqlOperationResult?.Exception != null) AppLog.Error(logMessage, sqlOperationResult.Exception);
+                    else AppLog.Error(logMessage);
                     Dialogs.TimelapseReadErrorNoticeDialog(GlobalReferences.MainWindow, sqlOperationResult, context,
                         onClose: () => _readErrorDialogPending = 0);
                 }

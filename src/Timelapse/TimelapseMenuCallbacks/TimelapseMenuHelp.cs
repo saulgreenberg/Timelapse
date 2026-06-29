@@ -228,7 +228,14 @@ namespace Timelapse
             }
 
             string logContents;
-            try { logContents = File.ReadAllText(logPath); }
+            try
+            {
+                string[] lines = File.ReadAllLines(logPath);
+                const int maxLines = 1000;
+                logContents = lines.Length > maxLines
+                    ? string.Join(Environment.NewLine, lines, lines.Length - maxLines, maxLines)
+                    : string.Join(Environment.NewLine, lines);
+            }
             catch { logContents = "(Could not read log file contents)"; }
 
             string body = "Add details describing the problem you are having, as that will help the Timelapse developer try to figure out what is going on."

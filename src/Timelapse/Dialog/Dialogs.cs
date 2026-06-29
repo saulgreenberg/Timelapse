@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,6 +36,11 @@ namespace Timelapse.Dialog
 {
     public static class Dialogs
     {
+        // Ensures TimelapseNeedsToShutDownDataWriteErrorDialog is shown at most once per process lifetime.
+        // Multiple concurrent write failures can arrive on background threads simultaneously; only the
+        // first one that wins the CAS reaches the dialog-and-shutdown logic.
+        private static int _shutdownDialogShown; // 0 = not yet shown; 1 = shown or showing
+
         #region Common test strings
         private static readonly string backupsLinkAndDirections =
             $"See the [link:{Constant.ExternalLinks.TimelapseFAQPage}|Timelapse Web site: FAQ page (Timelapse Crashes and Backups)] for how to do this.";
@@ -4420,6 +4426,7 @@ namespace Timelapse.Dialog
                 owner.Dispatcher.Invoke(() => TimelapseNeedsToShutDownDataWriteErrorDialog(owner, isDDBfile, message, filePath, sqlResult));
                 return;
             }
+            if (Interlocked.CompareExchange(ref _shutdownDialogShown, 1, 0) != 0) return;
             string typeOfFile = isDDBfile.HasValue ? (isDDBfile.Value ? "data (.ddb) file" : "template (.tdb) file") : "database file";
             string logMessage = $"TimelapseNeedsToShutDownDataWriteErrorDialog: Timelapse is shutting down due to a write error on the {typeOfFile}.";
             if (!string.IsNullOrEmpty(filePath)) logMessage += $" File: '{filePath}'.";

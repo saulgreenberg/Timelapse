@@ -301,7 +301,7 @@ namespace Timelapse.Constant
         public const string VersionNumberMinimum = "2.3.0.0"; // Earlier versions than this requires a special software update to the database files as done via DialogUpgradeFils.dll
         public const string VersionNumberBackwardsCompatible = "2.3.3.0"; // The earliest version known to be backwards compatible with this database
         public const string VersionNumberBackwardsCompatibleForTemplates = "2.3.0.0"; // The earliest version known to be backwards compatible with this database
-        public const string VersionPatchNumber = "-Beta6ForVersion2.5.0.7"; // If this version is patched, the patch number (or Beta indications).. Should be updated whenever new versions are release. Use "." or "-patch #." 
+        public const string VersionPatchNumber = "-Beta7ForVersion2.5.0.7"; // If this version is patched, the patch number (or Beta indications).. Should be updated whenever new versions are release. Use "." or "-patch #." 
         public const string DefaultSortTerms = "[ { \"DataLabel\":\"RelativePath\", \"DisplayLabel\":\"RelativePath\", \"ControlType\":\"RelativePath\", \"IsAscending\":\"true\" }, { \"DataLabel\":\"DateTime\", \"DisplayLabel\":\"DateTime\", \"ControlType\":\"DateTime\", \"IsAscending\":\"true\" } ]";
         public const string DefaultSearchTerms = "{}";
         public const string DefaultQuickPasteJSON = "[]";
@@ -343,7 +343,7 @@ namespace Timelapse.Constant
         public const string SearchTerms = "SearchTerms";              // a JSON description storing the current search terms
         public const string BoundingBoxDisplayThreshold = "BBDisplayThreshold";
         public const string Standard = "Standard";
-
+        
         // other columns found in Old XML files
         public const string Data = "Data";                 // the data describing the attributes of that control
         public const string Image = "Image";               // A single image and its associated data
