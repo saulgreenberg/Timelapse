@@ -1,11 +1,14 @@
 ﻿using AvalonDock.Layout;
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Threading;
 using Timelapse;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -41,6 +44,7 @@ namespace TimelapseTemplateEditor
         private bool setInitialFolderLevelTabSelection = true;         // Whether we should set the initial metadata tab
 
         private bool closedByMenu;
+        private readonly DispatcherTimer _titleResizeTimer = new();
         #endregion
 
         #region Initialization, Window Loading, Closing 
@@ -55,6 +59,18 @@ namespace TimelapseTemplateEditor
 
             // Have the grid hide the ID and Order columns
             MenuViewShowAllColumns_Click(MenuViewShowAllColumns, null);
+
+            // Debounced title update on window resize: fires 400ms after the user stops dragging.
+            _titleResizeTimer.Interval = TimeSpan.FromMilliseconds(400);
+            _titleResizeTimer.Tick += (_, _) => { _titleResizeTimer.Stop(); UpdateWindowTitle(); };
+            SizeChanged += (_, _) =>
+            {
+                if (templateDatabase != null)
+                {
+                    _titleResizeTimer.Stop();
+                    _titleResizeTimer.Start();
+                }
+            };
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -191,16 +207,33 @@ namespace TimelapseTemplateEditor
             // Enable/disable  all the buttons that allow rows to be added
             TemplateUI.RowControls.EditRowDockPanel.IsEnabled = templateIsLoaded;
 
-            // Include the database file name in the window title if it is set
+            // Include the database file path in the window title, truncated to fit the title bar.
             Title = EditorConstant.MainWindowBaseTitle;
-            Title += templateIsLoaded ? " (" + Path.GetFileName(filePath) + ")" : string.Empty;
+            Title += templateIsLoaded ? " (" + FilesFolders.TruncateFileNameForDisplay(filePath, GetTitlePathCharLimit()) + ")" : string.Empty;
 
             // Switch to the appropriate tab
             this.setInitialFolderLevelTabSelection = true;
             TemplatePane.IsActive = templateIsLoaded;
             InstructionPane.IsActive = !templateIsLoaded;
+        }
 
-            
+        private void UpdateWindowTitle()
+        {
+            if (templateDatabase?.FilePath == null) return;
+            Title = EditorConstant.MainWindowBaseTitle + " ("
+                + FilesFolders.TruncateFileNameForDisplay(templateDatabase.FilePath, GetTitlePathCharLimit())
+                + ")";
+        }
+
+        private int GetTitlePathCharLimit()
+        {
+            var typeface = new Typeface(SystemFonts.CaptionFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+            double dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+            var ft = new FormattedText("n", CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+                                       typeface, SystemFonts.CaptionFontSize, Brushes.Black, dpi);
+            double baseOverhead = (EditorConstant.MainWindowBaseTitle.Length + 4) * ft.Width;
+            double available = Math.Max(0, ActualWidth - 190 - baseOverhead);
+            return Math.Max(30, (int)(available / ft.Width));
         }
         #endregion
 

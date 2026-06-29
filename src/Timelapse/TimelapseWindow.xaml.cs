@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Timelapse.Constant;
 using Timelapse.Controls;
@@ -80,6 +81,7 @@ namespace Timelapse
         #region Private Variables
         private bool disposed;
         private int _readErrorDialogPending; // 0 = none, 1 = dialog pending or showing; accessed via Interlocked
+        private readonly DispatcherTimer _titleResizeTimer = new();
         private List<MarkersForCounter> markersOnCurrentFile;   // Holds a list of all markers for each counter on the current file
 
         private CommonDatabase templateDatabase;                      // The database that holds the template
@@ -215,6 +217,18 @@ namespace Timelapse
 
             // Mute the harmless 'System.Windows.Data Error: 4 : Cannot find source for binding with reference' (I think its from Avalon dock)
             PresentationTraceSources.DataBindingSource.Switch.Level = SourceLevels.Critical;
+
+            // Debounced title update: fires 400ms after the user stops dragging the window edge.
+            _titleResizeTimer.Interval = TimeSpan.FromMilliseconds(400);
+            _titleResizeTimer.Tick += (_, _) => { _titleResizeTimer.Stop(); UpdateWindowTitle(); };
+            SizeChanged += (_, _) =>
+            {
+                if (IsFileDatabaseAvailable())
+                {
+                    _titleResizeTimer.Stop();
+                    _titleResizeTimer.Start();
+                }
+            };
         }
         #endregion
 
@@ -978,6 +992,29 @@ namespace Timelapse
                 }
             }
             return null;
+        }
+
+        // Update the window title with the current database file path, truncated to fit the title bar.
+        internal void UpdateWindowTitle()
+        {
+            if (!IsFileDatabaseAvailable()) return;
+            Title = Defaults.MainWindowBaseTitle + " ("
+                + Util.FilesFolders.TruncateFileNameForDisplay(DataHandler.FileDatabase.FilePath, GetTitlePathCharLimit())
+                + ")";
+        }
+
+        // Estimate how many path characters fit in the title bar at the current window width.
+        // Uses the OS caption font metrics and subtracts ~190 DIPs for chrome buttons and icon.
+        // 'n' approximates the average width of path characters (letters, digits, backslashes) in Segoe UI.
+        private int GetTitlePathCharLimit()
+        {
+            var typeface = new Typeface(SystemFonts.CaptionFontFamily, FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+            double dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+            var ft = new FormattedText("n", CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
+                                       typeface, SystemFonts.CaptionFontSize, Brushes.Black, dpi);
+            double baseOverhead = (Defaults.MainWindowBaseTitle.Length + 4) * ft.Width; // +4 for " ()"
+            double available = Math.Max(0, ActualWidth - 190 - baseOverhead);
+            return Math.Max(30, (int)(available / ft.Width));
         }
 
         #endregion
