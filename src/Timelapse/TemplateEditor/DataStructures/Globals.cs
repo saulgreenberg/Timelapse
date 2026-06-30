@@ -13,8 +13,6 @@ namespace TimelapseTemplateEditor.EditorCode
         public static CommonDatabase TemplateDatabase => EditorConstant.templateEditorWindow?.templateDatabase;
         public static TemplateDataGridControl TemplateDataGridControl => TemplateUI?.TemplateDataGridControl;
         public static TemplateUIControl TemplateUI => EditorConstant.templateEditorWindow.TemplateUI;
-        public static TemplateDataEntryPreviewPanel TemplateDataEntryPreviewPanelControl => TemplateUI.TemplateDataEntryPreviewPanel;
-        public static TemplateSpreadsheetPreviewControl TemplateSpreadsheet => TemplateUI.TemplateSpreadsheetPreviewControl;
         public static MouseState MouseState => EditorConstant.templateEditorWindow.mouseState;
     }
 }

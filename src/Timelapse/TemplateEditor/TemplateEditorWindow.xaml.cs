@@ -105,13 +105,21 @@ namespace TimelapseTemplateEditor
             //    }
             //};
 
-            if (!string.IsNullOrEmpty(PendingTemplateFilePath))
+            try
             {
-                if (System.IO.File.Exists(PendingTemplateFilePath))
+                if (!string.IsNullOrEmpty(PendingTemplateFilePath))
                 {
-                    await TemplateDoOpen(PendingTemplateFilePath).ConfigureAwait(true);
+                    if (System.IO.File.Exists(PendingTemplateFilePath))
+                    {
+                        await TemplateDoOpen(PendingTemplateFilePath).ConfigureAwait(true);
+                    }
+                    PendingTemplateFilePath = null;
                 }
-                PendingTemplateFilePath = null;
+            }
+            catch (Exception ex)
+            {
+                AppLog.Error("Window_Loaded: Unexpected error opening pending template file.", ex);
+                TracePrint.CatchException(ex.Message);
             }
         }
 

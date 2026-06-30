@@ -34,8 +34,7 @@ namespace Timelapse.Controls
         private static partial IntPtr GetSystemMenu(IntPtr hWnd, [MarshalAs(UnmanagedType.Bool)] bool bRevert);
 
         [LibraryImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static partial bool EnableMenuItem(IntPtr hMenu, uint uIDEnableItem, uint uEnable);
+        private static partial void EnableMenuItem(IntPtr hMenu, uint uIDEnableItem, uint uEnable);
 
         private const uint MF_BYCOMMAND = 0x00000000;
         private const uint MF_GRAYED = 0x00000001;

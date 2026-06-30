@@ -240,64 +240,64 @@ namespace Timelapse
         #region Window Loading, Closing
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // Abort if some of the required dependencies are missing
-            if (Dependencies.AreRequiredBinariesPresent(Assembly.GetExecutingAssembly(), out string missingAssemblies) == false)
-            {
-                Dialogs.DependencyFilesMissingDialog(missingAssemblies);
-                AppLog.Error($"Required binaries missing ({missingAssemblies}). Shutting down.");
-                Application.Current.Shutdown();
-            }
-
-            // Check for updates at least once a day
-            if (DateTime.Now.Year != State.MostRecentCheckForUpdates.Year ||
-            DateTime.Now.Month != State.MostRecentCheckForUpdates.Month ||
-            DateTime.Now.Day != State.MostRecentCheckForUpdates.Day)
-            {
-                VersionChecks updater = new(this, VersionUpdates.ApplicationName, VersionUpdates.LatestVersionFileNameXML);
-                updater.TryCheckForNewVersionAndDisplayResultsAsNeeded(false);
-                State.MostRecentCheckForUpdates = DateTime.Now;
-            }
-            if (State.FirstTimeFileLoading)
-            {
-                // Load the previously saved layout. If there is none, TryLoad will default to a reasonable layout and window size/position.
-                this.AvalonLayout_TryLoad(AvalonLayoutTags.LastUsed);
-                //FolderMetadataPane.IsEnabled = false; // Needed as Try Load will set it to true if that was its last state
-                State.FirstTimeFileLoading = false;
-            }
-
-            if (!SystemStatus.CheckAndGetLangaugeAndCulture(out _, out _, out string displayname))
-            {
-                HelpDocument.WarningRegionLanguage = displayname;
-            }
-
-            // By default, we now set everything to use the Invariant culture, although this 
-            // isn't tested to ensure it works
-            Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-
-            // Add a context menu to the data controls that allows a user to restore default values to the current or selected file
-            // I originally had this in the XAML, but for some reason it complains if put there.
-            ContextMenu menuRestoreDefaults = new();
-            MenuItem menuItemRestoreDefaults = new();
-
-            menuItemRestoreDefaults.Click += MenuItemRestoreDefaultValues_Click;
-            menuRestoreDefaults.Opened += MenuRestoreDefaults_Opened;
-            menuRestoreDefaults.Items.Add(menuItemRestoreDefaults);
-            DataEntryControls.ContextMenu = menuRestoreDefaults;
-            DataEntryControlPanel.IsVisible = false;
-            InstructionPane.IsActive = true;
-            EnableOrDisableMenusAndControls();
-
-            // Initialize the modern notification system
-            ToastNotifier = new(this);
-
-            // Depending on the arguments, we may open Timelapse in particular wasy, or initiate it with a supplied template and/or data file
             try
             {
+                // Abort if some of the required dependencies are missing
+                if (Dependencies.AreRequiredBinariesPresent(Assembly.GetExecutingAssembly(), out string missingAssemblies) == false)
+                {
+                    Dialogs.DependencyFilesMissingDialog(missingAssemblies);
+                    AppLog.Error($"Required binaries missing ({missingAssemblies}). Shutting down.");
+                    Application.Current.Shutdown();
+                }
+
+                // Check for updates at least once a day
+                if (DateTime.Now.Year != State.MostRecentCheckForUpdates.Year ||
+                DateTime.Now.Month != State.MostRecentCheckForUpdates.Month ||
+                DateTime.Now.Day != State.MostRecentCheckForUpdates.Day)
+                {
+                    VersionChecks updater = new(this, VersionUpdates.ApplicationName, VersionUpdates.LatestVersionFileNameXML);
+                    updater.TryCheckForNewVersionAndDisplayResultsAsNeeded(false);
+                    State.MostRecentCheckForUpdates = DateTime.Now;
+                }
+                if (State.FirstTimeFileLoading)
+                {
+                    // Load the previously saved layout. If there is none, TryLoad will default to a reasonable layout and window size/position.
+                    this.AvalonLayout_TryLoad(AvalonLayoutTags.LastUsed);
+                    //FolderMetadataPane.IsEnabled = false; // Needed as Try Load will set it to true if that was its last state
+                    State.FirstTimeFileLoading = false;
+                }
+
+                if (!SystemStatus.CheckAndGetLangaugeAndCulture(out _, out _, out string displayname))
+                {
+                    HelpDocument.WarningRegionLanguage = displayname;
+                }
+
+                // By default, we now set everything to use the Invariant culture, although this
+                // isn't tested to ensure it works
+                Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+                // Add a context menu to the data controls that allows a user to restore default values to the current or selected file
+                // I originally had this in the XAML, but for some reason it complains if put there.
+                ContextMenu menuRestoreDefaults = new();
+                MenuItem menuItemRestoreDefaults = new();
+
+                menuItemRestoreDefaults.Click += MenuItemRestoreDefaultValues_Click;
+                menuRestoreDefaults.Opened += MenuRestoreDefaults_Opened;
+                menuRestoreDefaults.Items.Add(menuItemRestoreDefaults);
+                DataEntryControls.ContextMenu = menuRestoreDefaults;
+                DataEntryControlPanel.IsVisible = false;
+                InstructionPane.IsActive = true;
+                EnableOrDisableMenusAndControls();
+
+                // Initialize the modern notification system
+                ToastNotifier = new(this);
+
+                // Depending on the arguments, we may open Timelapse in particular wasy, or initiate it with a supplied template and/or data file
                 await HandleArgumentsOnOpenAsync();
             }
             catch (Exception ex)
             {
-                AppLog.Error("Window_Loaded: Unhandled exception in HandleArgumentsOnOpenAsync.", ex);
+                AppLog.Error("Window_Loaded: Unhandled exception.", ex);
                 TracePrint.CatchException(ex.Message);
             }
         }

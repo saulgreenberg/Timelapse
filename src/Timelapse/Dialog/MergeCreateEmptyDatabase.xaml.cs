@@ -132,22 +132,23 @@ namespace Timelapse.Dialog
         }
         private async void CreateEmptyButton_Click(object sender, RoutedEventArgs e)
         {
-            // Warn the user if ddb file already exists in that folder
-            // ReSharper disable once AssignNullToNotNullAttribute
-            if (Directory.GetFiles(Path.GetDirectoryName(TemplateTdbPath), "*" + File.FileDatabaseFileExtension).Length > 0)
-            {
-                if (false == Dialogs.MergeWarningCreateEmptyDdbFileExists(this))
-                {
-                    DialogResult = false;
-                    return;
-                }
-            }
             try
             {
+                // Warn the user if ddb file already exists in that folder
+                // ReSharper disable once AssignNullToNotNullAttribute
+                if (Directory.GetFiles(Path.GetDirectoryName(TemplateTdbPath), "*" + File.FileDatabaseFileExtension).Length > 0)
+                {
+                    if (false == Dialogs.MergeWarningCreateEmptyDdbFileExists(this))
+                    {
+                        DialogResult = false;
+                        return;
+                    }
+                }
                 await DoCreateEmptyDatabaseAsync();
             }
             catch (Exception ex)
             {
+                AppLog.Error("CreateEmptyButton_Click: Unexpected error creating empty database.", ex);
                 TracePrint.CatchException(ex.Message);
             }
         }

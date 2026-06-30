@@ -72,28 +72,29 @@ namespace Timelapse.Dialog
         }
         private async void ButtonCheckOut_Click(object sender, RoutedEventArgs e)
         {
-            // TODO If its a shortcut file, we need to check for folders and files in the database path, not actual path
-            // ReSharper disable once AssignNullToNotNullAttribute
-            string folderToUse = Path.Combine(InitialFolder, RelativeSubFolderPath);
-            bool pathExists = Directory.Exists(folderToUse);
-            //if (Directory.GetFiles(FullSubFolderPath, "*" + File.FileDatabaseFileExtension).Length > 0)
-            if (pathExists && Directory.GetFiles(folderToUse, "*" + File.FileDatabaseFileExtension).Length > 0)
-            {
-                if (false == Dialogs.MergeWarningCheckOutDdbFileExists(this))
-                {
-                    return;
-                }
-            }
-            else if (pathExists == false)
-            {
-                Directory.CreateDirectory(folderToUse);
-            }
             try
             {
+                // TODO If its a shortcut file, we need to check for folders and files in the database path, not actual path
+                // ReSharper disable once AssignNullToNotNullAttribute
+                string folderToUse = Path.Combine(InitialFolder, RelativeSubFolderPath);
+                bool pathExists = Directory.Exists(folderToUse);
+                //if (Directory.GetFiles(FullSubFolderPath, "*" + File.FileDatabaseFileExtension).Length > 0)
+                if (pathExists && Directory.GetFiles(folderToUse, "*" + File.FileDatabaseFileExtension).Length > 0)
+                {
+                    if (false == Dialogs.MergeWarningCheckOutDdbFileExists(this))
+                    {
+                        return;
+                    }
+                }
+                else if (pathExists == false)
+                {
+                    Directory.CreateDirectory(folderToUse);
+                }
                 await DoCheckoutAsync();
             }
             catch (Exception ex)
             {
+                AppLog.Error("ButtonCheckOut_Click: Unexpected error during merge checkout.", ex);
                 TracePrint.CatchException(ex.Message);
             }
         }

@@ -1757,15 +1757,16 @@ namespace Timelapse.Dialog
         #region Common to Selections and Detections
         private async void CountTimer_Tick(object sender, EventArgs e)
         {
-            CountTimer.Stop();
-            // This is set everytime a selection is made
-            if (dontCount)
-            {
-                return;
-            }
-
             try
             {
+                CountTimer.Stop();
+                // This is set everytime a selection is made
+                if (dontCount)
+                {
+                    return;
+                }
+
+
                 // Cancel any previous in-flight count query and start a fresh one.
                 // This prevents a backlog of queries when the user changes criteria rapidly.
                 await countCts.CancelAsync().ConfigureAwait(true);
@@ -1837,10 +1838,10 @@ namespace Timelapse.Dialog
             {
                 // Expected when the user changes criteria rapidly; a newer query is already running.
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Silently absorb any other error (database fault, disposed control, etc.).
-                // This is a background UI count — failure here must not crash the process.
+                AppLog.Error("CountTimer_Tick: Unexpected error during selection count.", ex);
+                TracePrint.CatchException(ex.Message);
             }
         }
 

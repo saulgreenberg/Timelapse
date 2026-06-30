@@ -322,8 +322,7 @@ namespace Timelapse.Util
         }
 
         [LibraryImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static partial bool GetCursorPos(out NativePoint pt);
+        private static partial void GetCursorPos(out NativePoint pt);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct NativePoint { public int X, Y; }

@@ -38,9 +38,6 @@ namespace Timelapse.DebuggingSupport
             }
         }
 
-        /// <summary>The full path to the log file, or null if not yet initialized.</summary>
-        public static string LogFilePath => _logFilePath;
-
         /// <summary>
         /// The expected log file path based on well-known constants, regardless of whether
         /// Initialize has been called. Use this to check for an existing log file at any time.

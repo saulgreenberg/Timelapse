@@ -326,19 +326,27 @@ namespace TimelapseTemplateEditor
 
         private async void MenuSwitchToTimelapseOnCurrentFile_Click(object sender, RoutedEventArgs e)
         {
-            string templateFilePath = this.templateDatabase?.FilePath;
-            if (State.SuppressSwitchBetweenTimelapseAndEditorWarning == false &&
-                Dialogs.MenuFileSwitchBetweenTimelapseAndEditorWarningDialog(this, false) == false)
+            try
             {
-                return;
+                string templateFilePath = this.templateDatabase?.FilePath;
+                if (State.SuppressSwitchBetweenTimelapseAndEditorWarning == false &&
+                    Dialogs.MenuFileSwitchBetweenTimelapseAndEditorWarningDialog(this, false) == false)
+                {
+                    return;
+                }
+                this.closedByMenu = true;
+                this.Close();
+                this.TimelapseWindow.Show();
+                this.TimelapseWindow.Activate();
+                if (!string.IsNullOrEmpty(templateFilePath) && System.IO.File.Exists(templateFilePath))
+                {
+                    await this.TimelapseWindow.TryOpenTemplateAsync(templateFilePath);
+                }
             }
-            this.closedByMenu = true;
-            this.Close();
-            this.TimelapseWindow.Show();
-            this.TimelapseWindow.Activate();
-            if (!string.IsNullOrEmpty(templateFilePath) && System.IO.File.Exists(templateFilePath))
+            catch (Exception ex)
             {
-                await this.TimelapseWindow.TryOpenTemplateAsync(templateFilePath);
+                AppLog.Error("MenuSwitchToTimelapseOnCurrentFile_Click: Unexpected error switching to Timelapse.", ex);
+                TracePrint.CatchException(ex.Message);
             }
         }
 

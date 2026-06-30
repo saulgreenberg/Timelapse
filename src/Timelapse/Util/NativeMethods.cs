@@ -91,8 +91,7 @@ namespace Timelapse.Util
         }
 
         [LibraryImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static partial bool GetCursorPos(ref Win32Point pt);
+        private static partial void GetCursorPos(ref Win32Point pt);
 
         // VK_CONTROL = 0x11; high bit set means key is currently down.
         [LibraryImport("user32.dll")]
