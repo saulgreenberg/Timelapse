@@ -31,7 +31,7 @@ This repository begins at Timelapse Version 2.4.0.1. Earlier Timelapse versions 
 If you wish to co-develop this project, contact saul@ucalgary.ca to see if our project goals coincide.
 
 ### Development environment
-My build was created using [Visual Studio 2022](https://www.visualstudio.com/vs/)
+My build was created using [Visual Studio 2026](https://www.visualstudio.com/vs/)
 * Common Tools -> GitHub Extension for Visual Studio 
 
 Clone the repository locally using Visual Studio's Team Explorer, or by using a GIT interface such as SourceTree, or through GitHub's clone or download options
@@ -40,7 +40,7 @@ Development is against .NET 10 (net10.0-windows for WPF applications).
 
 ### Prerequisites
   * Build environment
-    * Visual Studio 2022
+    * Visual Studio 2026
     * .[Net 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) (the .Net 10 desktop runtime works, but generates non-critical build errors as it does not contain System.Private.CoreLib.dll)
     * [C++ Redistributables](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)   (used by TimelapseTemplateEditor and TimelapseViewOnly)
     * [WiX Toolset v6.0+](https://wixtoolset.org/) (only required if you are building MSI installers)
@@ -63,6 +63,7 @@ To successfully build Timelapse, do the following.
 
 ### Publishing and Creating Installers
 
+**Note**: Timelapse is signed, and the ***PublishAll*** scripts below look for signing certificates. If you want to create the installers, you will have to edit the signing sections out of the ***PublishAll***  script. 
 Timelapse publishes three different installation methods, as described on the Timelapse web site and in the Installing and Running Timelapse section below.  To create the complete set of installers (zip package, per-machine MSI, and per-user MSI), you can use the automated publishing workflows below. Both options do the same thing
 
 **Option 1: Run the PowerShell script directly (recommended)**
