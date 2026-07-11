@@ -222,14 +222,21 @@ namespace Timelapse.Controls
             // RecognitionsRefreshCounts will also try to drop them in its finally block
         }
 
+        // Tier S (self-healing): these tables are recreated fresh (DROP IF EXISTS + CREATE) every
+        // time they're needed (see CreateTempTableAndIndexFor* below, which already treat their own
+        // writes as survivable), so a failed drop here is harmless — just log it. Run off the UI
+        // thread so a slow/contended drop (e.g. on a network share) can't freeze the UI on unload.
         private void DropSessionTempTables()
         {
-            string query = SqlForCounting.DoDropTemporaryTablesForSession();
-            SqlOperationResult result = Database.Database.ExecuteNonQueryWithRollback(query, 3000);
-            if (!result.Success)
+            _ = Task.Run(() =>
             {
-                GlobalReferences.MainWindow.OnUnhandledException(this, new UnhandledExceptionEventArgs(new SqlOperationException("Error in DropSessionTempTables", result), true));
-            }
+                string query = SqlForCounting.DoDropTemporaryTablesForSession();
+                SqlOperationResult result = Database.Database.ExecuteNonQueryWithRollback(query);
+                if (!result.Success)
+                {
+                    AppLog.Warning($"DropSessionTempTables: failed to drop session temp tables (harmless, they will be dropped and recreated next time they're needed). {result.ErrorMessage}");
+                }
+            });
         }
         #endregion
 
@@ -416,10 +423,12 @@ namespace Timelapse.Controls
                 this.ShowProgressOrAbortIfCancelled(true, "preparations (initial database tables and indexes");
 
                 string query1 = SqlForCounting.CreateTempTableAndIndexForEpisodePrefixCounts(episodeNoteField);
-                _ = Database.Database.ExecuteNonQueryWithRollback(query1); // Intentional: temp-table write failure is survivable; downstream queries return empty results
+                SqlOperationResult result1 = Database.Database.ExecuteNonQueryWithRollback(query1, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs); // Intentional: temp-table write failure is survivable; downstream queries return empty results
+                if (!result1.Success) AppLog.Warning($"CreateTempTableAndIndexForEpisodePrefixCounts failed (survivable, downstream queries return empty results). {result1.ErrorMessage}");
 
                 string query2 = SqlForCounting.CreateTempTableAndIndexForEpisodePrefixMap(episodeNoteField);
-                _ = Database.Database.ExecuteNonQueryWithRollback(query2); // Intentional: temp-table write failure is survivable; downstream queries return empty results
+                SqlOperationResult result2 = Database.Database.ExecuteNonQueryWithRollback(query2, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs); // Intentional: temp-table write failure is survivable; downstream queries return empty results
+                if (!result2.Success) AppLog.Warning($"CreateTempTableAndIndexForEpisodePrefixMap failed (survivable, downstream queries return empty results). {result2.ErrorMessage}");
                 isSessionTmpTablesCreated = true;
 
             }
@@ -434,7 +443,8 @@ namespace Timelapse.Controls
                 // Rebuild the filtered image IDs temp table when the where statement changes
                 this.ShowProgressOrAbortIfCancelled(true, ": examining conditions");
                 string query3 = SqlForCounting.CreateTempTableAndIndexForFilteredImageIds(where);
-                _ = Database.Database.ExecuteNonQueryWithRollback(query3); // Intentional: temp-table write failure is survivable; downstream queries return empty results
+                SqlOperationResult result3 = Database.Database.ExecuteNonQueryWithRollback(query3, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs); // Intentional: temp-table write failure is survivable; downstream queries return empty results
+                if (!result3.Success) AppLog.Warning($"CreateTempTableAndIndexForFilteredImageIds failed (survivable, downstream queries return empty results). {result3.ErrorMessage}");
             }
 
             if (false == isPerWhereTmpTablesCreated || isWhereChanged || isThresholdChanged)
@@ -446,7 +456,8 @@ namespace Timelapse.Controls
                 // -- ============================================================================
                 this.ShowProgressOrAbortIfCancelled(true, ": examining conditions");
                 string query4 = SqlForCounting.CreateTempTableAndIndexForEpisodeDetectionFlags(lowerDetectionConfidence, upperDetectionConfidence);
-                _ = Database.Database.ExecuteNonQueryWithRollback(query4); // Intentional: temp-table write failure is survivable; downstream queries return empty results
+                SqlOperationResult result4 = Database.Database.ExecuteNonQueryWithRollback(query4, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs); // Intentional: temp-table write failure is survivable; downstream queries return empty results
+                if (!result4.Success) AppLog.Warning($"CreateTempTableAndIndexForEpisodeDetectionFlags failed (survivable, downstream queries return empty results). {result4.ErrorMessage}");
                 isPerWhereTmpTablesCreated = true;
             }
             lastWhereStatement = where;

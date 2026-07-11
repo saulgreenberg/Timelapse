@@ -1680,7 +1680,12 @@ namespace Timelapse.Database
                 new(DatabaseColumn.BackwardsCompatibility, Sql.Text, string.Empty),
                 new(DatabaseColumn.Standard, Sql.Text, string.Empty)
             ];
-            database.CreateTable(DBTables.TemplateInfo, templateInfoColumns);
+            SqlOperationResult createResult = database.CreateTable(DBTables.TemplateInfo, templateInfoColumns);
+            if (!createResult.Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false, "The problem occurred in CreateAndPopulateTemplateInfoTable (TemplateInfo CreateTable)", database.FilePath, createResult);
+                return;
+            }
 
             // Add the version number of the current Timelapse program to the templateinfo table
             List<List<ColumnTuple>> templateContents = [];
@@ -1839,7 +1844,11 @@ namespace Timelapse.Database
             List<SchemaColumnDefinition> templateTableColumns = GetCommonSchema();
             templateTableColumns.Add(new(Control.TextBoxWidth, Sql.Text));
             templateTableColumns.Add(new(Control.Copyable, Sql.Text));
-            database.CreateTable(DBTables.Template, templateTableColumns);
+            SqlOperationResult createResult = database.CreateTable(DBTables.Template, templateTableColumns);
+            if (!createResult.Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false, "The problem occurred in CreateEmptyTemplateTable (Template CreateTable)", database.FilePath, createResult);
+            }
         }
 
         private static List<SchemaColumnDefinition> GetCommonSchema()

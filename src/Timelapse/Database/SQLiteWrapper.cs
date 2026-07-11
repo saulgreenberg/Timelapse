@@ -592,7 +592,7 @@ public class SQLiteWrapper
         // number of IDs — so a single BETWEEN covering 50,000 contiguous IDs still counts as
         // one condition and requires only one query.
         [MustUseReturnValue]
-        public SqlOperationResult Update(string tableName, string IDColumnName, List<long> listOfIDs, string columnName, string value)
+        public SqlOperationResult Update(string tableName, string IDColumnName, List<long> listOfIDs, string columnName, string value, int busyTimeoutMs = 0)
         {
             if (listOfIDs.Count == 0)
             {
@@ -611,7 +611,7 @@ public class SQLiteWrapper
                 startIndex = nextIndex;
             }
 
-            return ExecuteNonQueryWithRollback(queries);
+            return ExecuteNonQueryWithRollback(queries, busyTimeoutMs);
         }
 
         // Return a single update query as a string
@@ -831,10 +831,10 @@ public class SQLiteWrapper
         /// last-executing SQL statement on failure.
         /// </returns>
         [MustUseReturnValue]
-        public SqlOperationResult ExecuteNonQueryWithRollback(List<string> statements)
+        public SqlOperationResult ExecuteNonQueryWithRollback(List<string> statements, int busyTimeoutMs = 0)
         {
             ThrowIf.IsNullArgument(statements, nameof(statements));
-            return ExecuteNonQueryWithRollbackCore(statements);
+            return ExecuteNonQueryWithRollbackCore(statements, busyTimeoutMs: busyTimeoutMs);
         }
 
         /// <summary>
@@ -847,10 +847,10 @@ public class SQLiteWrapper
         /// last-executing SQL statement on failure.
         /// </returns>
         [MustUseReturnValue]
-        public SqlOperationResult ExecuteNonQueryWithRollback(List<string> statements, IProgress<ProgressBarArguments> progress, string progressString, int progressFrequency)
+        public SqlOperationResult ExecuteNonQueryWithRollback(List<string> statements, IProgress<ProgressBarArguments> progress, string progressString, int progressFrequency, int busyTimeoutMs = 0)
         {
             ThrowIf.IsNullArgument(statements, nameof(statements));
-            return ExecuteNonQueryWithRollbackCore(statements, progress, progressString, progressFrequency);
+            return ExecuteNonQueryWithRollbackCore(statements, progress, progressString, progressFrequency, busyTimeoutMs);
         }
 
         /// <summary>
@@ -864,11 +864,13 @@ public class SQLiteWrapper
         public SqlOperationResult ExecuteNonQueryWithRollback(
             List<string> preTransactionStatements,
             List<string> statements,
-            List<string> postTransactionStatements)
+            List<string> postTransactionStatements,
+            int busyTimeoutMs = 0)
         {
             ThrowIf.IsNullArgument(statements, nameof(statements));
             return ExecuteNonQueryWithRollbackCore(
                 statements,
+                busyTimeoutMs: busyTimeoutMs,
                 preTransactionStatements: preTransactionStatements,
                 postTransactionStatements: postTransactionStatements);
         }
@@ -933,6 +935,12 @@ public class SQLiteWrapper
             // Retry the entire transaction on transient BUSY/LOCKED — these resolve when the
             // competing writer releases its lock. Unrecoverable failures (I/O error, drive gone)
             // are not BUSY/LOCKED and fall straight through to the general catch.
+            // Callers that opt in with a nonzero busyTimeoutMs (background-thread writes only —
+            // see ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs) get a longer ceiling: 8
+            // attempts instead of 5, same linear-backoff formula, topping out at 2000 ms instead
+            // of 1000 ms (~9 s total instead of ~2.5 s). Do not opt in from UI-thread-synchronous
+            // call sites — this retry loop blocks whatever thread called it.
+            int maxBusyAttempt = busyTimeoutMs > 0 ? 7 : 4;
             for (int busyAttempt = 0; ; busyAttempt++)
             {
                 // ReSharper disable once RedundantAssignment
@@ -1009,18 +1017,19 @@ public class SQLiteWrapper
                 }
                 catch (SQLiteException sqliteEx) when (
                     (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked)
-                    && busyAttempt < 4)
+                    && busyAttempt < maxBusyAttempt)
                 {
                     // Transient lock — roll back and wait before retrying.
-                    // Linear backoff: 250 ms, 500 ms, 750 ms, 1 000 ms (4 retries → 5 attempts max).
-                    try { transaction?.Rollback(); } 
-                    catch 
-                    { 
+                    // Linear backoff: 250 ms, 500 ms, ... up to 1 000 ms (5 attempts max) or, for
+                    // opted-in background callers, up to 2 000 ms (8 attempts max).
+                    try { transaction?.Rollback(); }
+                    catch
+                    {
                         // Ignore
                     }
                     finally { transaction?.Dispose(); }
                     int delayMs = (busyAttempt + 1) * 250;
-                    TracePrint.PrintMessage($"Database busy/locked (attempt {busyAttempt + 1}/5), retrying in {delayMs} ms…");
+                    TracePrint.PrintMessage($"Database busy/locked (attempt {busyAttempt + 1}/{maxBusyAttempt + 1}), retrying in {delayMs} ms…");
                 }
                 catch (Exception exception)
                 {

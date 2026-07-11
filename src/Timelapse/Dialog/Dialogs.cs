@@ -2,8 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -3919,7 +3919,6 @@ namespace Timelapse.Dialog
                 "[li][b]🖯Scrollwheel[/b] [e]operates Scroll bar [/e] which scrolls rows" +
 
                 "[br][i]Zooming[/i]" +
-                "[li][b]🖯Scrollwheel[/b] ≡[e]Zoom in/out[/e] between image zoom levels" +
                 "[li][b](Ctl)-🖯Scrollwheel[/b] ≡[e]Zoom in/out[/e] (images\u21C4overview and between all zoom levels)" +
                 "[li][b]<[/b] ≡[e]Zoom in[/e] (ignored when data field has the focus)" +
                 "[li][b]>[/b] ≡[e]Zoom out[/e] (ignored when data field has the focus)" +

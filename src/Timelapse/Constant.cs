@@ -301,7 +301,7 @@ namespace Timelapse.Constant
         public const string VersionNumberMinimum = "2.3.0.0"; // Earlier versions than this requires a special software update to the database files as done via DialogUpgradeFils.dll
         public const string VersionNumberBackwardsCompatible = "2.3.3.0"; // The earliest version known to be backwards compatible with this database
         public const string VersionNumberBackwardsCompatibleForTemplates = "2.3.0.0"; // The earliest version known to be backwards compatible with this database
-        public const string VersionPatchNumber = ""; // If this version is patched, the patch number (or Beta indications).. Should be updated whenever new versions are release. Use "." or "-patch #." 
+        public const string VersionPatchNumber = "-Patch1"; // If this version is patched, the patch number (or Beta indications).. Should be updated whenever new versions are release. Use "." or "-patch #." 
         public const string DefaultSortTerms = "[ { \"DataLabel\":\"RelativePath\", \"DisplayLabel\":\"RelativePath\", \"ControlType\":\"RelativePath\", \"IsAscending\":\"true\" }, { \"DataLabel\":\"DateTime\", \"DisplayLabel\":\"DateTime\", \"ControlType\":\"DateTime\", \"IsAscending\":\"true\" } ]";
         public const string DefaultSearchTerms = "{}";
         public const string DefaultQuickPasteJSON = "[]";
@@ -779,6 +779,14 @@ namespace Timelapse.Constant
         public static readonly TimeSpan ProgressBarSleepInterval = TimeSpan.FromMilliseconds(10.0);
         public static readonly TimeSpan DataGridTimerInterval = TimeSpan.FromMilliseconds(250);
         public static readonly TimeSpan ProgressBarRefreshInterval = TimeSpan.FromMilliseconds(250);
+
+        // Opt-in BUSY/LOCKED retry budget for background-thread database writes (bulk updates/deletes,
+        // recognition counting, merge/checkout, ID-reset-and-vacuum). Passing this as busyTimeoutMs to
+        // ExecuteNonQueryWithRollback both sets SQLite's own busy handler and extends the outer retry
+        // ceiling in ExecuteNonQueryWithRollbackCore — helps ride out contention on a slow network
+        // share. Do not use on UI-thread-synchronous call sites, where a multi-second wait would freeze
+        // the UI with no indication anything is happening.
+        public const int BackgroundWriteExtendedBusyTimeoutMs = 3000;
     }
 
     public static class ThumbnailGrid

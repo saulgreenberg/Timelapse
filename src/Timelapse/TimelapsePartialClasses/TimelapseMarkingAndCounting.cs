@@ -61,7 +61,9 @@ namespace Timelapse
                     DataHandler.IsProgrammaticControlUpdate = true;
                     counter.SetContentAndTooltip(newCounterData);
                     DataHandler.IsProgrammaticControlUpdate = false;
-                    DataHandler.FileDatabase.UpdateFile(DataHandler.ImageCache.Current.ID, counter.DataLabel, newCounterData);
+                    // Fire-and-forget: avoids blocking the UI thread on a database write while tagging
+                    // (this event handler fires synchronously on every marker add/delete).
+                    _ = DataHandler.FileDatabase.UpdateFileAsync(DataHandler.ImageCache.Current.ID, counter.DataLabel, newCounterData);
                 }
             }
 
@@ -137,7 +139,9 @@ namespace Timelapse
 
                 string counterContent = count.ToString();
                 DataHandler.IsProgrammaticControlUpdate = true;
-                DataHandler.FileDatabase.UpdateFile(DataHandler.ImageCache.Current.ID, counter.DataLabel, counterContent);
+                // Fire-and-forget: avoids blocking the UI thread on a database write while tagging
+                // (this event handler fires synchronously on every marker add/delete).
+                _ = DataHandler.FileDatabase.UpdateFileAsync(DataHandler.ImageCache.Current.ID, counter.DataLabel, counterContent);
                 counter.SetContentAndTooltip(counterContent);
                 DataHandler.IsProgrammaticControlUpdate = false;
 

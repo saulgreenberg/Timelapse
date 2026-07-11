@@ -285,7 +285,7 @@ namespace Timelapse.Database
                 SqlOperationResult result = await Task.Run(() =>
                 {
                     CreateBackupIfNeeded();
-                    return Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value);
+                    return Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 });
                 if (!result.Success)
                 {

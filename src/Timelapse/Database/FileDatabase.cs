@@ -240,7 +240,12 @@ namespace Timelapse.Database
             {
                 schemaColumnDefinitions.Add(CreateFileDataColumnDefinition(control));
             }
-            Database.CreateTable(DBTables.FileData, schemaColumnDefinitions);
+            SqlOperationResult createFileDataResult = Database.CreateTable(DBTables.FileData, schemaColumnDefinitions);
+            if (!createFileDataResult.Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnDatabaseCreatedAsync (FileData CreateTable)", this.FilePath, createFileDataResult);
+                return;
+            }
 
             // Create the ImageSetTable and initialize a single row in it
             schemaColumnDefinitions.Clear();
@@ -1438,7 +1443,9 @@ namespace Timelapse.Database
             }
             if (deleteStatements.Count > 0)
             {
-                SqlOperationResult deleteResult = Database.ExecuteNonQueryWithRollback(deleteStatements);
+                // Always invoked from a background thread (DeleteImages' DoDeleteFilesAsync), so it's
+                // safe to opt into the extended BUSY/LOCKED retry budget for network-share resilience.
+                SqlOperationResult deleteResult = Database.ExecuteNonQueryWithRollback(deleteStatements, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 if (!deleteResult.Success)
                 {
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in DeleteFilesAndMarkers", this.FilePath, deleteResult);
@@ -2964,11 +2971,15 @@ namespace Timelapse.Database
             if (Database.TableExists(Constant.DBTables.Detections) && false == Database.TableHasContent(Constant.DBTables.Detections))
             {
                 // Empty detection tables — drop failures leave orphan empty tables, which is harmless
-                _ = Database.DropTable(Constant.DBTables.DetectionCategories);
-                _ = Database.DropTable(Constant.DBTables.Detections);
-                _ = Database.DropTable(Constant.DBTables.DetectionsVideo);
-                _ = Database.DropTable(Constant.DBTables.ClassificationCategories);
-                _ = Database.DropTable(Constant.DBTables.Classifications);
+                void LogIfFailed(SqlOperationResult result, string tableName)
+                {
+                    if (!result.Success) AppLog.Warning($"DropDetectionTablesIfEmpty: failed to drop empty table {tableName} (harmless, leaves an orphan empty table). {result.ErrorMessage}");
+                }
+                LogIfFailed(Database.DropTable(Constant.DBTables.DetectionCategories), Constant.DBTables.DetectionCategories);
+                LogIfFailed(Database.DropTable(Constant.DBTables.Detections), Constant.DBTables.Detections);
+                LogIfFailed(Database.DropTable(Constant.DBTables.DetectionsVideo), Constant.DBTables.DetectionsVideo);
+                LogIfFailed(Database.DropTable(Constant.DBTables.ClassificationCategories), Constant.DBTables.ClassificationCategories);
+                LogIfFailed(Database.DropTable(Constant.DBTables.Classifications), Constant.DBTables.Classifications);
             }
             detectionExists = false;
         }
@@ -3501,7 +3512,8 @@ namespace Timelapse.Database
             {
                 // Just delete the classifications table as it has no content, which means there is nothing to update
                 // Drop failure leaves an empty orphan table, which is harmless
-                _ = this.Database.DropTable(DBTables.Classifications);
+                SqlOperationResult dropEmptyClassificationsResult = this.Database.DropTable(DBTables.Classifications);
+                if (!dropEmptyClassificationsResult.Success) AppLog.Warning($"UpdateOldStyleRecognitionTablesIfNeeded: failed to drop empty Classifications table (harmless, leaves an orphan empty table). {dropEmptyClassificationsResult.ErrorMessage}");
                 return;
             }
 
@@ -3544,8 +3556,10 @@ namespace Timelapse.Database
             //  as it crashes if the custom select tries to use classifications.
             // This is why we don't allow versions at or after 2.3.3.0 to open earlier databases.
             // Drop/Vacuum failures here are survivable: Classifications is now redundant, and Vacuum is space-reclaim only
-            _ = this.Database.DropTable(DBTables.Classifications);
-            _ = this.Database.Vacuum();
+            SqlOperationResult dropClassificationsResult = this.Database.DropTable(DBTables.Classifications);
+            if (!dropClassificationsResult.Success) AppLog.Warning($"UpdateOldStyleRecognitionTablesIfNeeded: failed to drop redundant Classifications table (harmless, leaves an orphan table). {dropClassificationsResult.ErrorMessage}");
+            SqlOperationResult vacuumResult = this.Database.Vacuum();
+            if (!vacuumResult.Success) AppLog.Warning($"UpdateOldStyleRecognitionTablesIfNeeded: Vacuum failed after recognition migration (harmless, database just retains its pre-vacuum size). {vacuumResult.ErrorMessage}");
         }
         #endregion
 

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Timelapse.Constant;
+using Timelapse.DebuggingSupport;
 
 namespace Timelapse.Database
 {
@@ -49,10 +50,13 @@ namespace Timelapse.Database
             //   pre-transaction  → pragmas off + temp-table cleanup
             //   transactional    → all ID remapping, rolled back atomically on failure
             //   post-transaction → pragmas restored
+            // ResetIDsAndVacuum only ever runs via ResetIDsAndVacuumAsync (Task.Run), so it's safe to
+            // opt into the extended BUSY/LOCKED retry budget for network-share resilience.
             SqlOperationResult result = database.ExecuteNonQueryWithRollback(
                 GetPreTransactionStatements(),
                 GetTransactionalStatements(detectionsExist, detectionsVideoExist, detectionsVideoTableExists),
-                GetPostTransactionStatements(detectionsExist));
+                GetPostTransactionStatements(detectionsExist),
+                ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
 
             if (!result.Success)
             {
@@ -65,7 +69,8 @@ namespace Timelapse.Database
 
             // VACUUM is forbidden inside a transaction and opens its own connection internally.
             // Failure is survivable — the database just retains its pre-vacuum size.
-            _ = database.Vacuum();
+            SqlOperationResult vacuumResult = database.Vacuum();
+            if (!vacuumResult.Success) AppLog.Warning($"ResetIDsAndVacuum: Vacuum failed (harmless, database just retains its pre-vacuum size). {vacuumResult.ErrorMessage}");
         }
 
         public static Task ResetIDsAndVacuumAsync(SQLiteWrapper database)
