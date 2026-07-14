@@ -229,7 +229,7 @@ namespace Timelapse.Dialog
                 {
                     isAnyDataUpdated = true;
                     ReportProgress(new(100, $"Writing metadata for {totalImages} files. Please wait...", false, true));
-                    FileDatabase.UpdateFiles(imagesToUpdate);
+                    FileDatabase.UpdateFiles(imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 }
                 return feedbackData;
             }, GetCancellationToken()).ConfigureAwait(true);

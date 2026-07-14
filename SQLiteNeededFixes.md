@@ -1,10 +1,10 @@
 # SQLite Busy/Locked Handling — Follow-up Fixes Needed
 
-Status: **Phase 1 complete. #11 (WAL mode on network shares) found and FIXED, verified
-empirically. Phase 2 paused on #1 pending a decision on further verification.** Phase 1 done:
-#4 (commit `a24c139`), #3 (commit `2acdef0`), #9 (commit `6d0acc5`), #10 (mailto → clipboard +
-Explorer-reveal, plus an added error-log relocation to `%LocalAppData%\Timelapse\ErrorLogs\`
-with migration — implemented, currently uncommitted).
+Status: **Phase 1 complete. #11 (WAL mode on network shares), #2, and #7 found/fixed and
+verified. Phase 2 paused only on #1, pending a decision on further verification.** Phase 1
+done: #4 (commit `a24c139`), #3 (commit `2acdef0`), #9 (commit `6d0acc5`), #10 (mailto →
+clipboard + Explorer-reveal, plus an added error-log relocation to
+`%LocalAppData%\Timelapse\ErrorLogs\` with migration — implemented, currently uncommitted).
 
 **#11 — done:** `ResetIDsAndVacuum` used to permanently switch the database to WAL journal
 mode, which SQLite's own docs say is unreliable over network shares — directly relevant to the
@@ -234,21 +234,39 @@ non-fatal-with-warning (the repair can presumably be retried next time the datab
 opened) rather than blocking the user from opening their data at all. Needs the same product
 judgment call as #5.
 
-### 7. Un-migrated background-thread bulk writes that could safely have opted into the extended budget but weren't touched
+### 7. Un-migrated background-thread bulk writes that could safely have opted into the extended budget but weren't touched — FIXED
 
-These run inside `Task.Run(...)` (background thread, confirmed by their surrounding
-`BusyCancelIndicator`/dialog pattern) — the exact class of call the commit's message says it
-targeted ("bulk updates, deletes, recognition counting...") — but were missed:
+All candidates were individually traced to confirm they genuinely run inside `Task.Run` (not
+inferred from surrounding `BusyCancelIndicator`/dialog pattern alone) before opting anything in
+— this surfaced a real fan-in hazard along the way (see below).
 
-- `DeleteImages.xaml.cs:409` → `FileDatabase.UpdateFiles(imagesToUpdate)` →
-  `FileDatabaseUpdate.cs:154` — inside `Task.Run` in `DeleteImages.xaml.cs`. Note its sibling
-  call `DeleteFilesAndMarkers` (`FileDatabase.cs:1448`) *was* opted in — this one wasn't.
-- `DateTimeFixedCorrection.xaml.cs:117` → `FileDatabase.UpdateAdjustedFileTimes(...)` →
-  `FileDatabaseUpdate.cs:437` — `ExecuteNonQueryWithRollback(query)`, no timeout, called
-  from inside `Task.Run`.
-- Likely the same pattern in `DateTimeLinearCorrection.xaml.cs:161/167` and
-  `DateTimeCorrectAmbiguous.xaml.cs:170` (→ `UpdateExchangeDayAndMonthInFileDates` →
-  `FileDatabaseUpdate.cs:485`) — not yet individually confirmed, flagged by the audit agent
+**`UpdateAdjustedFileTimes` (`FileDatabaseUpdate.cs:437`)** — all 4 callers confirmed
+background: `DateTimeFixedCorrection.xaml.cs:117`, `DateTimeLinearCorrection.xaml.cs:161/167`,
+`DateTimeDaylightSavingsCorrection.xaml.cs:115` (found during verification, not in the
+original candidate list), all via a `DatabaseUpdateFileDates` helper called from inside each
+file's own `Task.Run`. Opted in directly.
+
+**`UpdateExchangeDayAndMonthInFileDates` (`FileDatabaseUpdate.cs:485`)** — sole caller
+`DateTimeCorrectAmbiguous.xaml.cs:170`, confirmed background. Opted in directly.
+
+**`UpdateFiles(List<ColumnTuplesWithWhere>)` (`FileDatabaseUpdate.cs:151`) — the fan-in hazard.**
+This one has **11 callers**, not the single site originally listed. Checking all of them found
+**10 confirmed background** (`DeleteImages.xaml.cs:409`, `CsvReaderWriter.cs:833` and `:1288`,
+`DateTimeRereadFromFiles.xaml.cs:238`, `FileMetadataPopulateAll.xaml.cs:232`,
+`FileMetadataPopulateDatesOnly.xaml.cs:216`, `PopulateCamtrapDataFields.xaml.cs:278`,
+`PopulateFieldWithEpisodeData.xaml.cs:214`, `PopulateFieldWithGUID.xaml.cs:177`,
+`DarkImagesThreshold.xaml.cs:350`) — but **1 confirmed UI-thread-synchronous**:
+`ControlsDataEntry/DataEntryHandler.cs:1035` (`DateTimeUpdate`, a plain method with no
+`Task.Run`/`await`, called directly from a date/time picker's value-changed event on every
+single edit). Extending the shared method's *default* behavior would have silently given that
+per-edit UI-thread write the long ~7s budget — exactly the freeze-inducing mistake this whole
+effort exists to avoid, on a method that runs on literally every date/time field edit.
+
+**Fix applied:** added an opt-in `int busyTimeoutMs = 0` parameter to
+`UpdateFiles(List<ColumnTuplesWithWhere>, int busyTimeoutMs = 0)` — default preserves current
+(short-budget) behavior for every caller including `DataEntryHandler.cs`, which was left
+completely untouched. Only the 10 confirmed-background call sites now explicitly pass
+`ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs`.
   as following the same `Task.Run`+dialog pattern used throughout `src/Timelapse/Dialog/`.
 
 **Recommendation:** audit all `Task.Run`-wrapped database-mutation call sites in
@@ -582,16 +600,14 @@ appearances").
    contract change for callers (`FileDatabase.cs:802`, `CommonDatabase.cs:151`). Verified with a
    valid DB (true, 16ms) and a genuinely corrupt file (false, 22ms — confirming corruption isn't
    delayed by the retry loop).
-3. **#7 — Opt confirmed background bulk writes into the extended budget.** Candidates:
-   `DeleteImages.xaml.cs:409` → `FileDatabase.UpdateFiles` → `FileDatabaseUpdate.cs:154`;
-   `DateTimeFixedCorrection.xaml.cs:117` → `FileDatabase.UpdateAdjustedFileTimes` →
-   `FileDatabaseUpdate.cs:437`; and (pending the same verification) likely
-   `DateTimeLinearCorrection.xaml.cs:161/167` and `DateTimeCorrectAmbiguous.xaml.cs:170` →
-   `FileDatabaseUpdate.cs:485`. **Mandatory verification per site before opt-in:** walk callers
-   upward from the DB call until hitting either a `Task.Run` boundary (confirmed backgrounded)
-   or a direct UI-event-handler with no such boundary (must stay on the short budget). Default
-   assumption is "UI thread" until a `Task.Run` is literally read in the call chain — never
-   infer from file name or apparent intent alone.
+3. **#7 — DONE.** Every candidate individually traced to confirm `Task.Run` backgrounding
+   before opting in (never inferred from file name/pattern alone). `UpdateAdjustedFileTimes`
+   and `UpdateExchangeDayAndMonthInFileDates` opted in directly (all callers confirmed
+   background). `UpdateFiles(List<ColumnTuplesWithWhere>)` turned out to have 11 callers, not
+   1 — 10 confirmed background (opted in via a new `busyTimeoutMs = 0` default parameter,
+   explicitly passed only at those 10 call sites) and 1 confirmed UI-thread-synchronous
+   (`DataEntryHandler.cs:1035`, left untouched on the default short budget). See finding #7
+   for the full site list and the fan-in hazard this verification step caught.
 4. **#8 — Global `UnobservedTaskException` safety net.** `App.xaml.cs` is currently a bare
    `public partial class App;` with no `OnStartup` override (startup is driven entirely by
    `StartupUri` in `App.xaml`). Add an `OnStartup` override (or static constructor) that

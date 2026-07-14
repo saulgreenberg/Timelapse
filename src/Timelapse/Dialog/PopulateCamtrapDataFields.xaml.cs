@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
@@ -275,7 +276,7 @@ namespace Timelapse.Dialog
                 IsAnyDataUpdated = true;
                 Progress.Report(new(100,
                     $"Writing CamtrapDP data for {TotalImages} files. Please wait...", false, true));
-                fileDatabase.UpdateFiles(imagesToUpdate);
+                fileDatabase.UpdateFiles(imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
 
                 return true;
             }, Token).ConfigureAwait(true);

@@ -347,7 +347,7 @@ namespace Timelapse.Dialog
                 Progress.Report(new(100,
                     $"Writing changes for {filesToUpdate.Count} files. Please wait...", false, true));
                 IsAnyDataUpdated = true;
-                fileDatabase.UpdateFiles(filesToUpdate);
+                fileDatabase.UpdateFiles(filesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 return filesToUpdate.Count > 0
                 ? $"{selectedFilesCount} files examined, with {filesToUpdate.Count} updated to reflect changes."
                 : $"{selectedFilesCount} files examined. None were updated as nothing has changed.";

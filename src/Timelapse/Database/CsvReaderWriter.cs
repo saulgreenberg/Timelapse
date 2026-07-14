@@ -830,7 +830,7 @@ namespace Timelapse.Database
                 // Write all accumulated updates in a single transaction.
                 // Previously updates were flushed every 10,000 rows, creating one fsync per batch.
                 // A single commit here is significantly faster, especially on network-hosted databases.
-                fileDatabase.UpdateFiles(imagesToUpdate);
+                fileDatabase.UpdateFiles(imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 return (CSVReadingResult.Success, importErrors);
             }, token).ConfigureAwait(true);
         }
@@ -1285,7 +1285,9 @@ namespace Timelapse.Database
 
             if (imagesToUpdate.Count > 0)
             {
-                fileDatabase.UpdateFiles(imagesToUpdate);
+                // UpdateDuplicatesInDatabase's only callers (this file) are all confirmed to run
+                // on a background thread — see SQLiteNeededFixes.md finding #7.
+                fileDatabase.UpdateFiles(imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
             }
 
             return errorMessage;

@@ -148,10 +148,14 @@ namespace Timelapse.Database
 
 
         // Given a list of column/value pairs (the string,object) and the FILE name indicating a row, update it
-        public void UpdateFiles(List<ColumnTuplesWithWhere> filesToUpdate)
+        // busyTimeoutMs defaults to 0 (short retry budget) since this is also called synchronously
+        // from the UI thread (e.g. DataEntryHandler.DateTimeUpdate on every date/time picker edit).
+        // Only pass ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs from call sites confirmed
+        // to run on a background thread (see SQLiteNeededFixes.md finding #7).
+        public void UpdateFiles(List<ColumnTuplesWithWhere> filesToUpdate, int busyTimeoutMs = 0)
         {
             CreateBackupIfNeeded();
-            SqlOperationResult updateResult = Database.Update(DBTables.FileData, filesToUpdate);
+            SqlOperationResult updateResult = Database.Update(DBTables.FileData, filesToUpdate, busyTimeoutMs);
             if (!updateResult.Success)
             {
                 Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(List)", this.FilePath, updateResult);
@@ -434,7 +438,9 @@ namespace Timelapse.Database
             if (imagesToUpdate.Count > 0)
             {
                 CreateBackupIfNeeded();
-                SqlOperationResult updateResult = Database.Update(DBTables.FileData, imagesToUpdate);
+                // All four callers confirmed to run on a background thread (inside Task.Run) — see
+                // SQLiteNeededFixes.md finding #7 — so it's safe to opt into the extended budget.
+                SqlOperationResult updateResult = Database.Update(DBTables.FileData, imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 if (!updateResult.Success)
                 {
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateAdjustedFileTimes", this.FilePath, updateResult);
@@ -482,7 +488,9 @@ namespace Timelapse.Database
             if (imagesToUpdate.Count > 0)
             {
                 CreateBackupIfNeeded();
-                SqlOperationResult updateResult = Database.Update(DBTables.FileData, imagesToUpdate);
+                // Sole caller (DateTimeCorrectAmbiguous.xaml.cs) confirmed to run on a background
+                // thread (inside Task.Run) — see SQLiteNeededFixes.md finding #7.
+                SqlOperationResult updateResult = Database.Update(DBTables.FileData, imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 if (!updateResult.Success)
                 {
                     Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateExchangeDayAndMonthInFileDates", this.FilePath, updateResult);

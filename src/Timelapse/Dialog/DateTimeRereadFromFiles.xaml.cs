@@ -235,7 +235,7 @@ namespace Timelapse.Dialog
             {
                 imagesToUpdate.Add(image.GetDateTimeColumnTuples());
             }
-            fileDatabase.UpdateFiles(imagesToUpdate);  // Write the updates to the database
+            fileDatabase.UpdateFiles(imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);  // Write the updates to the database
         }
         #endregion
 

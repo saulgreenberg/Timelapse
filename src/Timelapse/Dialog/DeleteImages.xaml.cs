@@ -406,7 +406,7 @@ namespace Timelapse.Dialog
                 else
                 {
                     // update image properties
-                    fileDatabase.UpdateFiles(imagesToUpdate);
+                    fileDatabase.UpdateFiles(imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 }
                 // A side effect of running this task is that the FileTable will be updated, which means that,
                 // at the very least, the calling function will need to run FilesSelectAndShow to either

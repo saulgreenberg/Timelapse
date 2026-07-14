@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -211,7 +212,7 @@ namespace Timelapse.Dialog
                 IsAnyDataUpdated = true;
                 Progress.Report(new(100,
                     $"Writing Episode data for {TotalImages} files. Please wait...", false, true));
-                fileDatabase.UpdateFiles(imagesToUpdate);
+                fileDatabase.UpdateFiles(imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
 
                 return true;
             }, Token).ConfigureAwait(true);
