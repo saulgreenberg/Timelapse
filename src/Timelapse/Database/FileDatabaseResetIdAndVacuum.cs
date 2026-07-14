@@ -89,8 +89,12 @@ namespace Timelapse.Database
                 // Must precede BeginTransaction — ignored by SQLite inside a transaction.
                 $"{Sql.PragmaForeignKeysOff}",
 
-                // Cannot be changed inside a transaction.
-                $"{Sql.PragmaJournalModeWall}",
+                // Deliberately NOT setting journal_mode = WAL here (as this once did): unlike
+                // the pragmas below, journal_mode is persisted in the database file itself and
+                // is never reset by closing the connection, so it would permanently convert
+                // every database that ever runs this operation to WAL — a mode SQLite's own
+                // docs warn against using on network shares, which is exactly where these
+                // files often live. See SQLiteNeededFixes.md finding #11.
 
                 // Performance pragmas — safe to set any time, placed here for clarity.
                 $"{Sql.PragmaSynchronousNormal}",

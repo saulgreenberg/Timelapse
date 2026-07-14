@@ -119,7 +119,9 @@ namespace Timelapse
         public const string PragmaSetForeignKeys = PragmaForeignKeysEquals + " 1 ";
         public const string PragmaForeignKeysOff = PragmaForeignKeysEquals + " OFF ";
         public const string PragmaForeignKeysOn = PragmaForeignKeysEquals + " ON ";
+        public const string PragmaJournalMode = Pragma + " journal_mode ";
         public const string PragmaJournalModeWall = Pragma + " journal_mode = WAL";
+        public const string PragmaJournalModeDelete = Pragma + " journal_mode = DELETE";
         public const string PragmaQuickCheck = Pragma + " QUICK_CHECK ";
         public const string PragmaSynchronousNormal = Pragma + " synchronous = NORMAL";
         public const string PragmaTempStoreMemory = Pragma + " temp_store = MEMORY";

@@ -938,8 +938,35 @@ namespace Timelapse.Database
                 // If the Detections Table is missing the frame_number column, add it.
                 AddDetectionsVideoTableIfNeeded(Database);
 
+                // If a previous version's ResetIDsAndVacuum left this database stuck in WAL
+                // mode, revert it — see SQLiteNeededFixes.md finding #11.
+                RevertJournalModeFromWalIfNeeded(Database);
+
                 // See pre-2.2.2.5 version for example code
             }).ConfigureAwait(true);
+        }
+
+        // Journal mode is a database-file-level property (unlike foreign_keys, synchronous,
+        // temp_store, etc., which are per-connection and reset automatically when the
+        // connection closes) — it's stored in the file itself and persists across every future
+        // open until explicitly changed. A previous version of ResetIDsAndVacuum set
+        // journal_mode = WAL and never reverted it, permanently leaving any database that ran
+        // through it stuck in WAL mode. WAL is unreliable on network shares per SQLite's own
+        // documentation, so check for and revert it here, on every open, going forward.
+        // Cheap in the common case (already not WAL): one scalar read, then return.
+        private static void RevertJournalModeFromWalIfNeeded(SQLiteWrapper database)
+        {
+            string currentMode = database.ScalarGetScalarFromSelectAsString(Sql.PragmaJournalMode);
+            if (!string.Equals(currentMode, "wal", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            string revertedMode = database.ScalarGetScalarFromSelectAsString(Sql.PragmaJournalModeDelete);
+            if (!string.Equals(revertedMode, "delete", StringComparison.OrdinalIgnoreCase))
+            {
+                AppLog.Warning($"RevertJournalModeFromWalIfNeeded: could not revert journal_mode from WAL (still '{revertedMode}'). The database may be open elsewhere; it will be retried on the next open.");
+            }
         }
         #endregion
 

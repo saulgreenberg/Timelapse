@@ -1,11 +1,30 @@
 # SQLite Busy/Locked Handling — Follow-up Fixes Needed
 
-Status: **Phase 1 in progress** (see "Implementation Plan" section at the end). Done so far:
-#4 (`Update()` overload parity, commit `a24c139` on `develop`), #3 (`CreateTable`
-consistency, uncommitted), #9 (retry-duration comment fix, uncommitted). Remaining in Phase
-1: #10 (mailto clipboard fix). This document is written to be self-contained so a fresh
-session (or a different person) can pick up the work without needing the original
-conversation.
+Status: **Phase 1 complete. #11 (WAL mode on network shares) found and FIXED, verified
+empirically. Phase 2 paused on #1 pending a decision on further verification.** Phase 1 done:
+#4 (commit `a24c139`), #3 (commit `2acdef0`), #9 (commit `6d0acc5`), #10 (mailto → clipboard +
+Explorer-reveal, plus an added error-log relocation to `%LocalAppData%\Timelapse\ErrorLogs\`
+with migration — implemented, currently uncommitted).
+
+**#11 — done:** `ResetIDsAndVacuum` used to permanently switch the database to WAL journal
+mode, which SQLite's own docs say is unreliable over network shares — directly relevant to the
+original bug's network-share deployment, and plausibly a bigger contributor to real-world
+"database is locked" reports than lock-contention timing. Fixed (stopped setting WAL, added an
+on-open migration for already-affected databases) and verified empirically — see finding #11
+below for full detail, including a provenance check confirming this pragma predates any
+Claude-assisted work on this project (traces to the repo's first commit, 2025-12-11).
+
+Phase 2 status: #1 (read-path Busy/Locked retry) — **code written** (all four read primitives
+in `SQLiteWrapper.cs` now retry on `Busy`/`Locked` with the short budget), builds clean, but
+**live-contention verification is inconclusive**: a real contention test (same-process, then
+cross-process with `PRAGMA locking_mode=EXCLUSIVE` + a confirmed held lock) never actually
+produced a `SQLITE_BUSY`/`LOCKED` exception — every read succeeded near-instantly regardless of
+the lock. This does NOT mean the code is wrong (it's a minimal, structural mirror of the
+already-proven write-path retry logic, and demonstrably doesn't alter the success path), but it
+means the new catch branches have not been empirically confirmed to fire. Paused here rather
+than claimed as verified — see "Open questions" for next steps. This document is written to be
+self-contained so a fresh session (or a different person) can pick up the work without needing
+the original conversation.
 
 ## Session context
 
@@ -298,6 +317,82 @@ of attach-the-real-file or paste-the-text depending on what their mail client su
 verified (0 warnings/errors); manual end-to-end test (does the mail client open with subject
 filled, log on clipboard, and Explorer showing the file selected) still pending.
 
+### 11. `ResetIDsAndVacuum` permanently switches the database to WAL journal mode — likely a root-cause contributor — FIXED and verified
+
+`src/Timelapse/Database/FileDatabaseResetIdAndVacuum.cs:93`, inside `GetPreTransactionStatements()`:
+```csharp
+$"{Sql.PragmaJournalModeWall}",   // Sql.cs:122 → "PRAGMA journal_mode = WAL"
+```
+alongside `PragmaSynchronousNormal`, `PragmaTempStoreMemory`, and `PragmaCacheSize`, all
+labeled "Performance pragmas — safe to set any time." That label is true for three of the four,
+but **not for `journal_mode`**: unlike `synchronous`, `temp_store`, `cache_size`, and
+`foreign_keys` (all per-connection settings that reset to defaults the moment the connection
+closes), `journal_mode` is a **persistent, database-file-level property** stored in the file's
+own header. Once set to WAL, it stays WAL for every future connection to that file, by every
+future version of the app, until something explicitly issues `PRAGMA journal_mode = DELETE` (or
+another non-WAL mode) — which nothing in this codebase ever does. Confirmed via full-file read
+of `FileDatabaseResetIdAndVacuum.cs`: `GetPostTransactionStatements()` only restores
+`foreign_keys = ON` and drops temp tables; journal mode is never reverted, anywhere.
+
+`ResetIDsAndVacuum` is not a rare, manually-invoked maintenance action — per this file's own
+header comment, it runs automatically "when a large ID value is detected when loading the
+database" or "when a merge check-in completes." Both are ordinary events for an actively-used
+project. So in practice, most databases that have been in use for a while, merged, or had files
+deleted in bulk have likely already been silently, permanently converted to WAL mode, with zero
+user-facing indication that anything changed.
+
+**Why this matters for the exact bug this whole investigation started from:** SQLite's own
+documentation explicitly warns that WAL mode requires shared-memory-mapped file support (the
+companion `-shm`/`-wal` files) that many network filesystems do not implement correctly, and
+recommends against using WAL-mode databases on network shares — recommending the traditional
+rollback journal instead for exactly that deployment. The original bug report's database lived
+at `W:\Projects\16P0245_HD_Murray_River\Wildlife Cams\Photos\2026\...` — a mapped network
+drive. If that database had ever been through `ResetIDsAndVacuum` (plausible for an
+actively-used, multi-contributor wildlife-camera project with periodic merges), it would have
+been running in WAL mode over a network share ever since — a configuration SQLite itself says
+not to use. This could plausibly be a bigger, more direct contributor to the "database is
+locked" reports than plain lock-contention timing, and would explain why the errors read as
+somewhat erratic/inconsistent rather than a clean, deterministic contention pattern.
+
+**Provenance check (requested by the user):** this WAL pragma is not something introduced by
+Claude in any session, including the July 11 reference commit. Traced via `git log -p -S` to
+commit `711ee0053f55dfc3f9af618d76fe525bf7f75366`, dated **2025-12-11**, titled "Repository
+starts with version 2.4.0.1..." — the repository's very first commit. It's original,
+human-authored legacy code, predating any AI-assisted work on this project by over seven
+months.
+
+**Resolved — Option A implemented (stop using WAL entirely for this operation):**
+- `FileDatabaseResetIdAndVacuum.cs:93` — removed the `PragmaJournalModeWall` line from
+  `GetPreTransactionStatements()`. The other three performance pragmas
+  (`synchronous=NORMAL`, `temp_store=MEMORY`, `cache_size`) remain and provide the bulk-operation
+  speedup without the permanent, file-level mode change. `ResetIDsAndVacuum` no longer converts
+  any database to WAL going forward.
+- **Migration for already-affected databases:** added `RevertJournalModeFromWalIfNeeded`
+  (`FileDatabase.cs`), called from the existing `UpgradeDatabasesForBackwardsCompatabilityAsync`
+  `Task.Run` block (`FileDatabase.cs:906-942`) — the same unconditional, on-every-open
+  "IfNeeded" check sequence already used for schema migrations (`AddExportToCSVColumnIfNeeded`,
+  `AddStandardToImageSetColumnIfNeeded`, etc.), which runs regardless of the template-sync
+  branching elsewhere in the open flow and is already off the UI thread. Reads the current
+  `journal_mode`; if (and only if) it's `wal`, reverts to `delete`. Supporting additions:
+  `Sql.PragmaJournalMode` (bare read form) and `Sql.PragmaJournalModeDelete` in `Sql.cs`, and
+  `SQLiteWrapper.ScalarGetScalarFromSelectAsString(query)` (mirrors the existing
+  `ScalarGetScalarFromSelectAsInt`/`AsLong` wrappers, reusing the same already-hardened private
+  `GetScalarFromSelect` helper — including this session's new Busy/Locked read retry).
+- **Performance characteristics (asked about explicitly):** the check runs once per database
+  open. For the common case (mode already non-WAL — true for every database going forward, and
+  for any never affected by the old bug) it's one cheap scalar read, then return — negligible,
+  same league as its sibling checks. For a genuinely WAL-affected database, the one-time revert
+  forces a real SQLite checkpoint (flushes WAL contents into the main file, removes the
+  `-wal`/`-shm` companion files) — a real but bounded, one-time-per-database cost, off the UI
+  thread. After that single successful revert, every subsequent open of that same database is
+  back to the cheap no-op path, permanently.
+- **Verified empirically** (not just build-verified): a standalone test — create a scratch db,
+  force it to `wal`, run the exact same two calls `RevertJournalModeFromWalIfNeeded` makes —
+  confirmed: mode before = `wal`; revert call returned `delete`; mode after = `delete`; the
+  `-wal`/`-shm` companion files were actually removed (confirming a real checkpoint occurred, not
+  just a flag change); a second check on the now-reverted database confirmed the cheap
+  no-op path. Full pass, no ambiguity (unlike the lock-contention test for finding #1).
+
 ## Performance impact of implementing these fixes
 
 **Essentially zero impact on routine (uncontended) operations.** Every fix above only changes
@@ -388,8 +483,18 @@ which needs an answer before it's safe to call "fixed."
    should behave differently).
 2. **Resolved:** sequencing — phased by risk tier, safest-first, as separate commits/PRs (see
    Implementation Plan below). #5/#6 ship last, after the Phase 3 checkpoint is resolved.
-3. Status: plan approved, no code written yet. See "Implementation Plan" below for the
-   concrete, phased execution plan.
+3. Status: Phase 1 done, Phase 2 in progress (paused). See "Implementation Plan" below.
+4. **Resolved:** finding #11 (WAL mode) — Option A implemented (stopped setting WAL in
+   `ResetIDsAndVacuum`), plus an on-open migration for already-affected existing databases,
+   both verified empirically. See finding #11 for full detail.
+5. **New, unresolved — finding #1 verification:** the read-path retry code is written and
+   builds clean, but live-contention testing didn't manage to reproduce a real `SQLITE_BUSY`/
+   `LOCKED` exception to confirm the new catch branches actually fire (see the Phase 2 status
+   note above). Options going forward: try a lower-level repro (e.g. a raw Win32 file lock
+   instead of SQLite-level contention, to more literally simulate "another process/network
+   share has this file locked"), accept code-review-level confidence and move on, or revisit
+   once #11 is resolved (since #11 may turn out to be the more direct explanation for the
+   original read failures, making further contention-timing tuning less urgent by comparison).
 
 ## Implementation Plan (approved)
 

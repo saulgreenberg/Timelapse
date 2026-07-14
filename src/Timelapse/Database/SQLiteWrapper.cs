@@ -213,6 +213,18 @@ public class SQLiteWrapper
                     TracePrint.PrintMessage($"Database unavailable in GetDataTableFromSelect (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
                     Thread.Sleep(delayMs);
                 }
+                catch (SQLiteException sqliteEx) when (
+                    (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked)
+                    && attempt < 4)
+                {
+                    // Transient lock (e.g. a competing writer on a network share) — short,
+                    // UI-safe retry budget matching ExecuteNonQueryWithRollbackCore's default
+                    // schedule. Do not extend this: this method is frequently called
+                    // synchronously from the UI thread.
+                    int delayMs = (attempt + 1) * 250;
+                    TracePrint.PrintMessage($"Database busy/locked in GetDataTableFromSelect (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
+                    Thread.Sleep(delayMs);
+                }
                 catch (Exception exception)
                 {
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
@@ -271,6 +283,19 @@ public class SQLiteWrapper
                         TracePrint.PrintMessage($"Database unavailable in GetDataTableFromSelectAsync (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
                         Thread.Sleep(delayMs);
                     }
+                    catch (SQLiteException sqliteEx) when (
+                        !token.IsCancellationRequested &&
+                        (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked)
+                        && attempt < 4)
+                    {
+                        // Transient lock — short, UI-safe retry budget matching
+                        // ExecuteNonQueryWithRollbackCore's default schedule. This is the async
+                        // read path, but it's still awaited synchronously from UI code in
+                        // several callers, so the short budget applies here too.
+                        int delayMs = (attempt + 1) * 250;
+                        TracePrint.PrintMessage($"Database busy/locked in GetDataTableFromSelectAsync (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
+                        Thread.Sleep(delayMs);
+                    }
                     catch (Exception exception)
                     {
                         if (Interlocked.Exchange(ref _errorFired, 1) == 0)
@@ -306,6 +331,17 @@ public class SQLiteWrapper
                 {
                     int delayMs = (attempt + 1) * 200;
                     TracePrint.PrintMessage($"Database unavailable in GetDistinctValuesInColumn (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                    Thread.Sleep(delayMs);
+                }
+                catch (SQLiteException sqliteEx) when (
+                    (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked)
+                    && attempt < 4)
+                {
+                    // Transient lock — short, UI-safe retry budget matching
+                    // ExecuteNonQueryWithRollbackCore's default schedule. Do not extend this:
+                    // this method is frequently called synchronously from the UI thread.
+                    int delayMs = (attempt + 1) * 250;
+                    TracePrint.PrintMessage($"Database busy/locked in GetDistinctValuesInColumn (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
                     Thread.Sleep(delayMs);
                 }
                 catch (Exception exception)
@@ -347,6 +383,18 @@ public class SQLiteWrapper
                 {
                     int delayMs = (attempt + 1) * 200;
                     TracePrint.PrintMessage($"Database unavailable in GetScalarFromSelect (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                    Thread.Sleep(delayMs);
+                }
+                catch (SQLiteException sqliteEx) when (
+                    (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked)
+                    && attempt < 4)
+                {
+                    // Transient lock — short, UI-safe retry budget matching
+                    // ExecuteNonQueryWithRollbackCore's default schedule. Do not extend this:
+                    // this method (and its Scalar* wrappers) is frequently called
+                    // synchronously from the UI thread.
+                    int delayMs = (attempt + 1) * 250;
+                    TracePrint.PrintMessage($"Database busy/locked in GetScalarFromSelect (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
                     Thread.Sleep(delayMs);
                 }
                 catch (Exception exception)
@@ -793,6 +841,14 @@ public class SQLiteWrapper
                 return null;
             }
             return Convert.ToSingle(obj);
+        }
+
+        // Return a scalar string value, or null if things go wrong. Used for e.g. PRAGMA
+        // queries (such as journal_mode) that return their value as a single text row.
+        public string ScalarGetScalarFromSelectAsString(string query)
+        {
+            object obj = GetScalarFromSelect(query);
+            return (obj == null || obj == DBNull.Value) ? null : obj.ToString();
         }
 
         #endregion
