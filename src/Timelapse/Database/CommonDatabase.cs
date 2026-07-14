@@ -1022,7 +1022,11 @@ namespace Timelapse.Database
         {
             List<SchemaColumnDefinition> templateTableColumns = GetCommonSchema();
             templateTableColumns.Insert(3, new(Control.Level, Sql.IntegerType));
-            database.CreateTable(DBTables.MetadataTemplate, templateTableColumns);
+            SqlOperationResult createResult = database.CreateTable(DBTables.MetadataTemplate, templateTableColumns);
+            if (!createResult.Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in CreateEmptyMetadataTemplateTable (MetadataTemplate CreateTable)", database.FilePath, createResult);
+            }
         }
 
 
@@ -1036,7 +1040,11 @@ namespace Timelapse.Database
                 new(Control.Guid, Sql.Text),
                 new(Control.Alias, Sql.Text)
             ];
-            database.CreateTable(DBTables.MetadataInfo, metadataAliasTableColumns);
+            SqlOperationResult createResult = database.CreateTable(DBTables.MetadataInfo, metadataAliasTableColumns);
+            if (!createResult.Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in CreateEmptyMetadataInfoTable (MetadataInfo CreateTable)", database.FilePath, createResult);
+            }
         }
 
         #endregion

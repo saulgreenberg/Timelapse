@@ -260,7 +260,12 @@ namespace Timelapse.Database
             schemaColumnDefinitions.Add(new(DatabaseColumn.QuickPasteTerms, Sql.Text));        // A comma-separated list of 4 sort terms
             schemaColumnDefinitions.Add(new(DatabaseColumn.BoundingBoxDisplayThreshold, Sql.Real, RecognizerValues.BoundingBoxDisplayThresholdDefault));        // A comma-separated list of 4 sort terms
             schemaColumnDefinitions.Add(new(DatabaseColumn.Standard, Sql.Text, string.Empty));        // The standard used to create the template, if any
-            Database.CreateTable(DBTables.ImageSet, schemaColumnDefinitions);
+            SqlOperationResult createImageSetResult = Database.CreateTable(DBTables.ImageSet, schemaColumnDefinitions);
+            if (!createImageSetResult.Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnDatabaseCreatedAsync (ImageSet CreateTable)", this.FilePath, createImageSetResult);
+                return;
+            }
 
             // Populate the data for the image set with defaults
             // VersionCompatabily
@@ -306,7 +311,11 @@ namespace Timelapse.Database
                     schemaColumnDefinitions.Add(new(control.DataLabel, Sql.Text, string.Empty));
                 }
             }
-            Database.CreateTable(DBTables.Markers, schemaColumnDefinitions);
+            SqlOperationResult createMarkersResult = Database.CreateTable(DBTables.Markers, schemaColumnDefinitions);
+            if (!createMarkersResult.Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnDatabaseCreatedAsync (Markers CreateTable)", this.FilePath, createMarkersResult);
+            }
         }
 
         protected async Task OnExistingDatabaseOpenedAsync(CommonDatabase templateDatabase, TemplateSyncResults templateSyncResults)
@@ -2001,7 +2010,11 @@ namespace Timelapse.Database
                 // Create a column  as defined by each MetadataControlRow, but invoked using the base CommonControlRow class 
                 schemaColumnDefinitions.Add(CreateFileDataColumnDefinition(controlRow));
             }
-            Database.CreateTable(tableName, schemaColumnDefinitions);
+            SqlOperationResult createFolderMetadataResult = Database.CreateTable(tableName, schemaColumnDefinitions);
+            if (!createFolderMetadataResult.Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, $"The problem occurred in TryGenerateFolderMetadataTable ({tableName} CreateTable)", this.FilePath, createFolderMetadataResult);
+            }
         }
         #endregion
 
