@@ -22,17 +22,23 @@ independently, the decision was to accept the code as structurally sound (minima
 already-proven write-path logic) rather than keep chasing a repro. See finding #1 below for the
 full reasoning and the fallback plan if read-lock errors resurface later.
 
-**Phase 3 (#5/#6) — done (2026-07-14):** `UpdateSyncImageSetToDatabase` and
-`RepairClassificationCategoriesIfNeeded` now show a new `Dialogs.TimelapseOperationRetryDialog`
-(single "Retry" button, closing = proceed to fatal) after their existing automatic retries are
-exhausted, capped at one manual retry, before falling through to the unchanged fatal dialog.
-See Phase 3 below for the full design history and reasoning.
+**Phase 3 (#5/#6) — done and manually verified end-to-end (2026-07-14):**
+`UpdateSyncImageSetToDatabase` and `RepairClassificationCategoriesIfNeeded` now show a new
+`Dialogs.TimelapseOperationRetryDialog` (single "Retry" button, closing = proceed to fatal)
+after their existing automatic retries are exhausted, capped at one manual retry, before
+falling through to the unchanged fatal dialog. Live-tested against a real test project with an
+OS-level exclusive file lock forcing genuine write failures — confirmed the Retry dialog
+appears, one manual retry is attempted, and the existing fatal dialog correctly takes over when
+that retry also fails. See Phase 3 below for the full design history, reasoning, and test
+detail.
 
-**Remaining open items (all manual/UI verification, not design decisions):** finding #10's
-manual test (mailto/clipboard/Explorer-reveal — implemented and build-verified, end-to-end
-confirmation in the running app still outstanding) and Phase 3's manual test (trigger a
-failure, confirm Retry/fatal-fallback behavior — needs a real or simulated lock-contention
-scenario to reach). This document is written to be self-contained so a fresh session (or a
+**#12 (added beyond the original plan, 2026-07-14) — done:** successful retries previously left
+no trace in the log at all; now log via `AppLog.Warning` whenever a retry succeeds, across all
+six retry loops. See finding #12 below.
+
+**Remaining open item:** finding #10's manual test (mailto/clipboard/Explorer-reveal —
+implemented and build-verified, end-to-end confirmation in the running app still outstanding).
+This document is written to be self-contained so a fresh session (or a
 different person) can pick up the work without needing the original conversation.
 
 ## Session context
@@ -701,10 +707,17 @@ per site) if any single site's threading trace turns out inconclusive.
   that still fails, fall through to `TimelapseNeedsToShutDownDataWriteErrorDialog` exactly as
   before.
 
-Build verified (0 warnings/errors). Manual end-to-end test (trigger a failure, click Retry,
-confirm one more attempt, confirm fatal dialog still appears if that fails too) not yet done —
-would need a real or simulated lock-contention scenario to trigger the failure path in the
-first place.
+Build verified (0 warnings/errors). **Manual end-to-end test done and passed (2026-07-14):**
+opened a real test project (`C:\Users\saulg\Desktop\TestSets\PracticeImageSet`), held an
+OS-level exclusive lock (`FileShare.None`) on `TimelapseData.ddb` from a separate process, then
+changed the sort order in the running app (triggers `UpdateSyncImageSetToDatabase`). Confirmed:
+the new Retry dialog appeared (not the fatal one) once the automatic internal retries were
+exhausted; clicking Retry made one more attempt; since the lock was still held throughout, that
+attempt also failed and correctly fell through to the existing
+`TimelapseNeedsToShutDownDataWriteErrorDialog`, which shut the app down as designed. The
+"retry succeeds because the lock clears in time" branch was not separately tested (would
+require releasing the lock mid-dialog) — user confirmed this wasn't necessary given the
+fallback path is now verified working end-to-end.
 
 ### Critical files
 

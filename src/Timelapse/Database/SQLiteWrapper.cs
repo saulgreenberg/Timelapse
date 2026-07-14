@@ -602,11 +602,11 @@ public class SQLiteWrapper
             return ExecuteNonQueryWithRollback(queries, busyTimeoutMs);
         }
 
-        /// <summary>
-        /// Update specific rows in the DB as specified in the where clause.
-        /// </summary>
-        /// <param name="tableName">The table to update.</param>
-        /// <param name="columnsToUpdate">The column names and their new values.</param>
+        // <summary>
+        // Update specific rows in the DB as specified in the where clause.
+        // </summary>
+        // <param name="tableName">The table to update.</param>
+        // <param name="columnsToUpdate">The column names and their new values.</param>
         // UPDATE table_name SET 
         // colname1 = value1, 
         // colname2 = value2,
