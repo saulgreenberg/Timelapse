@@ -519,9 +519,9 @@ public class SQLiteWrapper
         }
 
         [MustUseReturnValue]
-        public SqlOperationResult Update(string tableName, List<ColumnTuplesWithWhere> updateQueryList)
+        public SqlOperationResult Update(string tableName, List<ColumnTuplesWithWhere> updateQueryList, int busyTimeoutMs = 0)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(updateQueryList, nameof(updateQueryList));
 
             List<string> queries = [];
@@ -534,7 +534,7 @@ public class SQLiteWrapper
                 }
                 queries.Add(query);
             }
-            return ExecuteNonQueryWithRollback(queries);
+            return ExecuteNonQueryWithRollback(queries, busyTimeoutMs);
         }
 
         /// <summary>
@@ -550,26 +550,26 @@ public class SQLiteWrapper
         // WHERE
         // <condition> e.g., ID=1;
         [MustUseReturnValue]
-        public SqlOperationResult Update(string tableName, ColumnTuplesWithWhere columnsToUpdate)
+        public SqlOperationResult Update(string tableName, ColumnTuplesWithWhere columnsToUpdate, int busyTimeoutMs = 0)
         {
             // Check the arguments for null
             ThrowIf.IsNullArgument(columnsToUpdate, nameof(columnsToUpdate));
 
             string query = CreateUpdateQuery(tableName, columnsToUpdate);
-            return ExecuteNonQueryWithRollback(query);
+            return ExecuteNonQueryWithRollback(query, busyTimeoutMs);
         }
 
         // UPDATE table_name SET
         // columnname = value,
         [MustUseReturnValue]
-        public SqlOperationResult Update(string tableName, ColumnTuple columnToUpdate)
+        public SqlOperationResult Update(string tableName, ColumnTuple columnToUpdate, int busyTimeoutMs = 0)
         {
             // Check the arguments for null
             ThrowIf.IsNullArgument(columnToUpdate, nameof(columnToUpdate));
 
             string query = Sql.Update + tableName + Sql.Set;
             query += $" {columnToUpdate.Name}{Sql.Equal}{Sql.Quote(columnToUpdate.Value)}";
-            return ExecuteNonQueryWithRollback(query);
+            return ExecuteNonQueryWithRollback(query, busyTimeoutMs);
         }
 
         // Efficient update for a list of IDs
