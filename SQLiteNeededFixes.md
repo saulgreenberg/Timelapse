@@ -1,10 +1,11 @@
 # SQLite Busy/Locked Handling — Follow-up Fixes Needed
 
-Status: **Phase 1 complete. #11 (WAL mode on network shares), #2, and #7 found/fixed and
-verified. Phase 2 paused only on #1, pending a decision on further verification.** Phase 1
-done: #4 (commit `a24c139`), #3 (commit `2acdef0`), #9 (commit `6d0acc5`), #10 (mailto →
-clipboard + Explorer-reveal, plus an added error-log relocation to
-`%LocalAppData%\Timelapse\ErrorLogs\` with migration — implemented, currently uncommitted).
+Status: **Phase 1 complete. Phase 2 complete except #1, which is paused pending a decision on
+further verification.** #11 (WAL mode on network shares), #2, #7, and #8 all found/fixed and
+verified (or, for #8, verified by construction — see below). Phase 1 done: #4 (commit
+`a24c139`), #3 (commit `2acdef0`), #9 (commit `6d0acc5`), #10 (mailto → clipboard +
+Explorer-reveal, plus an added error-log relocation to `%LocalAppData%\Timelapse\ErrorLogs\`
+with migration — implemented, currently uncommitted).
 
 **#11 — done:** `ResetIDsAndVacuum` used to permanently switch the database to WAL journal
 mode, which SQLite's own docs say is unreliable over network shares — directly relevant to the
@@ -273,21 +274,20 @@ completely untouched. Only the 10 confirmed-background call sites now explicitly
 `src/Timelapse/Dialog/` for the same opt-in, not just the ones the original bug report
 happened to touch.
 
-### 8. No global `UnobservedTaskException`/`AppDomain.UnhandledException` safety net for the new fire-and-forget tasks
+### 8. No global `UnobservedTaskException`/`AppDomain.UnhandledException` safety net for the new fire-and-forget tasks — FIXED
 
 `ExecuteNonQueryWithRollbackCore` does have a genuine catch-all (`catch (Exception)`), so the
 discarded task in `DropSessionTempTables` won't leak an exception under normal SQLite failure
 modes today. However, no `TaskScheduler.UnobservedTaskException` or
-`AppDomain.UnhandledException` handler exists anywhere in the app (searched `App.xaml.cs` and
-the whole `src` tree — no matches). The commit adds more fire-and-forget work
-(`DropSessionTempTables`'s `Task.Run`, plus the marker `UpdateFileAsync` calls in
-`TimelapseMarkingAndCounting.cs:64,141`). If any future change introduces an exception type
-that escapes one of these discarded tasks (e.g., a null-ref during a shutdown race), it will
-vanish with zero diagnostic trail rather than surface anywhere.
+`AppDomain.UnhandledException` handler existed anywhere in the app. Given the growing reliance
+on fire-and-forget tasks (`DropSessionTempTables`, marker `UpdateFileAsync` calls), a future
+exception escaping one of them would have vanished with zero diagnostic trail.
 
-**Recommendation:** register a `TaskScheduler.UnobservedTaskException` handler (cheap
-insurance) that at minimum logs via `AppLog`, given the app is now relying on more
-fire-and-forget tasks than before.
+**Fixed:** `App.xaml.cs` now has an `OnStartup` override registering
+`TaskScheduler.UnobservedTaskException`, logging via `AppLog.Warning` and calling
+`args.SetObserved()`. Diagnostics-only, as expected — on this project's target framework
+(`net10.0-windows`), unobserved task exceptions don't crash the process by default, so this
+doesn't change failure behavior, only ensures a future silent failure leaves a log trace.
 
 ### 9. Retry-duration doc/comment mismatch (not functional, but misleading) — FIXED
 
@@ -608,13 +608,9 @@ appearances").
    explicitly passed only at those 10 call sites) and 1 confirmed UI-thread-synchronous
    (`DataEntryHandler.cs:1035`, left untouched on the default short budget). See finding #7
    for the full site list and the fan-in hazard this verification step caught.
-4. **#8 — Global `UnobservedTaskException` safety net.** `App.xaml.cs` is currently a bare
-   `public partial class App;` with no `OnStartup` override (startup is driven entirely by
-   `StartupUri` in `App.xaml`). Add an `OnStartup` override (or static constructor) that
-   registers `TaskScheduler.UnobservedTaskException` (and consider
-   `AppDomain.CurrentDomain.UnhandledException` for parity), logging via `AppLog.Warning` at
-   minimum. Diagnostics only — on `net10.0-windows`, unobserved task exceptions don't crash the
-   process by default, so this doesn't change failure behavior, only visibility.
+4. **#8 — DONE.** `App.xaml.cs` now has an `OnStartup` override registering
+   `TaskScheduler.UnobservedTaskException`, logging via `AppLog.Warning` and calling
+   `args.SetObserved()`. Diagnostics only, as expected — doesn't change failure behavior.
 
 **Verification — reuse the reference commit's own technique:** hold a lock via a second
 `SQLiteConnection` executing `BEGIN IMMEDIATE` against a scratch copy of a `.ddb`, for a
