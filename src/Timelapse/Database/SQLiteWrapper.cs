@@ -203,6 +203,10 @@ public class SQLiteWrapper
                     dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
                     try   { dataTable.Load(reader); }
                     finally { dataTable.Columns.CollectionChanged -= DataTableColumns_Changed; }
+                    if (attempt > 0)
+                    {
+                        AppLog.Warning($"GetDataTableFromSelect: succeeded after {attempt} retry attempt(s) due to transient database contention (busy/locked or temporarily unavailable).");
+                    }
                     return dataTable;
                 }
                 catch (SQLiteException sqliteEx) when (
@@ -268,6 +272,10 @@ public class SQLiteWrapper
                         {
                             command.Dispose();
                         }
+                        if (attempt > 0)
+                        {
+                            AppLog.Warning($"GetDataTableFromSelectAsync: succeeded after {attempt} retry attempt(s) due to transient database contention (busy/locked or temporarily unavailable).");
+                        }
                         return dataTable;
                     }
                     catch (Exception) when (token.IsCancellationRequested)
@@ -323,6 +331,10 @@ public class SQLiteWrapper
                     {
                         distinctValues.Add(reader[columnName]);
                     }
+                    if (attempt > 0)
+                    {
+                        AppLog.Warning($"GetDistinctValuesInColumn: succeeded after {attempt} retry attempt(s) due to transient database contention (busy/locked or temporarily unavailable).");
+                    }
                     return distinctValues;
                 }
                 catch (SQLiteException sqliteEx) when (
@@ -375,7 +387,12 @@ public class SQLiteWrapper
                     command.CommandText = query;
                     //Debug.Print("Count: " + query);
                     //#pragma warning restore CA2100 // Review SQL queries for security vulnerabilities
-                    return command.ExecuteScalar();
+                    object scalarResult = command.ExecuteScalar();
+                    if (attempt > 0)
+                    {
+                        AppLog.Warning($"GetScalarFromSelect: succeeded after {attempt} retry attempt(s) due to transient database contention (busy/locked or temporarily unavailable).");
+                    }
+                    return scalarResult;
                 }
                 catch (SQLiteException sqliteEx) when (
                     (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
@@ -1069,6 +1086,10 @@ public class SQLiteWrapper
                         }
                     }
 
+                    if (busyAttempt > 0)
+                    {
+                        AppLog.Warning($"ExecuteNonQueryWithRollbackCore: succeeded after {busyAttempt} retry attempt(s) due to transient database contention (busy/locked).");
+                    }
                     return SqlOperationResult.Ok();
                 }
                 catch (SQLiteException sqliteEx) when (
@@ -1912,6 +1933,10 @@ public class SQLiteWrapper
                     using SQLiteDataReader reader = command.ExecuteReader();
                     dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
                     dataTable.Load(reader);
+                    if (attempt > 0)
+                    {
+                        AppLog.Warning($"PragmaGetQuickCheck: succeeded after {attempt} retry attempt(s) due to transient database contention (busy/locked or temporarily unavailable).");
+                    }
                     if (dataTable.Rows.Count == 1 && String.Equals((string)dataTable.Rows[0].ItemArray[0], Sql.Ok, StringComparison.OrdinalIgnoreCase))
                     {
                         return true;

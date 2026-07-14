@@ -439,6 +439,31 @@ months.
   just a flag change); a second check on the now-reverted database confirmed the cheap
   no-op path. Full pass, no ambiguity (unlike the lock-contention test for finding #1).
 
+### 12. Successful retries left no trace in the log — FIXED
+
+Raised by the user: "a retry is an indication that something has gone wrong, even though it
+may eventually resolve." Every retry attempt across all six retry loops in `SQLiteWrapper.cs`
+(`GetDataTableFromSelect`, `GetDataTableFromSelectAsync`, `GetDistinctValuesInColumn`,
+`GetScalarFromSelect`, `PragmaGetQuickCheck`, `ExecuteNonQueryWithRollbackCore`) logged only via
+`TracePrint.PrintMessage` → `Debug.Print`, visible solely to an attached debugger — never to the
+persistent `AppLog` file a user might send to the developer. Worse: if a retry *succeeded*
+(contention resolved within the budget), there was **no log trace at all**, anywhere, since
+success just returns normally. A database on a chronically-flaky network share that "self-heals"
+within its retry budget every time would look completely clean in any log sent to the
+developer — right up until the day it didn't resolve in time and hard-failed, with no history
+suggesting it had been silently straining for weeks.
+
+**Fixed:** added one `AppLog.Warning` call at the success-return point of each of the six retry
+loops, firing only if `attempt`/`busyAttempt > 0` (i.e., at least one retry actually happened).
+Zero cost in the normal case (no retry occurred). Sample log lines this produces:
+```
+2026-07-14 14:32:07.118 | WARNING | SQLiteWrapper.cs(206) GetDataTableFromSelect | GetDataTableFromSelect: succeeded after 2 retry attempt(s) due to transient database contention (busy/locked or temporarily unavailable).
+2026-07-14 14:35:41.902 | WARNING | SQLiteWrapper.cs(1075) ExecuteNonQueryWithRollbackCore | ExecuteNonQueryWithRollbackCore: succeeded after 1 retry attempt(s) due to transient database contention (busy/locked).
+```
+The log line applies uniformly regardless of which retry cause (`CantOpen`/`IoErr` or
+`Busy`/`Locked`) triggered the earlier attempts — the success point doesn't need to distinguish,
+it only needs to know retries happened at all. Build verified (0 warnings/errors).
+
 ## Performance impact of implementing these fixes
 
 **Essentially zero impact on routine (uncontended) operations.** Every fix above only changes
