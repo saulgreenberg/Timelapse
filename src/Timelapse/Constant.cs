@@ -498,8 +498,9 @@ namespace Timelapse.Constant
         public static readonly TimeSpan BackupInterval = TimeSpan.FromMinutes(30);
 
         public const string TraceFile = "TimelapseErrorReport.txt"; // File name for file containing debug information. Usually written in the same folder containing the template.
-        public const string LogFile = "TimelapseErrorLog.txt"; // Persistent error/warning log written to %LocalAppData%\Timelapse\.
-        public const string LogFolder = "Timelapse"; // Sub-folder under %LocalAppData% that holds the log file.
+        public const string LogFile = "TimelapseErrorLog.txt"; // Persistent error/warning log written to %LocalAppData%\Timelapse\ErrorLogs\.
+        public const string LogFolder = "Timelapse"; // Sub-folder under %LocalAppData% that holds the ErrorLogs sub-folder.
+        public const string LogSubFolder = "ErrorLogs"; // Sub-folder under %LocalAppData%\Timelapse\ that holds the log file, so it's easy to spot amongst the program's other files.
     }
 
     // Default settings for the FilePlayer

@@ -8,7 +8,7 @@ using File = Timelapse.Constant.File;
 namespace Timelapse.DebuggingSupport
 {
     /// <summary>
-    /// Persistent error/warning log written to %LocalAppData%\Timelapse\Timelapse.txt.
+    /// Persistent error/warning log written to %LocalAppData%\Timelapse\ErrorLogs\TimelapseErrorLog.txt.
     /// Call <see cref="Initialize"/> once at startup when the root path is known.
     /// All methods are thread-safe and are silent no-ops if initialization has not occurred or failed.
     /// </summary>
@@ -26,11 +26,30 @@ namespace Timelapse.DebuggingSupport
         {
             try
             {
-                string logFolder = Path.Combine(
+                string baseFolder = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     File.LogFolder);
+                string logFolder = Path.Combine(baseFolder, File.LogSubFolder);
                 Directory.CreateDirectory(logFolder);
                 _logFilePath = Path.Combine(logFolder, File.LogFile);
+
+                // One-time migration: a log written before the ErrorLogs sub-folder existed
+                // sits directly in baseFolder. Move it into the new location so users don't
+                // lose their existing log history. Best-effort — if it fails for any reason,
+                // just continue writing fresh entries to the new location; don't let a failed
+                // migration disable logging entirely.
+                try
+                {
+                    string oldLogFilePath = Path.Combine(baseFolder, File.LogFile);
+                    if (!System.IO.File.Exists(_logFilePath) && System.IO.File.Exists(oldLogFilePath))
+                    {
+                        System.IO.File.Move(oldLogFilePath, _logFilePath);
+                    }
+                }
+                catch
+                {
+                    // Migration is best-effort; if it fails, just continue writing to the new location.
+                }
             }
             catch
             {
@@ -45,6 +64,7 @@ namespace Timelapse.DebuggingSupport
         public static string DefaultLogFilePath => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             File.LogFolder,
+            File.LogSubFolder,
             File.LogFile);
 
         #region Initialization

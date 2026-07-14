@@ -238,16 +238,26 @@ namespace Timelapse
             }
             catch { logContents = "(Could not read log file contents)"; }
 
-            string body = "Add details describing the problem you are having, as that will help the Timelapse developer try to figure out what is going on."
+            // Put the log where the user can get it into the email themselves: on the clipboard
+            // (paste as text) and selected in File Explorer (drag in as an attachment). This avoids
+            // embedding the log in the mailto URI, which can silently fail once the encoded body
+            // exceeds what ShellExecute will accept for a large, SQL-dump-heavy log.
+            Clipboard.Clear();
+            Clipboard.SetText(logContents);
+            ProcessExecution.TryProcessStartUsingFileExplorerToSelectFile(logPath);
+
+            string body = $"1. Paste the log file into this email (Ctrl+V). Alternately, Timelapse raised a File Explorer "
+                        + $"window with the file {Path.GetFileName(logPath)} selected, which you can attach to your email."
                         + Environment.NewLine + Environment.NewLine
-                        + "--- Timelapse Error Log ---" + Environment.NewLine
-                        + logContents;
+                        + "2. Add details describing the problem you are having, as that will help the Timelapse developer try to figure out what is going on.";
 
             Uri uri = new($"mailto:{Constant.ExternalLinks.EmailAddress}?subject=Timelapse error log&body={Uri.EscapeDataString(body)}");
             if (!ProcessExecution.TryProcessStart(uri))
             {
                 MessageBox.Show(
-                    $"Could not open your email client. You can manually send the error log file to {Constant.ExternalLinks.EmailAddress}{Environment.NewLine}Log file: {logPath}",
+                    $"Could not open your email client. The error log has been copied to your clipboard (paste it with Ctrl+V) "
+                    + $"and selected in File Explorer, so you can paste or attach it into an email to {Constant.ExternalLinks.EmailAddress} manually."
+                    + $"{Environment.NewLine}Log file: {logPath}",
                     "Email Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }

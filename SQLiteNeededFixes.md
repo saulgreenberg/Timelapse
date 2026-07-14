@@ -254,7 +254,7 @@ real numbers (8 attempts, up to 1750ms/step, ~7s total) rather than changing
 zero-behavior-change documentation fix rather than a real, if small, change to
 already-working retry logic.
 
-### 10. Mailto error-log feature: separate, pre-existing bug (not caused by the SQLite fix)
+### 10. Mailto error-log feature: separate, pre-existing bug (not caused by the SQLite fix) — IMPLEMENTED, awaiting manual test
 
 `src/Timelapse/TimelapseMenuCallbacks/TimelapseMenuHelp.cs:219-253`
 (`MenuItemEmailErrorLog_Click`): reads the app log, truncates to the **last 1000 lines**
@@ -270,26 +270,33 @@ so the user isn't left with zero explanation — just an unhelpful one that does
 (URI too long) or offer an alternative (e.g., "log copied to clipboard" or "save log to file
 and attach manually").
 
-**Recommendation (decided):** stop putting the log content in the `mailto:` URL at all — any
-length cap is guessing at a moving, OS/mail-client-dependent target and still throws away
-content. Instead, in `MenuItemEmailErrorLog_Click` (`TimelapseMenuHelp.cs:219-253`):
-1. Copy `logContents` to the clipboard using the exact pattern already proven elsewhere in
-   this codebase — `Dialog/ExceptionShutdownDialog.xaml.cs:150-155`
+**Resolved (implemented in `TimelapseMenuHelp.cs`, `MenuItemEmailErrorLog_Click`):** stop
+putting the log content in the `mailto:` URL at all — any length cap is guessing at a moving,
+OS/mail-client-dependent target and still throws away content. A true auto-attached file was
+considered and rejected: `mailto:` has no attachment mechanism in its spec (RFC 6068), and the
+only way to get a real auto-attach is legacy Simple MAPI (`MAPISendMail`), which modern
+default-mail setups (Windows 11 Mail, webmail-as-default, Thunderbird without a MAPI plugin)
+generally don't support — not worth the added P/Invoke complexity for partial coverage.
+Implemented instead:
+1. Copy `logContents` to the clipboard using the pattern already proven elsewhere in this
+   codebase — `Dialog/ExceptionShutdownDialog.xaml.cs:150-155`
    (`Clipboard.Clear(); Clipboard.SetText(...)`).
-2. Build the `mailto:` URI with just the subject and a short, fixed instructional body
-   ("The error log has been copied to your clipboard — paste it here with Ctrl+V before
-   sending"), not the log itself — this keeps the URI a small, fixed size so it can no longer
-   overflow `ShellExecute`'s length ceiling.
-3. Update the existing failure-path `MessageBox` (line 249-251) to also mention the log is
-   already on the clipboard, so the user can paste it into webmail/Slack/etc. even if the
-   mailto launch itself fails.
+2. Reveal the log file selected in File Explorer via the existing
+   `ProcessExecution.TryProcessStartUsingFileExplorerToSelectFile(logPath)`
+   (`ProcessExecution.cs:126-140`) — lets the user drag the actual file in as a real attachment
+   instead of pasted text, if their mail client makes that easier.
+3. Build the `mailto:` URI with just the subject and a short, fixed instructional body
+   mentioning both the clipboard copy and the Explorer selection, not the log itself — this
+   keeps the URI a small, fixed size so it can no longer overflow `ShellExecute`'s length
+   ceiling.
+4. The existing failure-path `MessageBox` (was lines 249-251) now also mentions both fallbacks,
+   so the user has a path forward even if the mailto launch itself fails.
 
 This removes the failure mode entirely (fixed-size URL can't overflow) rather than just
-delaying it, reuses existing code, needs no MAPI/attachment complexity, and — as a side
-benefit — the user can now paste the *whole* log rather than being capped by URL length (the
-1000-line file-read cap can stay or be relaxed, since it's no longer load-bearing for the URI).
-Low priority relative to the SQLite items above, but directly impacts the user's ability to
-report *future* bugs like these.
+delaying it, reuses two patterns already proven in this codebase, and gives the user a choice
+of attach-the-real-file or paste-the-text depending on what their mail client supports. Build
+verified (0 warnings/errors); manual end-to-end test (does the mail client open with subject
+filled, log on clipboard, and Explorer showing the file selected) still pending.
 
 ## Performance impact of implementing these fixes
 
@@ -415,14 +422,18 @@ comment/unrelated-feature fix. No new design decisions, no threading judgment ca
    `SQLiteWrapper.cs` ~898-943) gives ~7s/1750ms max. Fixed by correcting the comment at
    `SQLiteWrapper.cs:938-942` to match reality (not by bumping `maxBusyAttempt`, to avoid a
    behavior change for a documentation-only problem).
-4. **#10 — Mailto: use the clipboard instead of an oversized URL body.** In
-   `TimelapseMenuHelp.cs:219-253` (`MenuItemEmailErrorLog_Click`): copy `logContents` to the
-   clipboard using the existing pattern at `Dialog/ExceptionShutdownDialog.xaml.cs:150-155`
-   (`Clipboard.Clear(); Clipboard.SetText(...)`); build the `mailto:` URI with just the
-   subject and a short fixed instructional body ("paste the log from your clipboard with
-   Ctrl+V"), not the log content itself, so the URI can no longer overflow `ShellExecute`'s
-   length ceiling; update the existing failure-path `MessageBox` (line 249-251) to also
-   mention the clipboard copy as a fallback path.
+4. **#10 — Mailto: use the clipboard + Explorer-reveal instead of an oversized URL body.
+   DONE, awaiting manual test.** In `TimelapseMenuHelp.cs:219-253`
+   (`MenuItemEmailErrorLog_Click`): copy `logContents` to the clipboard using the existing
+   pattern at `Dialog/ExceptionShutdownDialog.xaml.cs:150-155`
+   (`Clipboard.Clear(); Clipboard.SetText(...)`); also reveal the log file selected in File
+   Explorer via `ProcessExecution.TryProcessStartUsingFileExplorerToSelectFile(logPath)`
+   (`ProcessExecution.cs:126-140`) so the user can attach the real file instead of pasting
+   text; build the `mailto:` URI with just the subject and a short fixed instructional body
+   mentioning both fallbacks, not the log content itself, so the URI can no longer overflow
+   `ShellExecute`'s length ceiling; the existing failure-path `MessageBox` now also mentions
+   both fallbacks. Build verified; manual test (open Help > Email Error Log and confirm mail
+   client opens, clipboard has the log, Explorer shows the file selected) still pending.
 
 **Verification (no lock-contention harness needed):** run the app uncontended end-to-end
 (new database, existing database, recognition features) and confirm every touched
