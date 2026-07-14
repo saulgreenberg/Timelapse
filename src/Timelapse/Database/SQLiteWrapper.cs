@@ -937,8 +937,8 @@ public class SQLiteWrapper
             // are not BUSY/LOCKED and fall straight through to the general catch.
             // Callers that opt in with a nonzero busyTimeoutMs (background-thread writes only —
             // see ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs) get a longer ceiling: 8
-            // attempts instead of 5, same linear-backoff formula, topping out at 2000 ms instead
-            // of 1000 ms (~9 s total instead of ~2.5 s). Do not opt in from UI-thread-synchronous
+            // attempts instead of 5, same linear-backoff formula, topping out at 1750 ms instead
+            // of 1000 ms (~7 s total instead of ~2.5 s). Do not opt in from UI-thread-synchronous
             // call sites — this retry loop blocks whatever thread called it.
             int maxBusyAttempt = busyTimeoutMs > 0 ? 7 : 4;
             for (int busyAttempt = 0; ; busyAttempt++)

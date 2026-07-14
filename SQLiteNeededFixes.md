@@ -1,8 +1,11 @@
 # SQLite Busy/Locked Handling — Follow-up Fixes Needed
 
-Status: **plan approved (see "Implementation Plan" section at the end), no code changes made
-yet.** This document is written to be self-contained so a fresh session (or a different
-person) can pick up the work without needing the original conversation.
+Status: **Phase 1 in progress** (see "Implementation Plan" section at the end). Done so far:
+#4 (`Update()` overload parity, commit `a24c139` on `develop`), #3 (`CreateTable`
+consistency, uncommitted), #9 (retry-duration comment fix, uncommitted). Remaining in Phase
+1: #10 (mailto clipboard fix). This document is written to be self-contained so a fresh
+session (or a different person) can pick up the work without needing the original
+conversation.
 
 ## Session context
 
@@ -241,14 +244,15 @@ vanish with zero diagnostic trail rather than surface anywhere.
 insurance) that at minimum logs via `AppLog`, given the app is now relying on more
 fire-and-forget tasks than before.
 
-### 9. Retry-duration doc/comment mismatch (not functional, but misleading)
+### 9. Retry-duration doc/comment mismatch (not functional, but misleading) — FIXED
 
 Covered in the "What the commit fixed" section above — the code comment and commit message
-both say "~9s" / "2000ms max" for the extended budget; the actual arithmetic gives ~7s /
-1750ms max. Low priority, but worth fixing so future maintainers reasoning about worst-case
-UI/background wait times aren't misled. Either correct the comment, or bump
-`maxBusyAttempt` from 7 to 8 if 9s was the actually-intended ceiling (note: this would also
-bump total attempts from 8 to 9).
+both said "~9s" / "2000ms max" for the extended budget; the actual arithmetic gives ~7s /
+1750ms max. **Resolved:** corrected the comment at `SQLiteWrapper.cs:938-942` to state the
+real numbers (8 attempts, up to 1750ms/step, ~7s total) rather than changing
+`maxBusyAttempt` to match the originally-stated (incorrect) ~9s — chosen because it's a
+zero-behavior-change documentation fix rather than a real, if small, change to
+already-working retry logic.
 
 ### 10. Mailto error-log feature: separate, pre-existing bug (not caused by the SQLite fix)
 
@@ -405,11 +409,12 @@ comment/unrelated-feature fix. No new design decisions, no threading judgment ca
    (six recognition tables). **Care point:** each new early `return` on failure must not skip
    a later step that previously ran unconditionally — read the surrounding method's full
    control flow before adding the guard.
-3. **#9 — Retry-duration doc fix.** The code comment and commit message both claim "~9s /
-   2000ms max" for the extended busy budget; actual arithmetic
+3. **#9 — Retry-duration doc fix. DONE.** The code comment and commit message both claimed
+   "~9s / 2000ms max" for the extended busy budget; actual arithmetic
    (`maxBusyAttempt = busyTimeoutMs > 0 ? 7 : 4` in `ExecuteNonQueryWithRollbackCore`,
-   `SQLiteWrapper.cs` ~898-943) gives ~7s/1750ms max. Either correct the comment to match
-   reality, or bump `maxBusyAttempt` 7→8 to actually reach ~9s — pick one and document it.
+   `SQLiteWrapper.cs` ~898-943) gives ~7s/1750ms max. Fixed by correcting the comment at
+   `SQLiteWrapper.cs:938-942` to match reality (not by bumping `maxBusyAttempt`, to avoid a
+   behavior change for a documentation-only problem).
 4. **#10 — Mailto: use the clipboard instead of an oversized URL body.** In
    `TimelapseMenuHelp.cs:219-253` (`MenuItemEmailErrorLog_Click`): copy `logContents` to the
    clipboard using the existing pattern at `Dialog/ExceptionShutdownDialog.xaml.cs:150-155`
