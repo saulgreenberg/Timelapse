@@ -256,6 +256,7 @@
     <None Remove="Resources\FilePathTooLong.jpg" />
     <None Remove="Resources\LoadAnImageSet.jpg" />
     <None Remove="Resources\NoFilesAvailable.jpg" />
+    <None Remove="Resources\Splash\SplashBackground.jpg" />
     <None Remove="Resources\TimelapseHelp.rtf" />
     <None Remove="Resources\TimelapseMetadataInstructionsHelp.rtf" />
     <None Remove="Resources\VideoPauseIcon.png" />
@@ -476,6 +477,9 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\NoFilesAvailable.jpg">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Splash\SplashBackground.jpg">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Resources\TimelapseHelp.rtf">
