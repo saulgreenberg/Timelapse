@@ -1899,28 +1899,55 @@ public class SQLiteWrapper
         // Also note that a zero-length database file will pass this test, so you need to do a further check i.e. to see if a particular table is in the database.
         public bool PragmaGetQuickCheck()
         {
-            try
+            for (int attempt = 0; ; attempt++)
             {
-                using DataTable dataTable = new();
-                // Open the connection
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
-                using SQLiteCommand command = new(connection);
-                command.CommandText = Sql.PragmaQuickCheck;
-                using SQLiteDataReader reader = command.ExecuteReader();
-                dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
-                dataTable.Load(reader);
-                if (dataTable.Rows.Count == 1 && String.Equals((string)dataTable.Rows[0].ItemArray[0], Sql.Ok, StringComparison.OrdinalIgnoreCase))
+                try
                 {
-                    return true;
-                }
+                    using DataTable dataTable = new();
+                    // Open the connection
+                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+                    connection.Open();
+                    using SQLiteCommand command = new(connection);
+                    command.CommandText = Sql.PragmaQuickCheck;
+                    using SQLiteDataReader reader = command.ExecuteReader();
+                    dataTable.Columns.CollectionChanged += DataTableColumns_Changed;
+                    dataTable.Load(reader);
+                    if (dataTable.Rows.Count == 1 && String.Equals((string)dataTable.Rows[0].ItemArray[0], Sql.Ok, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
 
-                return false;
-            }
-            catch
-            {
-                // this will be a System.Data.SQLite.SQLiteException
-                return false;
+                    return false;
+                }
+                catch (SQLiteException sqliteEx) when (
+                    (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked)
+                    && attempt < 4)
+                {
+                    // Transient lock — short, UI-safe retry budget matching the read-path
+                    // pattern (finding #1). Narrowly scoped to Busy/Locked only: any other
+                    // SQLiteException (e.g. genuine corruption) must fall through to the
+                    // generic catch below without retrying, so a real corrupt-file diagnosis
+                    // isn't delayed by a multi-second wait that can't possibly help it.
+                    int delayMs = (attempt + 1) * 250;
+                    TracePrint.PrintMessage($"Database busy/locked in PragmaGetQuickCheck (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
+                    Thread.Sleep(delayMs);
+                }
+                catch (SQLiteException sqliteEx) when (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked)
+                {
+                    // Retries exhausted while still transiently locked — this is contention,
+                    // not corruption. Log it as such so it's diagnosable, rather than silently
+                    // reading to the caller as "the file is corrupt."
+                    AppLog.Warning($"PragmaGetQuickCheck: database remained busy/locked after retries (not corrupt).", sqliteEx);
+                    return false;
+                }
+                catch (Exception exception)
+                {
+                    // Any other exception — including a non-Busy/Locked SQLiteException, e.g.
+                    // genuine corruption — is not retried and is logged as a real integrity
+                    // problem, not contention.
+                    AppLog.Warning("PragmaGetQuickCheck: failed (may indicate a corrupt database).", exception);
+                    return false;
+                }
             }
         }
 

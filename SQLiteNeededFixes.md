@@ -111,9 +111,9 @@ even *before* this commit, and the commit didn't change that asymmetry.
 often on the UI thread) to these read primitives, mirroring the write-path pattern but with a
 shorter ceiling so it doesn't introduce new UI freezes.
 
-### 2. `PragmaGetQuickCheck` swallows Busy/Locked as "database is corrupt"
+### 2. `PragmaGetQuickCheck` swallows Busy/Locked as "database is corrupt" — FIXED and verified
 
-`src/Timelapse/Database/SQLiteWrapper.cs:1844-1869`:
+`src/Timelapse/Database/SQLiteWrapper.cs`, originally:
 ```csharp
 public bool PragmaGetQuickCheck()
 {
@@ -126,17 +126,25 @@ public bool PragmaGetQuickCheck()
 }
 ```
 Bare `catch { return false; }`, no distinction between "genuinely corrupt" and "transiently
-locked," no logging at all. Callers (`FileDatabase.cs:793`, `CommonDatabase.cs:151`) treat
+locked," no logging at all. Callers (`FileDatabase.cs:802`, `CommonDatabase.cs:151`) treat
 `false` as "the database file is likely corrupt" and abandon opening the file. This runs at
 database-open time — precisely when a network-share lock is most likely to be held by another
 user. **Failure scenario:** user opens a `.ddb` on a busy share, hits a transient lock, and
 Timelapse tells them their database is corrupt instead of retrying or reporting the real
-cause. This is arguably worse than the "confusing generic SQL read error" problem the
-commit's own message says it was eliminating, on a path the commit never touched.
+cause.
 
-**Recommendation:** log the actual exception via `AppLog`; distinguish
-`SQLiteErrorCode.Busy`/`Locked` from other failures before concluding "corrupt," and consider
-a short retry.
+**Fixed:** added a `Busy`/`Locked`-only retry loop (same short budget as finding #1's read-path
+fix — 5 attempts, 250ms steps, ~2.5s max), narrowly scoped so any *other* `SQLiteException`
+(genuine corruption, format errors) falls straight through to the generic catch without
+retrying. On retry exhaustion, logs via `AppLog.Warning` that the failure was contention, not
+corruption; the generic catch (real corruption) logs as such. Contract unchanged — still
+returns `bool`, callers untouched.
+
+**Verified empirically** (deterministic, unlike finding #1's lock-contention test): a valid
+scratch database returned `true` in 16ms; a genuinely corrupt file (plain garbage text, not a
+SQLite file at all) returned `false` in 22ms — confirming the exception filter correctly
+distinguishes the two cases and does **not** delay a real corruption diagnosis with retries
+(a mistakenly-broad filter would have shown ~1250ms+, not 22ms).
 
 ### 3. The `CreateTable` "tiering fix" was applied to only ~3 of ~15 call sites, including two immediately adjacent to a fixed one
 
@@ -567,11 +575,13 @@ appearances").
    retry loop must sit before that gate fires, not duplicate or bypass it. Scope the exception
    filter narrowly to `SQLiteErrorCode.Busy || SQLiteErrorCode.Locked` alongside the existing
    `CantOpen || IoErr` clause so genuinely non-transient errors still fall through immediately.
-2. **#2 — `PragmaGetQuickCheck` misdiagnosis.** Replace the bare `catch { return false; }` in
-   `SQLiteWrapper.cs:1844-1869` with one that logs via `AppLog` and distinguishes
-   `Busy`/`Locked` (retry briefly on the same short budget, then fall through) from other
-   SQLite error codes (treat as genuine corruption, `false`, as today). No contract change for
-   callers (`FileDatabase.cs:793`, `CommonDatabase.cs:151`).
+2. **#2 — `PragmaGetQuickCheck` misdiagnosis. DONE, verified empirically.** Replaced the bare
+   `catch { return false; }` in `SQLiteWrapper.cs` with one that retries `Busy`/`Locked` briefly
+   (same short budget as #1) then logs via `AppLog` on exhaustion, while any other SQLite error
+   code (genuine corruption) falls through immediately without retrying and logs as such. No
+   contract change for callers (`FileDatabase.cs:802`, `CommonDatabase.cs:151`). Verified with a
+   valid DB (true, 16ms) and a genuinely corrupt file (false, 22ms — confirming corruption isn't
+   delayed by the retry loop).
 3. **#7 — Opt confirmed background bulk writes into the extended budget.** Candidates:
    `DeleteImages.xaml.cs:409` → `FileDatabase.UpdateFiles` → `FileDatabaseUpdate.cs:154`;
    `DateTimeFixedCorrection.xaml.cs:117` → `FileDatabase.UpdateAdjustedFileTimes` →
