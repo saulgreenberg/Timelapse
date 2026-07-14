@@ -731,7 +731,17 @@ namespace Timelapse.Database
                 SqlOperationResult repairResult = this.Database.ExecuteNonQueryWithRollback(query);
                 if (!repairResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in RepairClassificationCategoriesIfNeeded", this.FilePath, repairResult);
+                    // ExecuteNonQueryWithRollback already retried automatically (short budget,
+                    // ~2.5s) before reporting failure. Offer exactly one more manual retry before
+                    // the fatal dialog.
+                    if (Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "repair classification category labels", repairResult) == true)
+                    {
+                        repairResult = this.Database.ExecuteNonQueryWithRollback(query);
+                    }
+                    if (!repairResult.Success)
+                    {
+                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in RepairClassificationCategoriesIfNeeded", this.FilePath, repairResult);
+                    }
                 }
             }
         }

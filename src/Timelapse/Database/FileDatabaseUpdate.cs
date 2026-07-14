@@ -315,7 +315,16 @@ namespace Timelapse.Database
             SqlOperationResult updateResult = Database.Update(DBTables.ImageSet, ImageSet.CreateColumnTuplesWithWhereByID());
             if (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateSyncImageSetToDatabase", this.FilePath, updateResult);
+                // Database.Update already retried automatically (short budget, ~2.5s) before
+                // reporting failure. Offer exactly one more manual retry before the fatal dialog.
+                if (Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save your sort/search settings", updateResult) == true)
+                {
+                    updateResult = Database.Update(DBTables.ImageSet, ImageSet.CreateColumnTuplesWithWhereByID());
+                }
+                if (!updateResult.Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateSyncImageSetToDatabase", this.FilePath, updateResult);
+                }
             }
         }
 

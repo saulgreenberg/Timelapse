@@ -4531,6 +4531,42 @@ namespace Timelapse.Dialog
             onClose?.Invoke();
         }
         #endregion
+
+        #region TimelapseOperationRetryDialog
+        // Shown when a write/repair operation fails after its own automatic short retry budget
+        // (~2.5s, inside Database.Update/ExecuteNonQueryWithRollback) has already been exhausted.
+        // Offers exactly one more, consciously-chosen retry before the caller falls back to the
+        // fatal TimelapseNeedsToShutDownDataWriteErrorDialog. Returns true only if the user
+        // clicked Retry; closing the dialog returns null, which the caller should treat the same
+        // as "proceed to the fatal dialog."
+        public static bool? TimelapseOperationRetryDialog(Window owner, string operationDescription, SqlOperationResult result)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Warning: a database write error occurred",
+                Icon = DialogIconType.Warning,
+                Problem = $"Timelapse tried to {operationDescription}, but an error occurred.",
+                Reason = "This can happen when:" +
+                         "[li] a network or OneDrive glitch temporarily blocked access to the file," +
+                         "[li] the database file was temporarily locked by another process," +
+                         "[li] the file is on a removable drive that was briefly disconnected.",
+                Result = "Timelapse already retried automatically for a few seconds without success." +
+                         "[br]You can try once more now, or close this dialog to let Timelapse handle it as a more serious problem.",
+                Solution = "[ni] [e]Retry[/e] to try the operation one more time." +
+                           "[ni] If it fails again, Timelapse will show further options.",
+            };
+            if (result?.Exception != null)
+            {
+                dialog.Details = $"[b]Error message:[/b] {result.ErrorMessage}" +
+                                 $"[br][b]Exception:[/b] {result.Exception.Message}";
+            }
+            dialog.OkButton.Content = "Retry";
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            return dialog.BuildAndShowDialog();
+        }
+        #endregion
     }
 
 }

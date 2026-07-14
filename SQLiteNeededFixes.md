@@ -1,11 +1,9 @@
 # SQLite Busy/Locked Handling — Follow-up Fixes Needed
 
-Status: **Phase 1 complete. Phase 2 complete except #1, which is paused pending a decision on
-further verification.** #11 (WAL mode on network shares), #2, #7, and #8 all found/fixed and
-verified (or, for #8, verified by construction — see below). Phase 1 done: #4 (commit
-`a24c139`), #3 (commit `2acdef0`), #9 (commit `6d0acc5`), #10 (mailto → clipboard +
-Explorer-reveal, plus an added error-log relocation to `%LocalAppData%\Timelapse\ErrorLogs\`
-with migration — implemented, currently uncommitted).
+Status: **All three phases complete.** Every finding from the original plan (#1-#11) is now
+found/fixed. Phase 1 done: #4 (commit `a24c139`), #3 (commit `2acdef0`), #9 (commit `6d0acc5`),
+#10 (mailto → clipboard + Explorer-reveal, plus an added error-log relocation to
+`%LocalAppData%\Timelapse\ErrorLogs\` with migration — implemented, currently uncommitted).
 
 **#11 — done:** `ResetIDsAndVacuum` used to permanently switch the database to WAL journal
 mode, which SQLite's own docs say is unreliable over network shares — directly relevant to the
@@ -15,17 +13,27 @@ on-open migration for already-affected databases) and verified empirically — s
 below for full detail, including a provenance check confirming this pragma predates any
 Claude-assisted work on this project (traces to the repo's first commit, 2025-12-11).
 
-Phase 2 status: #1 (read-path Busy/Locked retry) — **code written** (all four read primitives
-in `SQLiteWrapper.cs` now retry on `Busy`/`Locked` with the short budget), builds clean, but
-**live-contention verification is inconclusive**: a real contention test (same-process, then
-cross-process with `PRAGMA locking_mode=EXCLUSIVE` + a confirmed held lock) never actually
-produced a `SQLITE_BUSY`/`LOCKED` exception — every read succeeded near-instantly regardless of
-the lock. This does NOT mean the code is wrong (it's a minimal, structural mirror of the
-already-proven write-path retry logic, and demonstrably doesn't alter the success path), but it
-means the new catch branches have not been empirically confirmed to fire. Paused here rather
-than claimed as verified — see "Open questions" for next steps. This document is written to be
-self-contained so a fresh session (or a different person) can pick up the work without needing
-the original conversation.
+**#1 — done, accepted at code-review-level confidence (decided 2026-07-14).** All four read
+primitives in `SQLiteWrapper.cs` now retry on `Busy`/`Locked` with the short budget. Three
+separate live-contention test attempts never managed to reproduce a real `SQLITE_BUSY`/`LOCKED`
+exception, so the new catch branches were never empirically observed to fire — but given #11
+was plausibly the dominant real cause of the original read failures and is now fixed
+independently, the decision was to accept the code as structurally sound (minimal mirror of
+already-proven write-path logic) rather than keep chasing a repro. See finding #1 below for the
+full reasoning and the fallback plan if read-lock errors resurface later.
+
+**Phase 3 (#5/#6) — done (2026-07-14):** `UpdateSyncImageSetToDatabase` and
+`RepairClassificationCategoriesIfNeeded` now show a new `Dialogs.TimelapseOperationRetryDialog`
+(single "Retry" button, closing = proceed to fatal) after their existing automatic retries are
+exhausted, capped at one manual retry, before falling through to the unchanged fatal dialog.
+See Phase 3 below for the full design history and reasoning.
+
+**Remaining open items (all manual/UI verification, not design decisions):** finding #10's
+manual test (mailto/clipboard/Explorer-reveal — implemented and build-verified, end-to-end
+confirmation in the running app still outstanding) and Phase 3's manual test (trigger a
+failure, confirm Retry/fatal-fallback behavior — needs a real or simulated lock-contention
+scenario to reach). This document is written to be self-contained so a fresh session (or a
+different person) can pick up the work without needing the original conversation.
 
 ## Session context
 
@@ -90,7 +98,7 @@ own stated scope.
 
 ## What was NOT fixed, and other issues found (verified findings, prioritized)
 
-### 1. Read-path retry never covers Busy/Locked — systemic, and this is literally failure #4
+### 1. Read-path retry never covers Busy/Locked — systemic, and this is literally failure #4 — FIXED, accepted at code-review-level confidence
 
 `src/Timelapse/Database/SQLiteWrapper.cs`:
 - `GetDataTableFromSelect` (~line 188) and `GetDataTableFromSelectAsync` (~line 231)
@@ -108,11 +116,23 @@ untouched. This is exactly what happened at 14:28:39 in the log, 27 seconds befo
 `DropSessionTempTables` crashed again — i.e., reads have *less* resilience than writes did
 even *before* this commit, and the commit didn't change that asymmetry.
 
-**Recommendation:** add a `Busy`/`Locked` retry branch (short, UI-safe budget — reads are
-often on the UI thread) to these read primitives, mirroring the write-path pattern but with a
-shorter ceiling so it doesn't introduce new UI freezes.
+**Fixed:** added a `Busy`/`Locked` retry branch (short, UI-safe budget matching the write
+path's default schedule) to all four read primitives, narrowly scoped alongside the existing
+`CantOpen`/`IoErr` clause, preserving the `_errorFired` single-fire gate unchanged. Build
+verified clean.
 
-### 2. `PragmaGetQuickCheck` swallows Busy/Locked as "database is corrupt" — FIXED and verified
+**Verification status — accepted at code-review-level confidence, not empirically proven.**
+Three separate attempts to reproduce a real `SQLITE_BUSY`/`LOCKED` exception in a live-contention
+test (same-process `BEGIN IMMEDIATE`, same-process with `PRAGMA locking_mode=EXCLUSIVE`, and a
+genuinely separate OS process holding a confirmed lock) all failed — every read succeeded
+near-instantly regardless of the lock, so the new catch branches were never observed to
+actually fire. Decision (2026-07-14): accept this as done anyway, reasoning that finding #11
+(WAL mode silently enabled on databases that ever ran `ResetIDsAndVacuum`, undocumented as
+unreliable over network shares by SQLite itself) was plausibly the dominant real-world cause of
+the original read failures, and is now fixed independently. The retry code here remains a
+structurally sound, minimal-diff mirror of already-proven write-path logic — low residual risk
+even without a positive contention test — but if read-lock errors ever resurface in a future
+log after the #11 fix ships, revisit this verification gap first.
 
 `src/Timelapse/Database/SQLiteWrapper.cs`, originally:
 ```csharp
@@ -583,16 +603,13 @@ Mechanically similar to the already-proven write-path retry logic, but each requ
 got burned once ("database checkout... turned out not to be backgrounded despite
 appearances").
 
-1. **#1 — Read-path Busy/Locked retry.** Add a `Busy`/`Locked` branch to the exception filter
-   in `GetDataTableFromSelect` (~188), `GetDataTableFromSelectAsync` (~231),
-   `GetDistinctValuesInColumn` (~285), and `GetScalarFromSelect` (~328, backs several
-   `Scalar*` helpers) in `SQLiteWrapper.cs`. Use the **short** budget only (mirror the
-   existing 5-attempt/~2.5s pattern) — these are frequently called synchronously from the UI
-   thread, and the long budget would trade silent failure for a multi-second freeze. Preserve
-   the existing `Interlocked.Exchange(ref _errorFired, 1)` single-fire gate unchanged; the new
-   retry loop must sit before that gate fires, not duplicate or bypass it. Scope the exception
-   filter narrowly to `SQLiteErrorCode.Busy || SQLiteErrorCode.Locked` alongside the existing
-   `CantOpen || IoErr` clause so genuinely non-transient errors still fall through immediately.
+1. **#1 — DONE, accepted at code-review-level confidence.** Added a `Busy`/`Locked` branch to
+   the exception filter in `GetDataTableFromSelect`, `GetDataTableFromSelectAsync`,
+   `GetDistinctValuesInColumn`, and `GetScalarFromSelect` in `SQLiteWrapper.cs`, using the short
+   budget (matches the write path's default 5-attempt/~2.5s schedule), preserving the
+   `_errorFired` single-fire gate unchanged. Live-contention testing never reproduced a real
+   `Busy`/`Locked` exception (three attempts), so this was accepted on code-review-level
+   confidence rather than empirical proof — see finding #1 for the full reasoning.
 2. **#2 — `PragmaGetQuickCheck` misdiagnosis. DONE, verified empirically.** Replaced the bare
    `catch { return false; }` in `SQLiteWrapper.cs` with one that retries `Busy`/`Locked` briefly
    (same short budget as #1) then logs via `AppLog` on exhaustion, while any other SQLite error
@@ -627,38 +644,42 @@ controlled duration:
 **Rollback:** one commit per finding; #7's per-site opt-ins can be split further (one commit
 per site) if any single site's threading trace turns out inconclusive.
 
-### Phase 3 — Deferred decision (findings #5, #6): checkpoint, not code yet
+### Phase 3 — findings #5, #6 — DONE
 
-`UpdateSyncImageSetToDatabase` (`FileDatabaseUpdate.cs:307-316`) and
-`RepairClassificationCategoriesIfNeeded` (`FileDatabase.cs:709-728`) both remain on the fatal
-`TimelapseNeedsToShutDownDataWriteErrorDialog` path after phases 1-2 — **intentionally**. The
-user flagged both as touching state that matters (persisted sort/search/UI state; a
-classification-label repair) and is not ready to reuse the `DropSessionTempTables` silent-log
-treatment for them. Their words: *"both operations are important, where a failure to update
-or do the repair is problematic, so I need to consider how to deal with it. A likely solution
-is to raise a dialog box instead of a notification, as this is an important issue that the
-user needs to understand, where the dialog box includes details of what is going on."*
+`UpdateSyncImageSetToDatabase` (`FileDatabaseUpdate.cs`) and `RepairClassificationCategoriesIfNeeded`
+(`FileDatabase.cs`) both used to go straight from automatic-retry-exhaustion to the fatal
+`TimelapseNeedsToShutDownDataWriteErrorDialog`, with no intermediate chance to retry.
 
-**Before writing any code here, return to the user with concrete options, e.g.:**
-- A modal "This operation failed: `<what>`, reason: `<Busy/Locked detail>`" dialog with
-  **Retry** / **Ignore and continue** buttons, reusing `Dialogs`-style infrastructure already
-  in the codebase.
-- Whether **Ignore** should behave identically at both call sites, or whether close-time
-  failure (`TimelapseClosing.cs:116`) warrants different options than in-session failure
-  (e.g. `TimelapseMenuSort.cs:155`) — closing with unsynced state may carry different risk
-  than continuing to work with it.
-- Whether Retry should reuse the existing short retry budget again, or trigger a fresh attempt
-  on demand.
+**Decided design (2026-07-14), in three rounds of clarification:**
+1. Automatic short-budget retries (~2.5s, inside `Database.Update`/`ExecuteNonQueryWithRollback`)
+   already happened before either method's caller ever saw a failure — this was already true
+   before this fix and needed no change.
+2. On failure, show a new dialog — **exactly one "Retry" button**, no "Ignore and continue."
+   Closing the dialog (X, Esc, clicking away) is treated the same as a failed retry.
+3. **Capped at one manual retry total** — if that single retry also fails (or the user closes
+   the dialog instead of retrying), fall through to the existing fatal dialog, unchanged.
+4. Same treatment at both call sites and regardless of close-time vs. in-session context (no
+   special-casing `TimelapseClosing.cs` vs. e.g. `TimelapseMenuSort.cs`) — since the logic lives
+   entirely inside the two shared methods, every caller of `UpdateSyncImageSetToDatabase`
+   (`TimelapseMenuSort.cs`, `TimelapseQuickPaste.cs`, `TimelapseMenuEdit.cs` ×2,
+   `TimelapseImageSetLoading.cs`, `TimelapseCheckAndCorrectFolders.cs`, `TimelapseClosing.cs`)
+   gets the new behavior automatically and consistently, with no per-call-site changes needed.
 
-Only after that's settled, implement using the same `SqlOperationResult`/`Dialogs` pattern
-established elsewhere in the codebase, applying it consistently to both call sites (and
-`UpdateSyncImageSetToDatabase`'s other five UI-thread callers: `TimelapseMenuSort.cs`,
-`TimelapseQuickPaste.cs`, `TimelapseMenuEdit.cs` (x2), `TimelapseImageSetLoading.cs`,
-`TimelapseCheckAndCorrectFolders.cs`).
+**Implemented:**
+- New `Dialogs.TimelapseOperationRetryDialog(Window owner, string operationDescription, SqlOperationResult result)`
+  in `Dialogs.cs`, modeled on the existing `TimelapseReadErrorNoticeDialog` (same
+  `FormattedDialog`/`MessageBoxButtonType.OK` scaffolding), with the OK button relabeled
+  `"Retry"`. Returns `bool?` — `true` only if Retry was clicked; `null`/`false` (including
+  window-close) means "proceed to the fatal dialog."
+- Both `UpdateSyncImageSetToDatabase` and `RepairClassificationCategoriesIfNeeded` now: on
+  failure, show this dialog; if `true`, re-run the exact same write/repair statement once; if
+  that still fails, fall through to `TimelapseNeedsToShutDownDataWriteErrorDialog` exactly as
+  before.
 
-**Verification when unblocked:** same lock-hold harness, applied at close-time and at
-database-open-time; confirm the new dialog (not the fatal one) appears, Retry re-attempts
-correctly, and Ignore leaves the app in a documented, consistent state.
+Build verified (0 warnings/errors). Manual end-to-end test (trigger a failure, click Retry,
+confirm one more attempt, confirm fatal dialog still appears if that fails too) not yet done —
+would need a real or simulated lock-contention scenario to trigger the failure path in the
+first place.
 
 ### Critical files
 
