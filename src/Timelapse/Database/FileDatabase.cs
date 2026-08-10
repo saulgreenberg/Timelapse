@@ -889,7 +889,6 @@ namespace Timelapse.Database
             }
 
             // Replace the schema in the File DB table with the schema defined by the column definitions.
-            // XXXXXX THIS IS WHERE THE ERROR OCCURS
             SqlOperationResult alterResult = Database.SchemaAlterTableWithNewColumnDefinitions(DBTables.FileData, columnDefinitions);
             if (!alterResult.Success)
             {

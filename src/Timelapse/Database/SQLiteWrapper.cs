@@ -1574,27 +1574,38 @@ public class SQLiteWrapper
                 string destTable = $"{sourceTable}_NEW_{Guid.NewGuid():N}";
                 string sql = Sql.CreateTable + destTable + Sql.OpenParenthesis + newSchema + Sql.CloseParenthesis;
 
-                using SQLiteTransaction transaction = connection.BeginTransaction();
+                // PRAGMA foreign_keys is silently ignored while a transaction is open, so it must be
+                // toggled off here rather than relying on DropTable's own internal toggle below: otherwise
+                // foreign keys stay enabled for the DROP TABLE and cascade-delete rows in referencing tables.
+                PragmaSetForeignKeys(connection, false);
                 try
                 {
-                    using (SQLiteCommand command = new(sql, connection))
-                        command.ExecuteNonQuery();
+                    using SQLiteTransaction transaction = connection.BeginTransaction();
+                    try
+                    {
+                        using (SQLiteCommand command = new(sql, connection))
+                            command.ExecuteNonQuery();
 
-                    // Copy the old table's contents to the new table
-                    CopyAllValuesFromTable(connection, destTable, sourceTable, destTable);
+                        // Copy the old table's contents to the new table
+                        CopyAllValuesFromTable(connection, destTable, sourceTable, destTable);
 
-                    // Now drop the source table and rename the destination table to that of the source table
-                    DropTable(connection, sourceTable);
+                        // Now drop the source table and rename the destination table to that of the source table
+                        DropTable(connection, sourceTable);
 
-                    // Rename the table
-                    SchemaRenameTable(connection, destTable, sourceTable);
+                        // Rename the table
+                        SchemaRenameTable(connection, destTable, sourceTable);
 
-                    transaction.Commit();
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
                 }
-                catch
+                finally
                 {
-                    transaction.Rollback();
-                    throw;
+                    PragmaSetForeignKeys(connection, true);
                 }
 
                 return SqlOperationResult.Ok();
