@@ -1324,25 +1324,36 @@ public class SQLiteWrapper
                 createSql = createSql.Remove(createSql.Length - Sql.Comma.Length - Environment.NewLine.Length);
                 createSql += $"{Sql.CloseParenthesis} {Sql.Semicolon}";
 
-                using SQLiteTransaction transaction = connection.BeginTransaction();
+                // PRAGMA foreign_keys is silently ignored while a transaction is open, so it must be
+                // toggled off here rather than relying on DropTable's own internal toggle below: otherwise
+                // foreign keys stay enabled for the DROP TABLE and cascade-delete rows in referencing tables.
+                PragmaSetForeignKeys(connection, false);
                 try
                 {
-                    using (SQLiteCommand createCmd = new(createSql, connection))
-                        createCmd.ExecuteNonQuery();
+                    using SQLiteTransaction transaction = connection.BeginTransaction();
+                    try
+                    {
+                        using (SQLiteCommand createCmd = new(createSql, connection))
+                            createCmd.ExecuteNonQuery();
 
-                    // copy the contents from the source table to the destination table
-                    CopyAllValuesFromTable(connection, destTable, sourceTable, destTable);
+                        // copy the contents from the source table to the destination table
+                        CopyAllValuesFromTable(connection, destTable, sourceTable, destTable);
 
-                    // delete the source table, and rename the destination table so it is the same as the source table
-                    DropTable(connection, sourceTable);
-                    SchemaRenameTable(connection, destTable, sourceTable);
+                        // delete the source table, and rename the destination table so it is the same as the source table
+                        DropTable(connection, sourceTable);
+                        SchemaRenameTable(connection, destTable, sourceTable);
 
-                    transaction.Commit();
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
                 }
-                catch
+                finally
                 {
-                    transaction.Rollback();
-                    throw;
+                    PragmaSetForeignKeys(connection, true);
                 }
 
                 return SqlOperationResult.Ok();

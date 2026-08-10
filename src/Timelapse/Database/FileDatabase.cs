@@ -720,13 +720,13 @@ namespace Timelapse.Database
             if (this.DetectionsExists() && this.Database.TableExists(Constant.DBTables.ClassificationCategories))
             {
                 string table = Constant.DBTables.ClassificationCategories;
-                string label = $"{ Constant.ClassificationCategoriesColumns.Label}";
+                string label = $"{Constant.ClassificationCategoriesColumns.Label}";
                 string description = $"{Constant.ClassificationCategoriesColumns.Description}";
                 string newLabel = Sql.Quote(Constant.RecognizerValues.UnknownClassificationLabel);
                 string query = $"WITH SequencedRows AS (SELECT rowid, ROW_NUMBER() OVER (ORDER BY rowid) as seq FROM {table}"
-                               + $" WHERE {label} IS NULL OR TRIM({label}) = '' )" 
-                               + $" UPDATE {table} SET {label} = CASE " 
-                               + $" WHEN sr.seq = 1 THEN {newLabel} ELSE {newLabel} || sr.seq END," 
+                               + $" WHERE {label} IS NULL OR TRIM({label}) = '' )"
+                               + $" UPDATE {table} SET {label} = CASE "
+                               + $" WHEN sr.seq = 1 THEN {newLabel} ELSE {newLabel} || sr.seq END,"
                                + $" {description} = '' FROM SequencedRows sr WHERE {table}.rowid = sr.rowid;";
                 SqlOperationResult repairResult = this.Database.ExecuteNonQueryWithRollback(query);
                 if (!repairResult.Success)
@@ -889,6 +889,7 @@ namespace Timelapse.Database
             }
 
             // Replace the schema in the File DB table with the schema defined by the column definitions.
+            // XXXXXX THIS IS WHERE THE ERROR OCCURS
             SqlOperationResult alterResult = Database.SchemaAlterTableWithNewColumnDefinitions(DBTables.FileData, columnDefinitions);
             if (!alterResult.Success)
             {
@@ -1526,7 +1527,7 @@ namespace Timelapse.Database
         {
             Dictionary<string, string> actualColumns = SchemaGetColumnsAndDefaultValues(DBTables.FileData);
             if (actualColumns == null) return [];
-            HashSet<string> expectedSet = [..GetDataLabelsExceptIDInSpreadsheetOrderFromControls(), DatabaseColumn.ID];
+            HashSet<string> expectedSet = [.. GetDataLabelsExceptIDInSpreadsheetOrderFromControls(), DatabaseColumn.ID];
             return [.. actualColumns.Keys.Where(col => !expectedSet.Contains(col))];
         }
 
