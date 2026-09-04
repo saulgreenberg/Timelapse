@@ -982,13 +982,189 @@ public class SQLiteWrapper
             {
                 return SqlOperationResult.Ok();
             }
-            using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
 
-            // Retry the open for transient CANTOPEN failures (OneDrive / network-share lock).
-            // BusyTimeout cannot help here — it only applies after a successful open.
+            // Not a `using` declaration: on a READONLY retry (see below) this connection is
+            // disposed and replaced with a fresh one mid-loop, so disposal is handled explicitly
+            // in the `finally` below instead.
+            SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+            try
+            {
+                SqlOperationResult openFailure = OpenConnectionWithRetry(connection);
+                if (openFailure != null)
+                {
+                    return openFailure;
+                }
+
+                if (busyTimeoutMs > 0)
+                {
+                    connection.BusyTimeout = busyTimeoutMs;
+                }
+
+                // Retry the entire transaction on transient BUSY/LOCKED/READONLY — these resolve when
+                // the competing writer releases its lock, or a momentary network-share permission/lock
+                // hiccup (e.g. SMB session revalidation, an AV/backup scan) clears. Unrecoverable
+                // failures (I/O error, drive gone) are not in this set and fall straight through to the
+                // general catch.
+                // Callers that opt in with a nonzero busyTimeoutMs (background-thread writes only —
+                // see ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs) get a longer ceiling: 8
+                // attempts instead of 5, same linear-backoff formula, topping out at 1750 ms instead
+                // of 1000 ms (~7 s total instead of ~2.5 s). Do not opt in from UI-thread-synchronous
+                // call sites — this retry loop blocks whatever thread called it.
+                int maxBusyAttempt = busyTimeoutMs > 0 ? 7 : 4;
+                for (int busyAttempt = 0; ; busyAttempt++)
+                {
+                    // ReSharper disable once RedundantAssignment
+                    string mostRecentStatement = null;
+                    // Declared outside try so the catch blocks can call Rollback on the still-open connection.
+                    SQLiteTransaction transaction = null;
+                    try
+                    {
+                        // Run pre-transaction statements only on the first attempt.
+                        // They set connection-level state (e.g. PRAGMA foreign_keys = OFF) that
+                        // persists across retries, so repeating them is redundant.
+                        if (busyAttempt == 0 && preTransactionStatements != null)
+                        {
+                            using SQLiteCommand preCmd = new(connection);
+                            foreach (string stmt in preTransactionStatements)
+                            {
+                                if (string.IsNullOrWhiteSpace(stmt)) continue;
+                                mostRecentStatement = stmt;
+                                preCmd.CommandText = stmt;
+                                preCmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        transaction = connection.BeginTransaction();
+
+                        progress?.Report(new(0, progressString, false, true));
+
+                        using SQLiteCommand command = new(connection);
+                        command.Transaction = transaction;
+                        int statementsCount = statements.Count;
+                        int i = 0;
+                        foreach (string statement in statements)
+                        {
+                            if (progress != null && progressFrequency > 0 && i % progressFrequency == 0)
+                            {
+                                int percent = Convert.ToInt32(i * 100.0 / statementsCount);
+                                progress.Report(new(percent,
+                                    $"{progressString} ({i:N0}/{statementsCount:N0})...", false, false));
+                            }
+                            // Track the current statement so it is available in the catch block.
+                            // For single-statement calls this is the statement itself; for multi-statement
+                            // transactions it is the last statement executed before the exception, which is
+                            // almost always the one that caused the failure.
+                            // ReSharper disable once RedundantAssignment
+                            mostRecentStatement = statement;
+                            command.CommandText = statement;
+                            // Note: It is more efficient to do it this way than to send
+                            // a bunch of semicolon-separated statements as a single query
+                            command.ExecuteNonQuery();
+                            i++;
+                        }
+                        transaction.Commit();
+                        transaction.Dispose();
+                        // Set to null so the catch block does not attempt a rollback after a successful
+                        // commit — the transaction is already closed and there is nothing to roll back.
+                        transaction = null;
+
+                        // Run post-transaction statements on the same connection after the commit.
+                        // Used for PRAGMA foreign_keys = ON, which is ignored inside a transaction.
+                        // Failures here cannot be rolled back; the transaction has already committed.
+                        if (postTransactionStatements != null)
+                        {
+                            using SQLiteCommand postCmd = new(connection);
+                            foreach (string stmt in postTransactionStatements)
+                            {
+                                if (string.IsNullOrWhiteSpace(stmt)) continue;
+                                mostRecentStatement = stmt;
+                                postCmd.CommandText = stmt;
+                                postCmd.ExecuteNonQuery();
+                            }
+                        }
+
+                        if (busyAttempt > 0)
+                        {
+                            AppLog.Warning($"ExecuteNonQueryWithRollbackCore: succeeded after {busyAttempt} retry attempt(s) due to transient database contention (busy/locked/readonly).");
+                        }
+                        return SqlOperationResult.Ok();
+                    }
+                    catch (SQLiteException sqliteEx) when (
+                        (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked || sqliteEx.ResultCode == SQLiteErrorCode.ReadOnly)
+                        && busyAttempt < maxBusyAttempt)
+                    {
+                        // Transient lock, or a momentary readonly bounce (commonly seen on mapped
+                        // network drives when the SMB session briefly revalidates or an AV/backup
+                        // agent holds a read-only-compatible lock) — roll back and wait before retrying.
+                        // Linear backoff: 250 ms, 500 ms, ... up to 1 000 ms (5 attempts max) or, for
+                        // opted-in background callers, up to 2 000 ms (8 attempts max).
+                        try { transaction?.Rollback(); }
+                        catch
+                        {
+                            // Ignore
+                        }
+                        finally { transaction?.Dispose(); }
+
+                        if (sqliteEx.ResultCode == SQLiteErrorCode.ReadOnly)
+                        {
+                            // READONLY is latched once when the connection's pager opens — SQLite
+                            // silently falls back to a read-only pager if the file couldn't be
+                            // opened read/write at that moment, and never re-checks writability on
+                            // that same connection afterwards. Unlike BUSY/LOCKED (re-evaluated live
+                            // against the same connection), retrying on the same connection would
+                            // fail identically every time even after the underlying access problem
+                            // clears. Reopen a fresh connection so the next attempt gets a live
+                            // read/write check against the file.
+                            connection.Dispose();
+                            connection = GetNewSqliteConnection(ConnectionString);
+                            SqlOperationResult reopenFailure = OpenConnectionWithRetry(connection);
+                            if (reopenFailure != null)
+                            {
+                                return reopenFailure;
+                            }
+                            if (busyTimeoutMs > 0)
+                            {
+                                connection.BusyTimeout = busyTimeoutMs;
+                            }
+                        }
+
+                        int delayMs = (busyAttempt + 1) * 250;
+                        TracePrint.PrintMessage($"Database busy/locked/readonly (attempt {busyAttempt + 1}/{maxBusyAttempt + 1}), retrying in {delayMs} ms…");
+                    }
+                    catch (Exception exception)
+                    {
+                        try { transaction?.Rollback(); }
+                        catch { /* connection may already be broken; rollback best-effort only */ }
+                        finally { transaction?.Dispose(); }
+                        // Truncate only for the live-debugging log message; the full statement is
+                        // preserved untruncated in SqlOperationResult.FailingStatement for bug reports.
+                        string excerpt = mostRecentStatement?.Length > 500
+                            ? mostRecentStatement[..500] + "…"
+                            : mostRecentStatement ?? "(none)";
+                        TracePrint.PrintMessage(
+                            $"Failure near executing statement '{excerpt}' in ExecuteNonQueryWithRollbackCore: {exception}");
+                        return SqlOperationResult.Fail(
+                            $"Failure near executing statement '{excerpt}'",
+                            exception,
+                            mostRecentStatement);
+                    }
+                    Thread.Sleep((busyAttempt + 1) * 250);
+                }
+            }
+            finally
+            {
+                connection.Dispose();
+            }
+        }
+
+        // Opens the given (not-yet-open) connection, retrying transient CANTOPEN failures
+        // (OneDrive / network-share lock) with a short fixed backoff. Returns null on success,
+        // or a failure result once the retry budget (5 attempts) is exhausted.
+        private static SqlOperationResult OpenConnectionWithRetry(SQLiteConnection connection)
+        {
             for (int openAttempt = 0; ; openAttempt++)
             {
-                try { connection.Open(); break; }
+                try { connection.Open(); return null; }
                 catch (SQLiteException ex) when (ex.ResultCode == SQLiteErrorCode.CantOpen)
                 {
                     if (openAttempt >= 4)
@@ -998,138 +1174,6 @@ public class SQLiteWrapper
                     }
                     Thread.Sleep(200);
                 }
-            }
-
-            if (busyTimeoutMs > 0)
-            {
-                connection.BusyTimeout = busyTimeoutMs;
-            }
-
-            // Retry the entire transaction on transient BUSY/LOCKED/READONLY — these resolve when
-            // the competing writer releases its lock, or a momentary network-share permission/lock
-            // hiccup (e.g. SMB session revalidation, an AV/backup scan) clears. Unrecoverable
-            // failures (I/O error, drive gone) are not in this set and fall straight through to the
-            // general catch.
-            // Callers that opt in with a nonzero busyTimeoutMs (background-thread writes only —
-            // see ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs) get a longer ceiling: 8
-            // attempts instead of 5, same linear-backoff formula, topping out at 1750 ms instead
-            // of 1000 ms (~7 s total instead of ~2.5 s). Do not opt in from UI-thread-synchronous
-            // call sites — this retry loop blocks whatever thread called it.
-            int maxBusyAttempt = busyTimeoutMs > 0 ? 7 : 4;
-            for (int busyAttempt = 0; ; busyAttempt++)
-            {
-                // ReSharper disable once RedundantAssignment
-                string mostRecentStatement = null;
-                // Declared outside try so the catch blocks can call Rollback on the still-open connection.
-                SQLiteTransaction transaction = null;
-                try
-                {
-                    // Run pre-transaction statements only on the first attempt.
-                    // They set connection-level state (e.g. PRAGMA foreign_keys = OFF) that
-                    // persists across retries, so repeating them is redundant.
-                    if (busyAttempt == 0 && preTransactionStatements != null)
-                    {
-                        using SQLiteCommand preCmd = new(connection);
-                        foreach (string stmt in preTransactionStatements)
-                        {
-                            if (string.IsNullOrWhiteSpace(stmt)) continue;
-                            mostRecentStatement = stmt;
-                            preCmd.CommandText = stmt;
-                            preCmd.ExecuteNonQuery();
-                        }
-                    }
-
-                    transaction = connection.BeginTransaction();
-
-                    progress?.Report(new(0, progressString, false, true));
-
-                    using SQLiteCommand command = new(connection);
-                    command.Transaction = transaction;
-                    int statementsCount = statements.Count;
-                    int i = 0;
-                    foreach (string statement in statements)
-                    {
-                        if (progress != null && progressFrequency > 0 && i % progressFrequency == 0)
-                        {
-                            int percent = Convert.ToInt32(i * 100.0 / statementsCount);
-                            progress.Report(new(percent,
-                                $"{progressString} ({i:N0}/{statementsCount:N0})...", false, false));
-                        }
-                        // Track the current statement so it is available in the catch block.
-                        // For single-statement calls this is the statement itself; for multi-statement
-                        // transactions it is the last statement executed before the exception, which is
-                        // almost always the one that caused the failure.
-                        // ReSharper disable once RedundantAssignment
-                        mostRecentStatement = statement;
-                        command.CommandText = statement;
-                        // Note: It is more efficient to do it this way than to send
-                        // a bunch of semicolon-separated statements as a single query
-                        command.ExecuteNonQuery();
-                        i++;
-                    }
-                    transaction.Commit();
-                    transaction.Dispose();
-                    // Set to null so the catch block does not attempt a rollback after a successful
-                    // commit — the transaction is already closed and there is nothing to roll back.
-                    transaction = null;
-
-                    // Run post-transaction statements on the same connection after the commit.
-                    // Used for PRAGMA foreign_keys = ON, which is ignored inside a transaction.
-                    // Failures here cannot be rolled back; the transaction has already committed.
-                    if (postTransactionStatements != null)
-                    {
-                        using SQLiteCommand postCmd = new(connection);
-                        foreach (string stmt in postTransactionStatements)
-                        {
-                            if (string.IsNullOrWhiteSpace(stmt)) continue;
-                            mostRecentStatement = stmt;
-                            postCmd.CommandText = stmt;
-                            postCmd.ExecuteNonQuery();
-                        }
-                    }
-
-                    if (busyAttempt > 0)
-                    {
-                        AppLog.Warning($"ExecuteNonQueryWithRollbackCore: succeeded after {busyAttempt} retry attempt(s) due to transient database contention (busy/locked/readonly).");
-                    }
-                    return SqlOperationResult.Ok();
-                }
-                catch (SQLiteException sqliteEx) when (
-                    (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked || sqliteEx.ResultCode == SQLiteErrorCode.ReadOnly)
-                    && busyAttempt < maxBusyAttempt)
-                {
-                    // Transient lock, or a momentary readonly bounce (commonly seen on mapped
-                    // network drives when the SMB session briefly revalidates or an AV/backup
-                    // agent holds a read-only-compatible lock) — roll back and wait before retrying.
-                    // Linear backoff: 250 ms, 500 ms, ... up to 1 000 ms (5 attempts max) or, for
-                    // opted-in background callers, up to 2 000 ms (8 attempts max).
-                    try { transaction?.Rollback(); }
-                    catch
-                    {
-                        // Ignore
-                    }
-                    finally { transaction?.Dispose(); }
-                    int delayMs = (busyAttempt + 1) * 250;
-                    TracePrint.PrintMessage($"Database busy/locked/readonly (attempt {busyAttempt + 1}/{maxBusyAttempt + 1}), retrying in {delayMs} ms…");
-                }
-                catch (Exception exception)
-                {
-                    try { transaction?.Rollback(); }
-                    catch { /* connection may already be broken; rollback best-effort only */ }
-                    finally { transaction?.Dispose(); }
-                    // Truncate only for the live-debugging log message; the full statement is
-                    // preserved untruncated in SqlOperationResult.FailingStatement for bug reports.
-                    string excerpt = mostRecentStatement?.Length > 500
-                        ? mostRecentStatement[..500] + "…"
-                        : mostRecentStatement ?? "(none)";
-                    TracePrint.PrintMessage(
-                        $"Failure near executing statement '{excerpt}' in ExecuteNonQueryWithRollbackCore: {exception}");
-                    return SqlOperationResult.Fail(
-                        $"Failure near executing statement '{excerpt}'",
-                        exception,
-                        mostRecentStatement);
-                }
-                Thread.Sleep((busyAttempt + 1) * 250);
             }
         }
         #endregion
