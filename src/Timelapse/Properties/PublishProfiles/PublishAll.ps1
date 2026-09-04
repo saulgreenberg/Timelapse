@@ -4,10 +4,16 @@
 param(
     [string]$ProjectPath = "$PSScriptRoot\..\..\Timelapse.csproj",
     [string]$InstallersDir = "$PSScriptRoot\..\..\..\..\Installers",
-    [string]$SignTool = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe',
+    [string]$SignTool = (Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin\10.*\x64\signtool.exe' -ErrorAction SilentlyContinue |
+        Sort-Object { [version]$_.Directory.Parent.Name } -Descending |
+        Select-Object -First 1 -ExpandProperty FullName),
     [string]$Thumbprint = 'B6FF9831D50B47E1500DD47A0612E01E371CABC4',
     [string]$TimestampUrl = 'http://timestamp.certum.pl'
 )
+
+if (-not $SignTool -or -not (Test-Path $SignTool)) {
+    throw "signtool.exe not found under any installed Windows 10 SDK version. Install the Windows 10 SDK, or pass -SignTool <path> explicitly."
+}
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "Timelapse Master Publish Script" -ForegroundColor Cyan

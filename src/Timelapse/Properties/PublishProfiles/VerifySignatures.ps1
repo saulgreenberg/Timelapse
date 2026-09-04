@@ -6,8 +6,14 @@ param(
     [Parameter(Mandatory)][string]$RequiresDotNet10Dir,
     [Parameter(Mandatory)][string]$SelfContainedDir,
     [Parameter(Mandatory)][string]$InstallersOutputDir,
-    [string]$SignTool = 'C:\Program Files (x86)\Windows Kits\10\bin\10.0.22621.0\x64\signtool.exe'
+    [string]$SignTool = (Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin\10.*\x64\signtool.exe' -ErrorAction SilentlyContinue |
+        Sort-Object { [version]$_.Directory.Parent.Name } -Descending |
+        Select-Object -First 1 -ExpandProperty FullName)
 )
+
+if (-not $SignTool -or -not (Test-Path $SignTool)) {
+    throw "signtool.exe not found under any installed Windows 10 SDK version. Install the Windows 10 SDK, or pass -SignTool <path> explicitly."
+}
 
 $firstParty = @(
     'Timelapse.exe',

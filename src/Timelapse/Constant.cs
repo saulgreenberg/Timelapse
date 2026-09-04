@@ -63,7 +63,7 @@ namespace Timelapse.Constant
 
     public static class Colours
     {
-        public static readonly SolidColorBrush VeryLightBlue = (SolidColorBrush) new BrushConverter().ConvertFrom("#dfecf8");
+        public static readonly SolidColorBrush VeryLightBlue = (SolidColorBrush)new BrushConverter().ConvertFrom("#dfecf8");
         public static readonly SolidColorBrush LightBlue = new(Colors.LightBlue);
         public static readonly SolidColorBrush DarkBlue = new(Colors.Blue);
         public static readonly SolidColorBrush MintyGreen = new(Color.FromArgb(255, 200, 251, 200));
@@ -74,22 +74,22 @@ namespace Timelapse.Constant
         public static class Notification
         {
             public static readonly SolidColorBrush BackgroundInformation = new(Color.FromRgb(217, 237, 247));
-            public static readonly SolidColorBrush BackgroundSuccess     = new(Color.FromRgb(223, 240, 216));
-            public static readonly SolidColorBrush BackgroundWarning     = new(Color.FromRgb(252, 248, 227));
-            public static readonly SolidColorBrush BackgroundError       = new(Color.FromRgb(248, 215, 218));
-            public static readonly SolidColorBrush BackgroundNeutral     = new(Color.FromRgb(248, 249, 250));
+            public static readonly SolidColorBrush BackgroundSuccess = new(Color.FromRgb(223, 240, 216));
+            public static readonly SolidColorBrush BackgroundWarning = new(Color.FromRgb(252, 248, 227));
+            public static readonly SolidColorBrush BackgroundError = new(Color.FromRgb(248, 215, 218));
+            public static readonly SolidColorBrush BackgroundNeutral = new(Color.FromRgb(248, 249, 250));
 
             public static readonly SolidColorBrush BorderInformation = new(Color.FromRgb(174, 213, 129));
-            public static readonly SolidColorBrush BorderSuccess      = new(Color.FromRgb(155, 204, 145));
-            public static readonly SolidColorBrush BorderWarning      = new(Color.FromRgb(255, 193,   7));
-            public static readonly SolidColorBrush BorderError        = new(Color.FromRgb(220,  53,  69));
-            public static readonly SolidColorBrush BorderNeutral      = new(Color.FromRgb(108, 117, 125));
+            public static readonly SolidColorBrush BorderSuccess = new(Color.FromRgb(155, 204, 145));
+            public static readonly SolidColorBrush BorderWarning = new(Color.FromRgb(255, 193, 7));
+            public static readonly SolidColorBrush BorderError = new(Color.FromRgb(220, 53, 69));
+            public static readonly SolidColorBrush BorderNeutral = new(Color.FromRgb(108, 117, 125));
 
-            public static readonly SolidColorBrush ForegroundInformation = new(Color.FromRgb( 13, 110, 180));
-            public static readonly SolidColorBrush ForegroundSuccess      = new(Color.FromRgb( 25, 135,  84));
-            public static readonly SolidColorBrush ForegroundWarning      = new(Color.FromRgb(102,  77,   3));
-            public static readonly SolidColorBrush ForegroundError        = new(Color.FromRgb(114,  28,  36));
-            public static readonly SolidColorBrush ForegroundNeutral      = new(Color.FromRgb( 33,  37,  41));
+            public static readonly SolidColorBrush ForegroundInformation = new(Color.FromRgb(13, 110, 180));
+            public static readonly SolidColorBrush ForegroundSuccess = new(Color.FromRgb(25, 135, 84));
+            public static readonly SolidColorBrush ForegroundWarning = new(Color.FromRgb(102, 77, 3));
+            public static readonly SolidColorBrush ForegroundError = new(Color.FromRgb(114, 28, 36));
+            public static readonly SolidColorBrush ForegroundNeutral = new(Color.FromRgb(33, 37, 41));
         }
     }
     public static class Control
@@ -153,7 +153,7 @@ namespace Timelapse.Constant
         public static readonly SolidColorBrush BorderColorHighlight = Colours.DarkBlue;
 
         // a minty green, same as Copyable field
-        public static readonly SolidColorBrush QuickPasteFieldHighlightBrush = Colours.MintyGreen; 
+        public static readonly SolidColorBrush QuickPasteFieldHighlightBrush = Colours.MintyGreen;
 
         public static readonly ReadOnlyCollection<Type> KeyboardInputTypes = new List<Type>
         {       typeof(ImprintAutoCompleteTextBox), // note or alphanumeric control
@@ -243,7 +243,7 @@ namespace Timelapse.Constant
         public const string NoteTooltip = "A (usually short) textual note";
         public const string NoteDefaultValue = "";
         public const int NoteDefaultWidth = 100;
-        
+
         // Number controls
         public const string CounterTooltip = "Click the counter button, then click on the image to count the entity. Or just type in an integer";
         public const int CounterWidth = 30;
@@ -301,7 +301,7 @@ namespace Timelapse.Constant
         public const string VersionNumberMinimum = "2.3.0.0"; // Earlier versions than this requires a special software update to the database files as done via DialogUpgradeFils.dll
         public const string VersionNumberBackwardsCompatible = "2.3.3.0"; // The earliest version known to be backwards compatible with this database
         public const string VersionNumberBackwardsCompatibleForTemplates = "2.3.0.0"; // The earliest version known to be backwards compatible with this database
-        public const string VersionPatchNumber = "-Patch2"; // If this version is patched, the patch number (or Beta indications).. Should be updated whenever new versions are release. Use "." or "-patch #."
+        public const string VersionPatchNumber = "-Patch3"; // If this version is patched, the patch number (or Beta indications).. Should be updated whenever new versions are release. Use "." or "-patch #."
         public const string DefaultSortTerms = "[ { \"DataLabel\":\"RelativePath\", \"DisplayLabel\":\"RelativePath\", \"ControlType\":\"RelativePath\", \"IsAscending\":\"true\" }, { \"DataLabel\":\"DateTime\", \"DisplayLabel\":\"DateTime\", \"ControlType\":\"DateTime\", \"IsAscending\":\"true\" } ]";
         public const string DefaultSearchTerms = "{}";
         public const string DefaultQuickPasteJSON = "[]";
@@ -343,7 +343,7 @@ namespace Timelapse.Constant
         public const string SearchTerms = "SearchTerms";              // a JSON description storing the current search terms
         public const string BoundingBoxDisplayThreshold = "BBDisplayThreshold";
         public const string Standard = "Standard";
-        
+
         // other columns found in Old XML files
         public const string Data = "Data";                 // the data describing the attributes of that control
         public const string Image = "Image";               // A single image and its associated data
@@ -433,26 +433,26 @@ namespace Timelapse.Constant
 
         public const string TimelapseVideoImageRecognitionPresentation =
             "http://grouplab.cpsc.ucalgary.ca/grouplab/uploads/Publications/Publications/2021-05-ImageRecognition-Video.mp4";
-    // Videos - Lessons
-    public const string TimelapseVideosInstallingTimelapse = TimelapseVideosUploadLink + "/Lesson-InstallingTimelapse.mp4";
-    public const string TimelapseVideosIncrementallyAddingImages = TimelapseVideosUploadLink + "/Lesson-IncrementallyAddingImages.mp4";
-    public const string TimelapseVideosViewingVideos = TimelapseVideosUploadLink + "/Lesson-ViewingVideos.mp4";
-    public const string TimelapseVideosQuickPaste = TimelapseVideosUploadLink + "/Lesson-QuickPaste.mp4";
-    public const string TimelapseVideosDuplicatingRecords = TimelapseVideosUploadLink + "/Lesson-DuplicatingRecords.mp4";
-    public const string TimelapseVideosUsingAddaxAI = TimelapseVideosUploadLink + "/Lesson-UsingEcoAssist.mp4";
-    public const string TimelapseVideosImageRecognitionForVideos = TimelapseVideosUploadLink + "/Lesson-ImageRecognitionForVideos.mp4";
-    public const string TimelapseVideosUsingTheOverview = TimelapseVideosUploadLink + "/Lesson-UsingTheOverview.mp4";
-    public const string TimelapseVideosRandomSampling = TimelapseVideosUploadLink + "/Lesson-RandomSampling.mp4";
+        // Videos - Lessons
+        public const string TimelapseVideosInstallingTimelapse = TimelapseVideosUploadLink + "/Lesson-InstallingTimelapse.mp4";
+        public const string TimelapseVideosIncrementallyAddingImages = TimelapseVideosUploadLink + "/Lesson-IncrementallyAddingImages.mp4";
+        public const string TimelapseVideosViewingVideos = TimelapseVideosUploadLink + "/Lesson-ViewingVideos.mp4";
+        public const string TimelapseVideosQuickPaste = TimelapseVideosUploadLink + "/Lesson-QuickPaste.mp4";
+        public const string TimelapseVideosDuplicatingRecords = TimelapseVideosUploadLink + "/Lesson-DuplicatingRecords.mp4";
+        public const string TimelapseVideosUsingAddaxAI = TimelapseVideosUploadLink + "/Lesson-UsingEcoAssist.mp4";
+        public const string TimelapseVideosImageRecognitionForVideos = TimelapseVideosUploadLink + "/Lesson-ImageRecognitionForVideos.mp4";
+        public const string TimelapseVideosUsingTheOverview = TimelapseVideosUploadLink + "/Lesson-UsingTheOverview.mp4";
+        public const string TimelapseVideosRandomSampling = TimelapseVideosUploadLink + "/Lesson-RandomSampling.mp4";
 
-    public static readonly Uri TimlapseVersionChangesLink = new("https://timelapse.ucalgary.ca/versions");
-    public static readonly Uri CreativeCommonsLicenseLink = new("https://creativecommons.org/licenses/by-nc-sa/4.0/");
-    public static readonly Uri AdditionalLicenseDetailsLink = new("https://github.com/saulgreenberg/Timelapse/blob/master/LICENSE.md");
+        public static readonly Uri TimlapseVersionChangesLink = new("https://timelapse.ucalgary.ca/versions");
+        public static readonly Uri CreativeCommonsLicenseLink = new("https://creativecommons.org/licenses/by-nc-sa/4.0/");
+        public static readonly Uri AdditionalLicenseDetailsLink = new("https://github.com/saulgreenberg/Timelapse/blob/master/LICENSE.md");
 
-    // Videos - Presentations
-    public const string TimelapseVideosImageRecognitionTalk = TimelapseVideosUploadLink + "/ImageRecognitionForCameraTraps.mp4";
+        // Videos - Presentations
+        public const string TimelapseVideosImageRecognitionTalk = TimelapseVideosUploadLink + "/ImageRecognitionForCameraTraps.mp4";
 
-    public static readonly string EmailAddress = "saul@ucalgary.ca";
-    public static readonly string EmailAddressAsMailTo = "mailto:saul@ucalgary.ca";
+        public static readonly string EmailAddress = "saul@ucalgary.ca";
+        public static readonly string EmailAddressAsMailTo = "mailto:saul@ucalgary.ca";
 
         // ReSharper disable once UnusedMember.Global
         public static readonly string GmailAddress = "saul.greenberg@gmail.com";
@@ -460,8 +460,8 @@ namespace Timelapse.Constant
 
         // Camtrap
         public static readonly string CamtrapWebSite = "https://camtrap-dp.tdwg.org";
-    public static readonly string CamtrapWebSiteValidation = "https://camtrap-dp.tdwg.org/#validation";
-}
+        public static readonly string CamtrapWebSiteValidation = "https://camtrap-dp.tdwg.org/#validation";
+    }
     public static class File
     {
         public const string AviFileExtension = ".avi";
@@ -711,7 +711,7 @@ namespace Timelapse.Constant
         public const string SuppressCsvExportDialog = "SuppressCsvExportDialog";
         public const string SuppressCsvImportPrompt = "SuppressCsvImportPrompt";
         public const string SuppressHowDuplicatesWorkDialog = "SuppressHowDuplicatesWorkDialog";
-        
+
         public const string SuppressOpeningMessageDialog = "SuppressOpeningMessageDialog";
         public const string SuppressOpeningWithOlderTimelapseVersionDialog = "SuppressOpeningWithOlderTimelapseVersionDialog";
         public const string SuppressPropagateFromLastNonEmptyValuePrompt = "SuppressPropagateFromLastNonEmptyValuePrompt";
@@ -958,8 +958,8 @@ namespace Timelapse.Constant
         // The values below reflect  Megadetector v4, which is the likely detector if no overrides 
         // were set  in the Detection json file
         public const float DefaultTypicalDetectionThresholdIfUnknown = 0.2f;        // These values are recommend by Dan Morris
-        public const float DefaultConservativeDetectionThresholdIfUnknown = 0.05f;   
-        public const float DefaultTypicalClassificationThresholdIfUnknown = 0.5f; 
+        public const float DefaultConservativeDetectionThresholdIfUnknown = 0.05f;
+        public const float DefaultTypicalClassificationThresholdIfUnknown = 0.5f;
         public const float BoundingBoxDisplayThresholdDefault = Undefined;   // Appropriate for Megadetector v4
         public const string MDVersionUnknown = "vUnknown";
         public const float Undefined = -1F;
