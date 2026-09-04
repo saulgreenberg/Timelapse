@@ -1005,9 +1005,11 @@ public class SQLiteWrapper
                 connection.BusyTimeout = busyTimeoutMs;
             }
 
-            // Retry the entire transaction on transient BUSY/LOCKED — these resolve when the
-            // competing writer releases its lock. Unrecoverable failures (I/O error, drive gone)
-            // are not BUSY/LOCKED and fall straight through to the general catch.
+            // Retry the entire transaction on transient BUSY/LOCKED/READONLY — these resolve when
+            // the competing writer releases its lock, or a momentary network-share permission/lock
+            // hiccup (e.g. SMB session revalidation, an AV/backup scan) clears. Unrecoverable
+            // failures (I/O error, drive gone) are not in this set and fall straight through to the
+            // general catch.
             // Callers that opt in with a nonzero busyTimeoutMs (background-thread writes only —
             // see ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs) get a longer ceiling: 8
             // attempts instead of 5, same linear-backoff formula, topping out at 1750 ms instead
@@ -1088,15 +1090,17 @@ public class SQLiteWrapper
 
                     if (busyAttempt > 0)
                     {
-                        AppLog.Warning($"ExecuteNonQueryWithRollbackCore: succeeded after {busyAttempt} retry attempt(s) due to transient database contention (busy/locked).");
+                        AppLog.Warning($"ExecuteNonQueryWithRollbackCore: succeeded after {busyAttempt} retry attempt(s) due to transient database contention (busy/locked/readonly).");
                     }
                     return SqlOperationResult.Ok();
                 }
                 catch (SQLiteException sqliteEx) when (
-                    (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked)
+                    (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked || sqliteEx.ResultCode == SQLiteErrorCode.ReadOnly)
                     && busyAttempt < maxBusyAttempt)
                 {
-                    // Transient lock — roll back and wait before retrying.
+                    // Transient lock, or a momentary readonly bounce (commonly seen on mapped
+                    // network drives when the SMB session briefly revalidates or an AV/backup
+                    // agent holds a read-only-compatible lock) — roll back and wait before retrying.
                     // Linear backoff: 250 ms, 500 ms, ... up to 1 000 ms (5 attempts max) or, for
                     // opted-in background callers, up to 2 000 ms (8 attempts max).
                     try { transaction?.Rollback(); }
@@ -1106,7 +1110,7 @@ public class SQLiteWrapper
                     }
                     finally { transaction?.Dispose(); }
                     int delayMs = (busyAttempt + 1) * 250;
-                    TracePrint.PrintMessage($"Database busy/locked (attempt {busyAttempt + 1}/{maxBusyAttempt + 1}), retrying in {delayMs} ms…");
+                    TracePrint.PrintMessage($"Database busy/locked/readonly (attempt {busyAttempt + 1}/{maxBusyAttempt + 1}), retrying in {delayMs} ms…");
                 }
                 catch (Exception exception)
                 {
