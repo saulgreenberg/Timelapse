@@ -3634,8 +3634,8 @@ namespace Timelapse.Dialog
                        $"[ni] The [i]AddaxAI[/i] [b]Windows Installation web page[/b] will appear." +
                        $"[ni] Follow the instructions on that page (it should be easy)." +
                        $"[ni] If a [e]Windows protected your PC[/e] dialog appears, select [b]More Info[/b] and [b]Run anyway[/b].",
-                Result = $"Installation takes ~5-15 minutes. " +
-                       "Lots of technical feedback will be displayed as various required packages are loaded.",
+                Result = $"Installation can take ~5-15 minutes. " +
+                       "Feedback should be displayed as installation progresses.",
                 Hint = $"Be patient! Try to avoid interrupting the installation, as cleaning up an aborted installation can be messy."
             };
             return dialog.BuildAndShowDialog();
@@ -3656,9 +3656,9 @@ namespace Timelapse.Dialog
                        $"[ni] Select the model you want to use." +
                        $"[li 2] [b]None[/b] shows detections, and only classifies entities as an animal, person, or vehicle," +
                        $"[li 2] [b]Geographic models[/b] classify particular species found in a geographic region," +
-                       $"[li 2] [b]Global - SpeciesNet - Google[/b]  is a more general species classifier[br 2]" +
+                       $"[li 2] [b]Global | SpeciesNet (by Google)[/b]  is a more general species classifier[br 2]" +
                        $"[ni] Click [b]Start processing[/b] to recognize your images.",
-                Result = "A #DarkSlateGray[[e]timelapse_recognition_file.json[/e]] file will be created in your chosen folder. Use the [b]Recognition[/b] menu to load it into Timelapse.",
+                Result = "An #DarkSlateGray[[e]addaxai_recognitions.json[/e]] file will be created in your chosen folder. Use the [b]Recognition[/b] menu to load it into Timelapse.",
                 Hint = $"Be patient. Image recognition takes time![br]" +
                           $"[li] You may want to run this overnight if you have (say) tens or hundreds of thousands of images." +
                           "[li] You can continue with your other work (including Timelapse work) while AddaxAI is running."
