@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.SQLite;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using Timelapse.Database;
 using Timelapse.DebuggingSupport;
@@ -147,11 +148,26 @@ namespace Timelapse.Dialog
             }
         }
 
-        // Copy the bug report into the clipboard
+        // Copy the bug report into the clipboard.
+        // Also invoked automatically from Window_Loaded (with sender/e both null) so the
+        // report is pre-copied before the user does anything.
         private void CopyButton_Click(object sender, RoutedEventArgs e)
         {
-            Clipboard.Clear();
-            Clipboard.SetText($"Email this to {to} {Environment.NewLine}{body}");
+            try
+            {
+                Clipboard.Clear();
+                Clipboard.SetText($"Email this to {to} {Environment.NewLine}{body}");
+            }
+            catch (COMException)
+            {
+                // The clipboard is a single systemwide resource that another process (a
+                // clipboard manager, remote desktop session, antivirus, etc.) can transiently
+                // hold open, causing OpenClipboard to fail. This dialog is already reporting
+                // a fatal error - failing to also copy the report to the clipboard is not
+                // worth crashing over, so just let the user know they can select and copy the
+                // text below manually instead.
+                CopyReport.Content = "Copy failed - please select and copy the text below manually";
+            }
         }
         #endregion
 
