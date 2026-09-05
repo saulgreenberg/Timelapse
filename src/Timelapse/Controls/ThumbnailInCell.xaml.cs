@@ -20,12 +20,26 @@ namespace Timelapse.Controls
     public partial class ThumbnailInCell
     {
         #region Public Properties
-        // ImageHeight is calculated from the width * the image's aspect ratio, but checks for nulls, etc. 
+        // ImageHeight is calculated from the width * the image's aspect ratio, but checks for nulls, etc.
         // Note: while the image width should always be the cell width, the height depends on the aspect ratio
-        public double ImageHeight =>
-            (Image == null || Image.Source == null || Image.Source.Width == 0)
-                ? 0
-                : Image.Width * Image.Source.Height / Image.Source.Width;
+        public double ImageHeight
+        {
+            get
+            {
+                try
+                {
+                    return (Image == null || Image.Source == null || Image.Source.Width == 0)
+                        ? 0
+                        : Image.Width * Image.Source.Height / Image.Source.Width;
+                }
+                catch (InvalidOperationException)
+                {
+                    // Thumbnail bitmap is momentarily inaccessible from this thread (rare WPF
+                    // cross-thread Freezable timing issue - see RefreshBoundingBoxes below).
+                    return 0;
+                }
+            }
+        }
 
         public int Row { get; set; }
         public int Column { get; set; }
@@ -476,13 +490,26 @@ namespace Timelapse.Controls
         //   - Narrow images (imageAR ≤ cellAR): content is (CellHeight-6)*imageAR wide, centred → rightMargin = (CellWidth-contentW)/2
         private void UpdateHomeBadgeMargin()
         {
-            if (Image.Source == null || Image.Source.Height == 0) return;
-            double imageAR = Image.Source.Width / Image.Source.Height;
-            double cellAR  = CellWidth / CellHeight;
-            double contentW = imageAR > cellAR
-                ? CellWidth - 6
-                : (CellHeight - 6) * imageAR;
-            HomeBadge.Margin = new Thickness(0, 3, (CellWidth - contentW) / 2.0, 0);
+            try
+            {
+                if (Image.Source == null || Image.Source.Height == 0) return;
+                double imageAR = Image.Source.Width / Image.Source.Height;
+                double cellAR = CellWidth / CellHeight;
+                double contentW = imageAR > cellAR
+                    ? CellWidth - 6
+                    : (CellHeight - 6) * imageAR;
+                HomeBadge.Margin = new Thickness(0, 3, (CellWidth - contentW) / 2.0, 0);
+            }
+            catch (InvalidOperationException)
+            {
+                // Thumbnail bitmap is momentarily inaccessible from this thread (rare WPF
+                // cross-thread Freezable timing issue - see RefreshBoundingBoxes above).
+                // This only positions a cosmetic badge, so skip it rather than crash -
+                // unlike SetThumbnail's identical catch, this call site (via the IsHome
+                // setter, invoked directly from ThumbnailGridVirtualized.AssignPoolControls)
+                // had no protection, so the exception was propagating to
+                // OnDispatcherUnhandledException and taking down the whole app.
+            }
         }
         #endregion
     }
