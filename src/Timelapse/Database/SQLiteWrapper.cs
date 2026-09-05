@@ -189,6 +189,7 @@ public class SQLiteWrapper
         {
             // Debug.Print("GetDataTableFromSelect: " + query);
             DataTable dataTable = new();
+            SQLiteErrorCode? lastRetryReason = null;
             for (int attempt = 0; ; attempt++)
             {
                 try
@@ -205,7 +206,7 @@ public class SQLiteWrapper
                     finally { dataTable.Columns.CollectionChanged -= DataTableColumns_Changed; }
                     if (attempt > 0)
                     {
-                        AppLog.Warning($"GetDataTableFromSelect: succeeded after {attempt} retry attempt(s) due to transient database contention (busy/locked or temporarily unavailable).");
+                        AppLog.Warning($"GetDataTableFromSelect: succeeded after {attempt} retry attempt(s) (was retrying on {lastRetryReason}).");
                     }
                     return dataTable;
                 }
@@ -213,6 +214,7 @@ public class SQLiteWrapper
                     (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
                     && attempt < 3)
                 {
+                    lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 200;
                     TracePrint.PrintMessage($"Database unavailable in GetDataTableFromSelect (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
                     Thread.Sleep(delayMs);
@@ -225,6 +227,7 @@ public class SQLiteWrapper
                     // UI-safe retry budget matching ExecuteNonQueryWithRollbackCore's default
                     // schedule. Do not extend this: this method is frequently called
                     // synchronously from the UI thread.
+                    lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 250;
                     TracePrint.PrintMessage($"Database busy/locked in GetDataTableFromSelect (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
                     Thread.Sleep(delayMs);
@@ -233,7 +236,9 @@ public class SQLiteWrapper
                 {
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("GetDataTableFromSelect", SqlOperationResult.Fail(
-                            $"SQL read failure in GetDataTableFromSelect: {exception.Message}", exception, query));
+                            $"SQL read failure in GetDataTableFromSelect: {exception.Message}" +
+                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
+                            exception, query));
                     return dataTable;
                 }
             }
@@ -249,6 +254,7 @@ public class SQLiteWrapper
             return await Task.Run(() =>
             {
                 DataTable dataTable = new();
+                SQLiteErrorCode? lastRetryReason = null;
                 for (int attempt = 0; ; attempt++)
                 {
                     try
@@ -274,7 +280,7 @@ public class SQLiteWrapper
                         }
                         if (attempt > 0)
                         {
-                            AppLog.Warning($"GetDataTableFromSelectAsync: succeeded after {attempt} retry attempt(s) due to transient database contention (busy/locked or temporarily unavailable).");
+                            AppLog.Warning($"GetDataTableFromSelectAsync: succeeded after {attempt} retry attempt(s) (was retrying on {lastRetryReason}).");
                         }
                         return dataTable;
                     }
@@ -287,6 +293,7 @@ public class SQLiteWrapper
                         (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
                         && attempt < 3)
                     {
+                        lastRetryReason = sqliteEx.ResultCode;
                         int delayMs = (attempt + 1) * 200;
                         TracePrint.PrintMessage($"Database unavailable in GetDataTableFromSelectAsync (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
                         Thread.Sleep(delayMs);
@@ -300,6 +307,7 @@ public class SQLiteWrapper
                         // ExecuteNonQueryWithRollbackCore's default schedule. This is the async
                         // read path, but it's still awaited synchronously from UI code in
                         // several callers, so the short budget applies here too.
+                        lastRetryReason = sqliteEx.ResultCode;
                         int delayMs = (attempt + 1) * 250;
                         TracePrint.PrintMessage($"Database busy/locked in GetDataTableFromSelectAsync (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
                         Thread.Sleep(delayMs);
@@ -308,7 +316,9 @@ public class SQLiteWrapper
                     {
                         if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                             OnReadError?.Invoke("GetDataTableFromSelectAsync", SqlOperationResult.Fail(
-                                $"SQL read failure in GetDataTableFromSelectAsync: {exception.Message}", exception, query));
+                                $"SQL read failure in GetDataTableFromSelectAsync: {exception.Message}" +
+                                (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
+                                exception, query));
                         return dataTable;
                     }
                 }
@@ -318,6 +328,7 @@ public class SQLiteWrapper
         public List<object> GetDistinctValuesInColumn(string tableName, string columnName)
         {
             List<object> distinctValues = [];
+            SQLiteErrorCode? lastRetryReason = null;
             for (int attempt = 0; ; attempt++)
             {
                 try
@@ -333,7 +344,7 @@ public class SQLiteWrapper
                     }
                     if (attempt > 0)
                     {
-                        AppLog.Warning($"GetDistinctValuesInColumn: succeeded after {attempt} retry attempt(s) due to transient database contention (busy/locked or temporarily unavailable).");
+                        AppLog.Warning($"GetDistinctValuesInColumn: succeeded after {attempt} retry attempt(s) (was retrying on {lastRetryReason}).");
                     }
                     return distinctValues;
                 }
@@ -341,6 +352,7 @@ public class SQLiteWrapper
                     (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
                     && attempt < 3)
                 {
+                    lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 200;
                     TracePrint.PrintMessage($"Database unavailable in GetDistinctValuesInColumn (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
                     Thread.Sleep(delayMs);
@@ -352,6 +364,7 @@ public class SQLiteWrapper
                     // Transient lock — short, UI-safe retry budget matching
                     // ExecuteNonQueryWithRollbackCore's default schedule. Do not extend this:
                     // this method is frequently called synchronously from the UI thread.
+                    lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 250;
                     TracePrint.PrintMessage($"Database busy/locked in GetDistinctValuesInColumn (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
                     Thread.Sleep(delayMs);
@@ -360,7 +373,8 @@ public class SQLiteWrapper
                 {
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("GetDistinctValuesInColumn", SqlOperationResult.Fail(
-                            $"SQL read failure in GetDistinctValuesInColumn (table '{tableName}', column '{columnName}'): {exception.Message}",
+                            $"SQL read failure in GetDistinctValuesInColumn (table '{tableName}', column '{columnName}'): {exception.Message}" +
+                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
                             exception,
                             String.Format(Sql.SelectDistinct + " {0} " + Sql.From + "{1}", columnName, tableName)));
                     return distinctValues;
@@ -376,6 +390,7 @@ public class SQLiteWrapper
         private object GetScalarFromSelect(string query)
         {
             // Debug.Print("Scalar: " + query);
+            SQLiteErrorCode? lastRetryReason = null;
             for (int attempt = 0; ; attempt++)
             {
                 try
@@ -390,7 +405,7 @@ public class SQLiteWrapper
                     object scalarResult = command.ExecuteScalar();
                     if (attempt > 0)
                     {
-                        AppLog.Warning($"GetScalarFromSelect: succeeded after {attempt} retry attempt(s) due to transient database contention (busy/locked or temporarily unavailable).");
+                        AppLog.Warning($"GetScalarFromSelect: succeeded after {attempt} retry attempt(s) (was retrying on {lastRetryReason}).");
                     }
                     return scalarResult;
                 }
@@ -398,6 +413,7 @@ public class SQLiteWrapper
                     (sqliteEx.ResultCode == SQLiteErrorCode.CantOpen || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
                     && attempt < 3)
                 {
+                    lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 200;
                     TracePrint.PrintMessage($"Database unavailable in GetScalarFromSelect (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
                     Thread.Sleep(delayMs);
@@ -410,6 +426,7 @@ public class SQLiteWrapper
                     // ExecuteNonQueryWithRollbackCore's default schedule. Do not extend this:
                     // this method (and its Scalar* wrappers) is frequently called
                     // synchronously from the UI thread.
+                    lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 250;
                     TracePrint.PrintMessage($"Database busy/locked in GetScalarFromSelect (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
                     Thread.Sleep(delayMs);
@@ -418,7 +435,9 @@ public class SQLiteWrapper
                 {
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("GetScalarFromSelect", SqlOperationResult.Fail(
-                            $"SQL read failure in GetScalarFromSelect: {exception.Message}", exception, query));
+                            $"SQL read failure in GetScalarFromSelect: {exception.Message}" +
+                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
+                            exception, query));
                     return null;
                 }
             }
@@ -989,7 +1008,7 @@ public class SQLiteWrapper
             SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
             try
             {
-                SqlOperationResult openFailure = OpenConnectionWithRetry(connection);
+                SqlOperationResult openFailure = OpenConnectionWithRetry(connection, "ExecuteNonQueryWithRollbackCore (initial open)");
                 if (openFailure != null)
                 {
                     return openFailure;
@@ -999,6 +1018,8 @@ public class SQLiteWrapper
                 {
                     connection.BusyTimeout = busyTimeoutMs;
                 }
+
+                SQLiteErrorCode? lastRetryReason = null;
 
                 // Retry the entire transaction on transient BUSY/LOCKED/READONLY — these resolve when
                 // the competing writer releases its lock, or a momentary network-share permission/lock
@@ -1085,7 +1106,7 @@ public class SQLiteWrapper
 
                         if (busyAttempt > 0)
                         {
-                            AppLog.Warning($"ExecuteNonQueryWithRollbackCore: succeeded after {busyAttempt} retry attempt(s) due to transient database contention (busy/locked/readonly).");
+                            AppLog.Warning($"ExecuteNonQueryWithRollbackCore: succeeded after {busyAttempt} retry attempt(s) (was retrying on {lastRetryReason}).");
                         }
                         return SqlOperationResult.Ok();
                     }
@@ -1098,6 +1119,7 @@ public class SQLiteWrapper
                         // agent holds a read-only-compatible lock) — roll back and wait before retrying.
                         // Linear backoff: 250 ms, 500 ms, ... up to 1 000 ms (5 attempts max) or, for
                         // opted-in background callers, up to 2 000 ms (8 attempts max).
+                        lastRetryReason = sqliteEx.ResultCode;
                         try { transaction?.Rollback(); }
                         catch
                         {
@@ -1117,7 +1139,7 @@ public class SQLiteWrapper
                             // read/write check against the file.
                             connection.Dispose();
                             connection = GetNewSqliteConnection(ConnectionString);
-                            SqlOperationResult reopenFailure = OpenConnectionWithRetry(connection);
+                            SqlOperationResult reopenFailure = OpenConnectionWithRetry(connection, "ExecuteNonQueryWithRollbackCore (reopen after READONLY)");
                             if (reopenFailure != null)
                             {
                                 return reopenFailure;
@@ -1144,7 +1166,8 @@ public class SQLiteWrapper
                         TracePrint.PrintMessage(
                             $"Failure near executing statement '{excerpt}' in ExecuteNonQueryWithRollbackCore: {exception}");
                         return SqlOperationResult.Fail(
-                            $"Failure near executing statement '{excerpt}'",
+                            $"Failure near executing statement '{excerpt}'" +
+                            (busyAttempt > 0 ? $" (failed after {busyAttempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
                             exception,
                             mostRecentStatement);
                     }
@@ -1159,18 +1182,28 @@ public class SQLiteWrapper
 
         // Opens the given (not-yet-open) connection, retrying transient CANTOPEN failures
         // (OneDrive / network-share lock) with a short fixed backoff. Returns null on success,
-        // or a failure result once the retry budget (5 attempts) is exhausted.
-        private static SqlOperationResult OpenConnectionWithRetry(SQLiteConnection connection)
+        // or a failure result once the retry budget (5 attempts) is exhausted. `context` is a
+        // short label identifying the call site, used only for logging (e.g. distinguishing an
+        // initial open from a reopen forced by a READONLY retry).
+        private static SqlOperationResult OpenConnectionWithRetry(SQLiteConnection connection, string context)
         {
             for (int openAttempt = 0; ; openAttempt++)
             {
-                try { connection.Open(); return null; }
+                try
+                {
+                    connection.Open();
+                    if (openAttempt > 0)
+                    {
+                        AppLog.Warning($"{context}: connection opened successfully after {openAttempt} retry attempt(s) (was retrying on CANTOPEN).");
+                    }
+                    return null;
+                }
                 catch (SQLiteException ex) when (ex.ResultCode == SQLiteErrorCode.CantOpen)
                 {
                     if (openAttempt >= 4)
                     {
                         TracePrint.PrintMessage($"Unable to open database after 5 attempts: {ex}");
-                        return SqlOperationResult.Fail("Unable to open database file", ex);
+                        return SqlOperationResult.Fail($"{context}: unable to open database file (failed after {openAttempt + 1} attempt(s) on CANTOPEN)", ex);
                     }
                     Thread.Sleep(200);
                 }
@@ -1429,6 +1462,10 @@ public class SQLiteWrapper
                     {
                         columnsList.Add(reader[1].ToString());
                     }
+                    if (attempt > 0)
+                    {
+                        AppLog.Warning($"SchemaGetColumns: succeeded after {attempt} retry attempt(s) (was retrying on CANTOPEN/IOERR).");
+                    }
                     return columnsList;
                 }
                 catch (SQLiteException sqliteEx) when (
@@ -1443,7 +1480,9 @@ public class SQLiteWrapper
                 {
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("SchemaGetColumns", SqlOperationResult.Fail(
-                            $"SQL read failure in SchemaGetColumns (table '{tableName}'): {exception.Message}", exception));
+                            $"SQL read failure in SchemaGetColumns (table '{tableName}'): {exception.Message}" +
+                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s))" : ""),
+                            exception));
                     return null;
                 }
             }
@@ -1466,6 +1505,10 @@ public class SQLiteWrapper
                     {
                         columndefaultsDict.Add(reader[1].ToString() ?? string.Empty, reader[4].ToString());
                     }
+                    if (attempt > 0)
+                    {
+                        AppLog.Warning($"SchemaGetColumnsAndDefaultValues: succeeded after {attempt} retry attempt(s) (was retrying on CANTOPEN/IOERR).");
+                    }
                     return columndefaultsDict;
                 }
                 catch (SQLiteException sqliteEx) when (
@@ -1480,7 +1523,9 @@ public class SQLiteWrapper
                 {
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("SchemaGetColumnsAndDefaultValues", SqlOperationResult.Fail(
-                            $"SQL read failure in SchemaGetColumnsAndDefaultValues (table '{tableName}'): {exception.Message}", exception));
+                            $"SQL read failure in SchemaGetColumnsAndDefaultValues (table '{tableName}'): {exception.Message}" +
+                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s))" : ""),
+                            exception));
                     return null;
                 }
             }
@@ -1495,6 +1540,10 @@ public class SQLiteWrapper
                     using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
                     connection.Open();
                     List<string> currentColumnNames = GetSchemaColumnNamesAsList(connection, sourceTable);
+                    if (attempt > 0)
+                    {
+                        AppLog.Warning($"SchemaIsColumnInTable: succeeded after {attempt} retry attempt(s) (was retrying on CANTOPEN/IOERR).");
+                    }
                     return currentColumnNames.Contains(currentColumnName);
                 }
                 catch (SQLiteException sqliteEx) when (
@@ -1509,7 +1558,8 @@ public class SQLiteWrapper
                 {
                     if (Interlocked.Exchange(ref _errorFired, 1) == 0)
                         OnReadError?.Invoke("SchemaIsColumnInTable", SqlOperationResult.Fail(
-                            $"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}",
+                            $"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}" +
+                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s))" : ""),
                             exception));
                     return false;
                 }
@@ -2032,7 +2082,7 @@ public class SQLiteWrapper
                     // Retries exhausted while still transiently locked — this is contention,
                     // not corruption. Log it as such so it's diagnosable, rather than silently
                     // reading to the caller as "the file is corrupt."
-                    AppLog.Warning($"PragmaGetQuickCheck: database remained busy/locked after retries (not corrupt).", sqliteEx);
+                    AppLog.Warning($"PragmaGetQuickCheck: database remained busy/locked after {attempt} retry attempt(s) (not corrupt).", sqliteEx);
                     return false;
                 }
                 catch (Exception exception)
@@ -2040,7 +2090,10 @@ public class SQLiteWrapper
                     // Any other exception — including a non-Busy/Locked SQLiteException, e.g.
                     // genuine corruption — is not retried and is logged as a real integrity
                     // problem, not contention.
-                    AppLog.Warning("PragmaGetQuickCheck: failed (may indicate a corrupt database).", exception);
+                    AppLog.Warning(
+                        "PragmaGetQuickCheck: failed (may indicate a corrupt database)." +
+                        (attempt > 0 ? $" ({attempt} retry attempt(s) occurred first.)" : ""),
+                        exception);
                     return false;
                 }
             }
