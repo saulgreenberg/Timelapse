@@ -1021,6 +1021,13 @@ public class SQLiteWrapper
 
                 SQLiteErrorCode? lastRetryReason = null;
 
+                // Tracks whether pre-transaction statements (e.g. PRAGMA foreign_keys = OFF) have
+                // been applied to the connection currently in use. This used to be equivalent to
+                // "busyAttempt == 0", but a READONLY retry (below) replaces the connection mid-loop,
+                // so it's now tracked explicitly and reset whenever the connection is replaced —
+                // otherwise a fresh connection would silently run without those pragmas.
+                bool preTransactionStatementsApplied = false;
+
                 // Retry the entire transaction on transient BUSY/LOCKED/READONLY — these resolve when
                 // the competing writer releases its lock, or a momentary network-share permission/lock
                 // hiccup (e.g. SMB session revalidation, an AV/backup scan) clears. Unrecoverable
@@ -1040,10 +1047,11 @@ public class SQLiteWrapper
                     SQLiteTransaction transaction = null;
                     try
                     {
-                        // Run pre-transaction statements only on the first attempt.
-                        // They set connection-level state (e.g. PRAGMA foreign_keys = OFF) that
-                        // persists across retries, so repeating them is redundant.
-                        if (busyAttempt == 0 && preTransactionStatements != null)
+                        // Run pre-transaction statements once per connection. They set connection-level
+                        // state (e.g. PRAGMA foreign_keys = OFF) that persists for the life of that
+                        // connection, so they only need to run again if the connection itself was
+                        // replaced (READONLY retry, below) — not on every retry against the same one.
+                        if (!preTransactionStatementsApplied && preTransactionStatements != null)
                         {
                             using SQLiteCommand preCmd = new(connection);
                             foreach (string stmt in preTransactionStatements)
@@ -1054,6 +1062,7 @@ public class SQLiteWrapper
                                 preCmd.ExecuteNonQuery();
                             }
                         }
+                        preTransactionStatementsApplied = true;
 
                         transaction = connection.BeginTransaction();
 
@@ -1148,6 +1157,8 @@ public class SQLiteWrapper
                             {
                                 connection.BusyTimeout = busyTimeoutMs;
                             }
+                            // The new connection hasn't seen the pre-transaction statements yet.
+                            preTransactionStatementsApplied = false;
                         }
 
                         int delayMs = (busyAttempt + 1) * 250;
