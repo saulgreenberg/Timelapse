@@ -3619,6 +3619,35 @@ namespace Timelapse.Dialog
             return dialog.BuildAndShowDialog();
         }
 
+        // Warn the user that the selected folder contains a DeletedFiles sub-folder with images/videos in it,
+        // which AddaxAI would also try to recognize if run on the selected folder as-is.
+        public static bool? AddaxAIDeletedFilesFolderContainsMedia(Window owner, string deletedFilesFolderPath)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            const string title = "The DeletedFiles folder contains images or videos";
+
+            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            {
+                Owner = owner,
+                Icon = DialogIconType.Warning,
+                DialogTitle = title,
+                What = $"The selected folder contains a [i]{File.DeletedFilesFolder}[/i] sub-folder with images or videos in it:[br]" +
+                       $"#DarkSlateGray[{deletedFilesFolderPath}]",
+                Problem = $"If you run [i]AddaxAI[/i] on the selected folder, it will also try to recognize the images/videos in that " +
+                          $"[i]{File.DeletedFilesFolder}[/i] sub-folder, which is almost certainly not what you want as Timelapse ignores that folder.",
+                Solution = $"[li] Run the recognizer on a more specific sub-folder that excludes the [i]{File.DeletedFilesFolder}[/i] folder, or" +
+                           $"[li] Delete the files in the [i]{File.DeletedFilesFolder}[/i] folder first, or" +
+                           "[li] Continue anyways if you don't mind those files being included, even though Timelapse won't use those file's recognition data.",
+                Hint = "Select:[br 2]" +
+                       "[li] [b]Run the Recognizer Anyways[/b] to proceed as is, or" +
+                       "[li] [b]Cancel[/b] to stop and choose a different folder."
+            };
+            dialog.OkButton.Content = "Run the Recognizer Anyways";
+            dialog.OkButton.Width = double.NaN;
+            dialog.OkButton.Padding = new Thickness(10, 0, 10, 0);
+            return dialog.BuildAndShowDialog();
+        }
+
         public static bool? AddaxAIInstallationInformaton(Window owner)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));

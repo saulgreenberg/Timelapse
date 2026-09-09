@@ -496,6 +496,18 @@ namespace Timelapse
                 return;
             }
 
+            // Warn if the selected folder has a DeletedFiles sub-folder containing images/videos (including in its
+            // own sub-folders), as AddaxAI would otherwise also try to recognize those (almost certainly undesired) files.
+            string deletedFilesFolderPath = Path.Combine(selectedFolderPath, File.DeletedFilesFolder);
+            if (FilesFolders.CheckFolderAndSubfoldersForAtLeastOneImageOrVideoFile(deletedFilesFolderPath))
+            {
+                if (true != Dialogs.AddaxAIDeletedFilesFolderContainsMedia(this, deletedFilesFolderPath))
+                {
+                    // The user chose Cancel rather than Run the Recognizer Anyways.
+                    return;
+                }
+            }
+
             AddaxAILocation? location = TryFindAddaxAIInstallation();
             bool started;
             if (location is { IsRegistryExecutable: true })

@@ -914,6 +914,28 @@ namespace Timelapse.Util
         //{
         //    return Directory.GetFiles(folderPath, "*" + extension).Length;
         //}
+
+        // Return true as soon as at least one image or video file is found anywhere in folderPath or its sub-folders.
+        // Uses a lazily-evaluated enumeration so it stops at the first match instead of collecting every file first,
+        // which matters if the folder tree is large.
+        public static bool CheckFolderAndSubfoldersForAtLeastOneImageOrVideoFile(string folderPath)
+        {
+            if (string.IsNullOrWhiteSpace(folderPath) || false == Directory.Exists(folderPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                return Directory.EnumerateFiles(folderPath, "*", SearchOption.AllDirectories)
+                    .Any(filePath => GetFileTypeByItsExtension(filePath) != FileExtensionEnum.IsNotImageOrVideo);
+            }
+            catch (Exception exception)
+            {
+                TracePrint.PrintMessage($"CheckFolderAndSubfoldersForAtLeastOneImageOrVideoFile failed on '{folderPath}': {exception.Message}");
+                return false;
+            }
+        }
         #endregion
 
         #region Public Static Methods - Video files
