@@ -3658,7 +3658,7 @@ namespace Timelapse.Dialog
                        $"[li 2] [b]Geographic models[/b] classify particular species found in a geographic region," +
                        $"[li 2] [b]Global | SpeciesNet (by Google)[/b]  is a more general species classifier[br 2]" +
                        $"[ni] Click [b]Start processing[/b] to recognize your images.",
-                Result = "An #DarkSlateGray[[e]addaxai_recognitions.json[/e]] file will be created in your chosen folder. Use the [b]Recognition[/b] menu to load it into Timelapse.",
+                Result = "An #DarkSlateGray[[e]addaxai-recognitions.json[/e]] file will be created in your chosen folder. Use the [b]Recognition[/b] menu to load it into Timelapse.",
                 Hint = $"Be patient. Image recognition takes time![br]" +
                           $"[li] You may want to run this overnight if you have (say) tens or hundreds of thousands of images." +
                           "[li] You can continue with your other work (including Timelapse work) while AddaxAI is running."

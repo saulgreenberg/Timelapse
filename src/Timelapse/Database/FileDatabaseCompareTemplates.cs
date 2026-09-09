@@ -231,6 +231,14 @@ namespace Timelapse.Database
                                 $"      -  {absentItemsAsString}");
                             choiceListsDiffer = tdbChoices.Except(ddbDatabaseChoices).ToList().Count > 0;
                         }
+                        //else
+                        //{
+                            // If items are the same but in different order, trigger a sync. However, this doesn't change anything
+                         //   if (false == tdbChoices.SequenceEqual(ddbDatabaseChoices))
+                         //   {
+                         //       templateSyncResults.SyncRequiredAsNonCriticalDataFieldAttributesDiffer = true;
+                         //   }
+                        //}
                     }
                     // Check: Any other changed values in any of the columns that may affect the UI appearance. 
                     if (ddbControl.ControlOrder != tdbControl.ControlOrder ||
