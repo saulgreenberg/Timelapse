@@ -392,6 +392,8 @@ namespace Timelapse.Constant
         public const string AddaxAIDownload = @"https://addaxdatascience.com/addaxai-windows/";
         public const string AddaxAIUninstallDownload = @"https://addaxdatascience.com/windows-uninstall/";
         public const string AddaxAISubfolderExecutable = @"AddaxAI_files\AddaxAI\open.bat";
+        public const string AddaxAIRegistryKey = @"Software\AddaxAI";
+        public const string AddaxAIRegistryValueExePath = "ExePath";
     }
 
     public static class EpisodeDefaults

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.Win32;
 using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.Database;
@@ -400,30 +402,59 @@ namespace Timelapse
         #endregion
 
         #region AddaxAI menu items
-        // Adjust menu based on whether AddaxAI is installed
-        // NOTE: EcoAssist is now called AddaxAI. To smooth out the transition of names, we check both ecoassist paths and addax paths.
-        private void MenuItem_OnAddaxAISubmenuOpened(object sender, RoutedEventArgs e)
+        // Result of locating an AddaxAI/EcoAssist installation.
+        private readonly struct AddaxAILocation(string executablePath, bool isRegistryExecutable)
         {
-            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), EcoAssist.EcoAssistSubfolderExecutable);
-            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
-            string addaxAIExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AddaxAI.AddaxAISubfolderExecutable);
-            string addaxAIExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), AddaxAI.AddaxAISubfolderExecutable);
-            // Enable running ecoassist only if the Ecoassist executable seems to be installed.
-            MenuItemAddaxAIRun.IsEnabled = System.IO.File.Exists(ecoAssistExecutable1) || System.IO.File.Exists(ecoAssistExecutable2) ||
-                                             System.IO.File.Exists(addaxAIExecutable1) || System.IO.File.Exists(addaxAIExecutable2);
+            public string ExecutablePath { get; } = executablePath;
+            // True  => ExecutablePath is AddaxAI.exe itself (found via registry), safe to run directly.
+            // False => ExecutablePath is the legacy open.bat launcher (found via hard-coded fallback paths).
+            public bool IsRegistryExecutable { get; } = isRegistryExecutable;
         }
 
-        // Download and install AddaxAI. 
+        // Locate AddaxAI (or legacy EcoAssist): registry first (HKCU, then HKLM), falling back to the
+        // well-known hard-coded open.bat locations for older installs that don't register themselves.
+        // NOTE: EcoAssist is now called AddaxAI. To smooth out the transition of names, we check both ecoassist paths and addax paths.
+        private static AddaxAILocation? TryFindAddaxAIInstallation()
+        {
+            string registryPath =
+                Registry.CurrentUser.OpenSubKey(AddaxAI.AddaxAIRegistryKey)?.GetValue(AddaxAI.AddaxAIRegistryValueExePath) as string
+                ?? Registry.LocalMachine.OpenSubKey(AddaxAI.AddaxAIRegistryKey)?.GetValue(AddaxAI.AddaxAIRegistryValueExePath) as string;
+
+            if (string.IsNullOrWhiteSpace(registryPath) == false && System.IO.File.Exists(registryPath))
+            {
+                return new AddaxAILocation(registryPath, true);
+            }
+
+            string homePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string[] fallbackCandidates =
+            [
+                Path.Combine(homePath, AddaxAI.AddaxAISubfolderExecutable),
+                Path.Combine(programFiles, AddaxAI.AddaxAISubfolderExecutable),
+                Path.Combine(homePath, EcoAssist.EcoAssistSubfolderExecutable),
+                Path.Combine(programFiles, EcoAssist.EcoAssistSubfolderExecutable),
+            ];
+            foreach (string candidate in fallbackCandidates)
+            {
+                if (System.IO.File.Exists(candidate))
+                {
+                    return new AddaxAILocation(candidate, false);
+                }
+            }
+            return null;
+        }
+
+        // Adjust menu based on whether AddaxAI is installed
+        private void MenuItem_OnAddaxAISubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            MenuItemAddaxAIRun.IsEnabled = TryFindAddaxAIInstallation() != null;
+        }
+
+        // Download and install AddaxAI.
         private void MenuItemAddaxAIDownload_Click(object sender, RoutedEventArgs e)
         {
-            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), EcoAssist.EcoAssistSubfolderExecutable);
-            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
-            string addaxAIExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AddaxAI.AddaxAISubfolderExecutable);
-            string addaxAIExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), AddaxAI.AddaxAISubfolderExecutable);
-
             // If an installation already exists, check with the user to see if he/she wants to continue...
-            if (System.IO.File.Exists(ecoAssistExecutable1) || System.IO.File.Exists(ecoAssistExecutable2) ||
-                System.IO.File.Exists(addaxAIExecutable1) || System.IO.File.Exists(addaxAIExecutable2))
+            if (TryFindAddaxAIInstallation() != null)
             {
                 if (false == Dialogs.AddaxAIAlreadyDownloaded(this))
                 {
@@ -440,14 +471,8 @@ namespace Timelapse
 
         private void MenuItemAddaxAIUninstall_Click(object sender, RoutedEventArgs e)
         {
-            string ecoAssistExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), EcoAssist.EcoAssistSubfolderExecutable);
-            string ecoAssistExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), EcoAssist.EcoAssistSubfolderExecutable);
-            string addaxAIExecutable1 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), AddaxAI.AddaxAISubfolderExecutable);
-            string addaxAIExecutable2 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), AddaxAI.AddaxAISubfolderExecutable);
-
-            // If an installation already exists, check with the user to see if he/she wants to continue...
-            if (false == System.IO.File.Exists(ecoAssistExecutable1) && false == System.IO.File.Exists(ecoAssistExecutable2) &&
-                false == System.IO.File.Exists(addaxAIExecutable1) && false == System.IO.File.Exists(addaxAIExecutable2))
+            // If no installation exists, check with the user to see if he/she wants to continue...
+            if (TryFindAddaxAIInstallation() == null)
             {
                 if (false == Dialogs.AddaxAINotInstalled(this))
                 {
@@ -459,8 +484,6 @@ namespace Timelapse
 
         private void MenuItemAddaxAIRun_Click(object sender, RoutedEventArgs e)
         {
-            string homepath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             string myDocuments = State.RecentlyOpenedTemplateFiles.TryGetMostRecent(out string mostRecent)
                 ? Path.GetDirectoryName(mostRecent)
                 : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -473,12 +496,32 @@ namespace Timelapse
                 return;
             }
 
-            string cmd = @"/k ";
-            cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, AddaxAI.AddaxAISubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";
-            cmd += $@"(cd /d {homepath} && ""{homepath}\{AddaxAI.AddaxAISubfolderExecutable}"" timelapse ""{selectedFolderPath}"" ) || ";
-            cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, EcoAssist.EcoAssistSubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";
-            cmd += $@"(cd /d {homepath} && ""{homepath}\{EcoAssist.EcoAssistSubfolderExecutable}"" timelapse ""{selectedFolderPath}"" ) ";
-            if (false == ProcessExecution.TryProcessRunCommand(cmd))
+            AddaxAILocation? location = TryFindAddaxAIInstallation();
+            bool started;
+            if (location is { IsRegistryExecutable: true })
+            {
+                // Recent AddaxAI versions register their exe path in the registry - run it directly.
+                started = ProcessExecution.TryProcessStart(new ProcessStartInfo
+                {
+                    FileName = location.Value.ExecutablePath,
+                    Arguments = $"--timelapse \"{selectedFolderPath}\"",
+                    UseShellExecute = true
+                });
+            }
+            else
+            {
+                // Fallback for older installs without a registry entry: unchanged open.bat cascade.
+                string homepath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                string cmd = @"/k ";
+                cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, AddaxAI.AddaxAISubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";
+                cmd += $@"(cd /d {homepath} && ""{homepath}\{AddaxAI.AddaxAISubfolderExecutable}"" timelapse ""{selectedFolderPath}"" ) || ";
+                cmd += $@"(cd /d {programFiles} && ""{Path.Combine(programFiles, EcoAssist.EcoAssistSubfolderExecutable)}"" timelapse ""{selectedFolderPath}"" ) || ";
+                cmd += $@"(cd /d {homepath} && ""{homepath}\{EcoAssist.EcoAssistSubfolderExecutable}"" timelapse ""{selectedFolderPath}"" ) ";
+                started = ProcessExecution.TryProcessRunCommand(cmd);
+            }
+
+            if (false == started)
             {
                 Dialogs.AddaxAICouldNotBeStarted(this);
             }
