@@ -3626,7 +3626,7 @@ namespace Timelapse.Dialog
             ThrowIf.IsNullArgument(owner, nameof(owner));
             const string title = "The DeletedFiles folder contains images or videos";
 
-            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            var dialog = new FormattedDialog
             {
                 Owner = owner,
                 Icon = DialogIconType.Warning,
@@ -3640,11 +3640,14 @@ namespace Timelapse.Dialog
                            "[li] Continue anyways if you don't mind those files being included, even though Timelapse won't use those file's recognition data.",
                 Hint = "Select:[br 2]" +
                        "[li] [b]Run the Recognizer Anyways[/b] to proceed as is, or" +
-                       "[li] [b]Cancel[/b] to stop and choose a different folder."
+                       "[li] [b]Cancel[/b] to stop and choose a different folder.",
+                OkButton =
+                {
+                    Content = "Run the Recognizer Anyways",
+                    Width = double.NaN,
+                    Padding = new Thickness(10, 0, 10, 0)
+                }
             };
-            dialog.OkButton.Content = "Run the Recognizer Anyways";
-            dialog.OkButton.Width = double.NaN;
-            dialog.OkButton.Padding = new Thickness(10, 0, 10, 0);
             return dialog.BuildAndShowDialog();
         }
 
