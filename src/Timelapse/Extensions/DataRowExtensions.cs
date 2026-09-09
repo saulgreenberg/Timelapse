@@ -2,6 +2,8 @@
 using System.Data;
 using System.Diagnostics;
 using Timelapse.Constant;
+using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Util;
 
 namespace Timelapse.Extensions
@@ -26,18 +28,40 @@ namespace Timelapse.Extensions
 
             public DateTime GetDateTimeField(string column)
             {
-                // Check the arguments for null. 
+                // Check the arguments for null.
                 ThrowIf.IsNullArgument(row, nameof(row));
+                DateTime fieldValue;
                 try
                 {
-                    return (DateTime)row[column];
+                    fieldValue = (DateTime)row[column];
                 }
                 catch
                 {
-                    // If for some reason we have an invalid date time (e.g., a null entry), always return a valid but improbable date (Jan 1 1900 midnight).
-                    Debug.Print("GetDateTimeField: Unexpected kind for date time in row with ID " + row.GetID());
-                    return new(1900, 1, 1, 12, 0, 0, 0);
+                    // The stored value isn't a DateTime at all (e.g. a null entry) - fall through
+                    // to the same out-of-range handling below via an obviously-invalid sentinel.
+                    fieldValue = DateTime.MinValue;
                 }
+
+                // A successfully-cast DateTime can still be nonsensical for a photo/video (e.g. a
+                // corrupted date string that happens to parse, such as one landing on year 9999 -
+                // which has previously crashed the date-entry control, since decomposing and
+                // recombining a date that close to DateTime.MaxValue can overflow). Treat anything
+                // outside a generous sane range the same way as an outright cast failure.
+                if (fieldValue.Year < 1900 || fieldValue.Year > 2100)
+                {
+                    DateTime fallback = new(1900, 1, 1, 0, 0, 0);
+                    long id = row.GetID();
+                    AppLog.Warning($"GetDateTimeField: invalid DateTime ({fieldValue}) in row Id {id}, column '{column}'. Replacing with {fallback} and correcting the database.");
+
+                    // Correct the in-memory value too, so repeated reads of this row later in the
+                    // session see the already-fixed value instead of re-detecting the same error.
+                    row[column] = fallback;
+                    GlobalReferences.MainWindow?.DataHandler?.FileDatabase?.UpdateFile(id, column, DateTimeHandler.ToStringDatabaseDateTime(fallback));
+
+                    return fallback;
+                }
+
+                return fieldValue;
             }
 
             // ReSharper disable once UnusedMember.Global
