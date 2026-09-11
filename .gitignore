@@ -140,3 +140,5 @@ $tf/
 ToDo/TreeViewForSpeciesNet.md
 .claude/worktrees/agent-a1026f122f6975727/.editorconfig
 .claude/
+Installers/TimelapseInstaller-PerMachine/Product.wxs
+Installers/TimelapseInstaller-PerUser/Product.wxs
