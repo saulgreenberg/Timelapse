@@ -217,6 +217,7 @@ public class SQLiteWrapper
                     lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 200;
                     TracePrint.PrintMessage($"Database unavailable in GetDataTableFromSelect (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                    AppLog.Warning($"GetDataTableFromSelect: attempt {attempt + 1}/4 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
                     Thread.Sleep(delayMs);
                 }
                 catch (SQLiteException sqliteEx) when (
@@ -230,6 +231,7 @@ public class SQLiteWrapper
                     lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 250;
                     TracePrint.PrintMessage($"Database busy/locked in GetDataTableFromSelect (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
+                    AppLog.Warning($"GetDataTableFromSelect: attempt {attempt + 1}/5 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
                     Thread.Sleep(delayMs);
                 }
                 catch (Exception exception)
@@ -296,6 +298,7 @@ public class SQLiteWrapper
                         lastRetryReason = sqliteEx.ResultCode;
                         int delayMs = (attempt + 1) * 200;
                         TracePrint.PrintMessage($"Database unavailable in GetDataTableFromSelectAsync (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                        AppLog.Warning($"GetDataTableFromSelectAsync: attempt {attempt + 1}/4 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
                         Thread.Sleep(delayMs);
                     }
                     catch (SQLiteException sqliteEx) when (
@@ -310,6 +313,7 @@ public class SQLiteWrapper
                         lastRetryReason = sqliteEx.ResultCode;
                         int delayMs = (attempt + 1) * 250;
                         TracePrint.PrintMessage($"Database busy/locked in GetDataTableFromSelectAsync (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
+                        AppLog.Warning($"GetDataTableFromSelectAsync: attempt {attempt + 1}/5 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
                         Thread.Sleep(delayMs);
                     }
                     catch (Exception exception)
@@ -355,6 +359,7 @@ public class SQLiteWrapper
                     lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 200;
                     TracePrint.PrintMessage($"Database unavailable in GetDistinctValuesInColumn (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                    AppLog.Warning($"GetDistinctValuesInColumn: attempt {attempt + 1}/4 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
                     Thread.Sleep(delayMs);
                 }
                 catch (SQLiteException sqliteEx) when (
@@ -367,6 +372,7 @@ public class SQLiteWrapper
                     lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 250;
                     TracePrint.PrintMessage($"Database busy/locked in GetDistinctValuesInColumn (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
+                    AppLog.Warning($"GetDistinctValuesInColumn: attempt {attempt + 1}/5 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
                     Thread.Sleep(delayMs);
                 }
                 catch (Exception exception)
@@ -416,6 +422,7 @@ public class SQLiteWrapper
                     lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 200;
                     TracePrint.PrintMessage($"Database unavailable in GetScalarFromSelect (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
+                    AppLog.Warning($"GetScalarFromSelect: attempt {attempt + 1}/4 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
                     Thread.Sleep(delayMs);
                 }
                 catch (SQLiteException sqliteEx) when (
@@ -429,6 +436,7 @@ public class SQLiteWrapper
                     lastRetryReason = sqliteEx.ResultCode;
                     int delayMs = (attempt + 1) * 250;
                     TracePrint.PrintMessage($"Database busy/locked in GetScalarFromSelect (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
+                    AppLog.Warning($"GetScalarFromSelect: attempt {attempt + 1}/5 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
                     Thread.Sleep(delayMs);
                 }
                 catch (Exception exception)
@@ -1028,11 +1036,14 @@ public class SQLiteWrapper
                 // otherwise a fresh connection would silently run without those pragmas.
                 bool preTransactionStatementsApplied = false;
 
-                // Retry the entire transaction on transient BUSY/LOCKED/READONLY — these resolve when
-                // the competing writer releases its lock, or a momentary network-share permission/lock
-                // hiccup (e.g. SMB session revalidation, an AV/backup scan) clears. Unrecoverable
-                // failures (I/O error, drive gone) are not in this set and fall straight through to the
-                // general catch.
+                // Retry the entire transaction on transient BUSY/LOCKED/READONLY/IOERR — these resolve
+                // when the competing writer releases its lock, or a momentary network-share
+                // permission/lock/I-O hiccup (e.g. SMB session revalidation, a VPN blip, an AV/backup
+                // scan) clears. IOERR is a broad SQLite code covering many distinct low-level OS file
+                // failures, some genuinely unrecoverable (drive gone) — those simply fail again on
+                // every retry and fall through to the fatal path after the same short budget, just a
+                // few seconds later than today. Other, more exotic SQLite error codes are not in this
+                // set and fall straight through to the general catch immediately.
                 // Callers that opt in with a nonzero busyTimeoutMs (background-thread writes only —
                 // see ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs) get a longer ceiling: 8
                 // attempts instead of 5, same linear-backoff formula, topping out at 1750 ms instead
@@ -1120,14 +1131,16 @@ public class SQLiteWrapper
                         return SqlOperationResult.Ok();
                     }
                     catch (SQLiteException sqliteEx) when (
-                        (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked || sqliteEx.ResultCode == SQLiteErrorCode.ReadOnly)
+                        (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked ||
+                         sqliteEx.ResultCode == SQLiteErrorCode.ReadOnly || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
                         && busyAttempt < maxBusyAttempt)
                     {
-                        // Transient lock, or a momentary readonly bounce (commonly seen on mapped
-                        // network drives when the SMB session briefly revalidates or an AV/backup
-                        // agent holds a read-only-compatible lock) — roll back and wait before retrying.
-                        // Linear backoff: 250 ms, 500 ms, ... up to 1 000 ms (5 attempts max) or, for
-                        // opted-in background callers, up to 2 000 ms (8 attempts max).
+                        // Transient lock, a momentary readonly bounce, or a low-level I/O error
+                        // (commonly seen on mapped network drives when the SMB session briefly
+                        // revalidates, a VPN blips, or an AV/backup agent holds a lock) — roll back and
+                        // wait before retrying. Linear backoff: 250 ms, 500 ms, ... up to 1 000 ms
+                        // (5 attempts max) or, for opted-in background callers, up to 2 000 ms
+                        // (8 attempts max).
                         lastRetryReason = sqliteEx.ResultCode;
                         try { transaction?.Rollback(); }
                         catch
@@ -1136,19 +1149,21 @@ public class SQLiteWrapper
                         }
                         finally { transaction?.Dispose(); }
 
-                        if (sqliteEx.ResultCode == SQLiteErrorCode.ReadOnly)
+                        if (sqliteEx.ResultCode == SQLiteErrorCode.ReadOnly || sqliteEx.ResultCode == SQLiteErrorCode.IoErr)
                         {
                             // READONLY is latched once when the connection's pager opens — SQLite
                             // silently falls back to a read-only pager if the file couldn't be
                             // opened read/write at that moment, and never re-checks writability on
-                            // that same connection afterwards. Unlike BUSY/LOCKED (re-evaluated live
-                            // against the same connection), retrying on the same connection would
-                            // fail identically every time even after the underlying access problem
-                            // clears. Reopen a fresh connection so the next attempt gets a live
-                            // read/write check against the file.
+                            // that same connection afterwards. IOERR is broader still: it can occur
+                            // mid-statement or mid-commit, and unlike BUSY/LOCKED (a clean rejection
+                            // before anything was attempted, safe to retry on the same connection),
+                            // the connection's internal state afterward is not guaranteed to be as
+                            // predictable. For both, reopen a fresh connection so the next attempt
+                            // starts clean rather than reusing a connection that hit a failure whose
+                            // exact internal side effects aren't well-defined.
                             connection.Dispose();
                             connection = GetNewSqliteConnection(ConnectionString);
-                            SqlOperationResult reopenFailure = OpenConnectionWithRetry(connection, "ExecuteNonQueryWithRollbackCore (reopen after READONLY)");
+                            SqlOperationResult reopenFailure = OpenConnectionWithRetry(connection, $"ExecuteNonQueryWithRollbackCore (reopen after {sqliteEx.ResultCode})");
                             if (reopenFailure != null)
                             {
                                 return reopenFailure;
@@ -1162,7 +1177,8 @@ public class SQLiteWrapper
                         }
 
                         int delayMs = (busyAttempt + 1) * 250;
-                        TracePrint.PrintMessage($"Database busy/locked/readonly (attempt {busyAttempt + 1}/{maxBusyAttempt + 1}), retrying in {delayMs} ms…");
+                        TracePrint.PrintMessage($"Database busy/locked/readonly/io-error (attempt {busyAttempt + 1}/{maxBusyAttempt + 1}), retrying in {delayMs} ms…");
+                        AppLog.Warning($"ExecuteNonQueryWithRollbackCore: attempt {busyAttempt + 1}/{maxBusyAttempt + 1} hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
                     }
                     catch (Exception exception)
                     {
@@ -1214,8 +1230,10 @@ public class SQLiteWrapper
                     if (openAttempt >= 4)
                     {
                         TracePrint.PrintMessage($"Unable to open database after 5 attempts: {ex}");
+                        AppLog.Warning($"{context}: unable to open database file after {openAttempt + 1} attempt(s) on CANTOPEN — giving up.");
                         return SqlOperationResult.Fail($"{context}: unable to open database file (failed after {openAttempt + 1} attempt(s) on CANTOPEN)", ex);
                     }
+                    AppLog.Warning($"{context}: attempt {openAttempt + 1}/5 hit CANTOPEN, retrying in 200 ms.");
                     Thread.Sleep(200);
                 }
             }
@@ -2086,6 +2104,7 @@ public class SQLiteWrapper
                     // isn't delayed by a multi-second wait that can't possibly help it.
                     int delayMs = (attempt + 1) * 250;
                     TracePrint.PrintMessage($"Database busy/locked in PragmaGetQuickCheck (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
+                    AppLog.Warning($"PragmaGetQuickCheck: attempt {attempt + 1}/5 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
                     Thread.Sleep(delayMs);
                 }
                 catch (SQLiteException sqliteEx) when (sqliteEx.ResultCode == SQLiteErrorCode.Busy || sqliteEx.ResultCode == SQLiteErrorCode.Locked)
