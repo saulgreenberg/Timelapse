@@ -17,9 +17,11 @@
                 <Button Name="NoButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="NoButton_Click">_Remind Me Later</Button>
                 <Button Name="YesButton" IsDefault="True" AutomationProperties.AutomationId="OkButton" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="YesButton_Click" IsEnabled="True">_Download New Version (via web browser)</Button>
             </StackPanel>
-            <Rectangle Fill="#FF868686" Height="2" HorizontalAlignment="Stretch" DockPanel.Dock="Top"/>
-            <Rectangle Fill="#FF868686" Height="2" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom"/>
-            <FlowDocumentScrollViewer Name="ChangeDescription" MinHeight="100" MinWidth="100" DockPanel.Dock="Top" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Auto"/>
+            <DockPanel Name="ChangeDescriptionPane" DockPanel.Dock="Top">
+                <Rectangle Fill="#FF868686" Height="2" HorizontalAlignment="Stretch" DockPanel.Dock="Top"/>
+                <Rectangle Fill="#FF868686" Height="2" HorizontalAlignment="Stretch" DockPanel.Dock="Bottom"/>
+                <FlowDocumentScrollViewer Name="ChangeDescription" MinHeight="100" MinWidth="100" DockPanel.Dock="Top" HorizontalAlignment="Stretch" VerticalScrollBarVisibility="Auto"/>
+            </DockPanel>
         </DockPanel>
     </DockPanel>
 </Window>
