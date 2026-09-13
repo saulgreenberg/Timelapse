@@ -4,6 +4,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -516,10 +517,18 @@ namespace Timelapse.Database
                 List<List<ColumnTuple>> controlInsertWrapper = [newControl.CreateColumnTuplesWithWhereByID().Columns];
                 errorReport += "controlInsertWrapper succeeded." + Environment.NewLine;
                 SqlOperationResult insertControlResult = Database.Insert(DBTables.Template, controlInsertWrapper);
-                if (!insertControlResult.Success)
+                while (!insertControlResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in AddControlToDataTableAndDatabase", this.FilePath, insertControlResult);
-                    return null;
+                    bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "add this control", insertControlResult, this.FilePath);
+                    if (retryChoice != true)
+                    {
+                        if (retryChoice == false)
+                        {
+                            Application.Current.Shutdown();
+                        }
+                        return null;
+                    }
+                    insertControlResult = Database.Insert(DBTables.Template, controlInsertWrapper);
                 }
                 errorReport += " Database.Insert succeeded." + Environment.NewLine;
 
@@ -564,10 +573,18 @@ namespace Timelapse.Database
             // drop the control from the database and data table
             string where = DatabaseColumn.ID + Sql.Equal + controlToRemove.ID;
             SqlOperationResult deleteControlResult = Database.DeleteRows(DBTables.Template, where);
-            if (!deleteControlResult.Success)
+            while (!deleteControlResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in RemoveControlFromDataTableAndDatabase", this.FilePath, deleteControlResult);
-                return;
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "remove this control", deleteControlResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                deleteControlResult = Database.DeleteRows(DBTables.Template, where);
             }
             LoadControlsFromTemplateDBSortedByControlOrder();
 
@@ -593,10 +610,18 @@ namespace Timelapse.Database
                 }
             }
             SqlOperationResult updateOrderResult = Database.Update(DBTables.Template, controlUpdates);
-            if (!updateOrderResult.Success)
+            while (!updateOrderResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in RemoveControlFromDataTableAndDatabase", this.FilePath, updateOrderResult);
-                return;
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "renumber the remaining controls", updateOrderResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                updateOrderResult = Database.Update(DBTables.Template, controlUpdates);
             }
 
             // update the in memory table to reflect current database content
@@ -1275,10 +1300,18 @@ namespace Timelapse.Database
             // A. Add the new control to the database
             List<List<ColumnTuple>> controlInsertWrapper = [newControl.CreateColumnTuplesWithWhereByID().Columns];
             SqlOperationResult insertMetaControlResult = Database.Insert(DBTables.MetadataTemplate, controlInsertWrapper);
-            if (!insertMetaControlResult.Success)
+            while (!insertMetaControlResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in MetadataAddControlToDataTableAndDatabase", this.FilePath, insertMetaControlResult);
-                return UpdateStateEnum.Failed;
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "add this metadata control", insertMetaControlResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return UpdateStateEnum.Failed;
+                }
+                insertMetaControlResult = Database.Insert(DBTables.MetadataTemplate, controlInsertWrapper);
             }
 
             // B. Update the in memory table to reflect current database content
@@ -1319,10 +1352,18 @@ namespace Timelapse.Database
             string where = DatabaseColumn.ID + Sql.Equal + controlToRemove.ID
                            + Sql.And + Control.Level + Sql.Equal + Sql.Quote(level.ToString());
             SqlOperationResult deleteMetaControlResult = Database.DeleteRows(DBTables.MetadataTemplate, where);
-            if (!deleteMetaControlResult.Success)
+            while (!deleteMetaControlResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in RemoveMetadataControlFromDataTableAndDatabase", this.FilePath, deleteMetaControlResult);
-                return;
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "remove this metadata control", deleteMetaControlResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                deleteMetaControlResult = Database.DeleteRows(DBTables.MetadataTemplate, where);
             }
             await LoadMetadataControlsAndInfoFromTemplateTDBSortedByControlOrderAsync();
 
@@ -1356,10 +1397,18 @@ namespace Timelapse.Database
                 }
             }
             SqlOperationResult updateMetaOrderResult = Database.Update(DBTables.MetadataTemplate, controlUpdates);
-            if (!updateMetaOrderResult.Success)
+            while (!updateMetaOrderResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in RemoveMetadataControlFromDataTableAndDatabase", this.FilePath, updateMetaOrderResult);
-                return;
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "renumber the remaining metadata controls", updateMetaOrderResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                updateMetaOrderResult = Database.Update(DBTables.MetadataTemplate, controlUpdates);
             }
 
             // update the in memory table to reflect current database content
@@ -1436,9 +1485,18 @@ namespace Timelapse.Database
             ];
 
             SqlOperationResult moveLevelResult = Database.ExecuteNonQueryWithRollback(queries);
-            if (!moveLevelResult.Success)
+            while (!moveLevelResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in MetadataMoveLevelForwardsOrBackwardsInDatabase", this.FilePath, moveLevelResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "move this metadata level", moveLevelResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                moveLevelResult = Database.ExecuteNonQueryWithRollback(queries);
             }
         }
         #endregion
@@ -1556,10 +1614,18 @@ namespace Timelapse.Database
                 columnsTuplesWithWhereList.Add(columnTupleWithWhere);
             }
             SqlOperationResult syncMetaOrderResult = Database.Update(DBTables.MetadataTemplate, columnsTuplesWithWhereList);
-            if (!syncMetaOrderResult.Success)
+            while (!syncMetaOrderResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in SyncMetadataControlsToDatabase", this.FilePath, syncMetaOrderResult);
-                return;
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "reorder these metadata controls", syncMetaOrderResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                syncMetaOrderResult = Database.Update(DBTables.MetadataTemplate, columnsTuplesWithWhereList);
             }
 
             // Update the in memory table to reflect current database content

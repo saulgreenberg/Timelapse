@@ -66,6 +66,7 @@
                     Click="OkButton_Click"
                     Visibility="Collapsed"/>
             <Button Name="CancelButton"
+                    x:FieldModifier="public"
                     Content="Cancel"
                     Width="80"
                     Height="30"

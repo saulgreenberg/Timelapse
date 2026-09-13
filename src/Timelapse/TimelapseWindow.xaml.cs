@@ -180,6 +180,62 @@ namespace Timelapse
                 }
             };
 
+            // Show a transient notice (near the cursor, or centered for retries not tied to a
+            // specific on-screen action) while SQLiteWrapper is silently retrying a transient
+            // database contention/network error, so a multi-second automatic-retry pause doesn't
+            // look like the app has hung. Dismissed once the retry succeeds, exhausts (a dialog
+            // is about to show), or via its own auto-close timer.
+            SQLiteWrapper.OnRetryBegin = (message, closeAfterMs, attachToCursor) =>
+            {
+                ModernNotifier notifier = GlobalReferences.MainWindow?.ToastNotifier;
+                if (notifier == null)
+                {
+                    return;
+                }
+                if (attachToCursor)
+                {
+                    notifier.ShowInformationByCursor(message, closeAfterMs, animateEllipsis: true);
+                }
+                else
+                {
+                    notifier.ShowInformation(message, new NotificationOptions { CloseAfter = closeAfterMs, ShowCloseButton = true, AnimateEllipsis = true });
+                }
+                // The retry loop that just triggered this is about to block the calling thread
+                // (often the UI thread) with a synchronous Thread.Sleep. ShowNotification queues
+                // its work via Dispatcher.BeginInvoke rather than running it inline, so without
+                // forcing one pump here the popup would never actually paint until the whole
+                // retry sequence finishes - defeating the point of showing it at all. Same
+                // technique already used in BitmapUtilities.PumpDispatcherMessages.
+                DispatcherFrame frame = new();
+                Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => frame.Continue = false), DispatcherPriority.Background);
+                Dispatcher.PushFrame(frame);
+            };
+            SQLiteWrapper.OnRetryEnd = () => GlobalReferences.MainWindow?.ToastNotifier?.Dismiss();
+
+            // Performs the wait between retry attempts. A bare Thread.Sleep on the UI thread
+            // blocks the dispatcher entirely, so a notice's cursor-tracking timer (and rendering
+            // in general) freezes as soon as the first retry delay starts, even though
+            // OnRetryBegin above already forced one pump to get it on screen initially. Pump in
+            // short bursts instead so the notice keeps tracking the cursor and repainting for the
+            // whole wait. On a background thread there is no UI-thread dispatcher being blocked,
+            // so a plain sleep is fine.
+            SQLiteWrapper.OnRetryDelay = delayMs =>
+            {
+                if (!Dispatcher.CheckAccess())
+                {
+                    Thread.Sleep(delayMs);
+                    return;
+                }
+                Stopwatch stopwatch = Stopwatch.StartNew();
+                while (stopwatch.ElapsedMilliseconds < delayMs)
+                {
+                    DispatcherFrame frame = new();
+                    Dispatcher.CurrentDispatcher.BeginInvoke(new Action(() => frame.Continue = false), DispatcherPriority.Background);
+                    Dispatcher.PushFrame(frame);
+                    Thread.Sleep(15);
+                }
+            };
+
             // Populate the most recent image set list
             MenuItemRecentImageSets_RefreshItems();
 

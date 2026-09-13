@@ -28,17 +28,26 @@ namespace Timelapse.Util
         }
 
         /// <summary>
-        /// Show an information notification
+        /// Show an information notification, auto-closing after 3 seconds
         /// </summary>
         public void ShowInformationByCursor(string message)
+        {
+            ShowInformationByCursor(message, 3000);
+        }
+
+        /// <summary>
+        /// Show an information notification by the cursor, auto-closing after the given duration
+        /// </summary>
+        public void ShowInformationByCursor(string message, int closeAfterMs, bool animateEllipsis = false)
         {
             ShowNotification(message, NotificationType.Information,
                 new NotificationOptions
                 {
                     ShowCloseButton = true,
-                    CloseAfter = 3000,
+                    CloseAfter = closeAfterMs,
                     Compact = true,
                     AttachToCursor = true,
+                    AnimateEllipsis = animateEllipsis,
                 });
         }
 
@@ -149,19 +158,34 @@ namespace Timelapse.Util
                 }
             };
 
+            string ellipsisBaseText = message.TrimEnd('.');
             var stackPanel = new StackPanel
             {
                 Orientation = Orientation.Horizontal,
             };
             var textBlock = new TextBlock
             {
-                Text = message,
+                Text = options.AnimateEllipsis ? ellipsisBaseText : message,
                 Foreground = GetForegroundColor(type),
                 FontFamily = new("Segoe UI"),
                 FontSize = options.Compact ? 10 : 14,
                 TextWrapping = TextWrapping.Wrap,
                 VerticalAlignment = VerticalAlignment.Center
             };
+            if (options.AnimateEllipsis)
+            {
+                // Reserve width for the widest variant (3 dots) up front so the notification
+                // doesn't keep resizing horizontally as the dot count animates.
+                var widestVariant = new FormattedText(
+                    ellipsisBaseText + "...",
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface(textBlock.FontFamily, textBlock.FontStyle, textBlock.FontWeight, textBlock.FontStretch),
+                    textBlock.FontSize,
+                    Brushes.Black,
+                    VisualTreeHelper.GetDpi(owner).PixelsPerDip);
+                textBlock.Width = widestVariant.Width;
+            }
             var closeButton = new Button
             {
                 Content = "X",
@@ -264,6 +288,25 @@ namespace Timelapse.Util
                 popup.Closed += (_, _) => trackTimer.Stop();
             }
 
+            // Animate the trailing ellipsis (1 dot -> 3 dots -> 1 dot -> ...) for as long as the
+            // popup is open. Relies on the dispatcher being pumped periodically, same as the
+            // cursor-tracking timer above - a caller blocked in a bare Thread.Sleep would freeze
+            // this too, but SQLiteWrapper's retry loops route their waits through OnRetryDelay,
+            // which pumps in short bursts for exactly this reason.
+            if (options.AnimateEllipsis)
+            {
+                int dotCount = 0;
+                var ellipsisTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
+                ellipsisTimer.Tick += (_, _) =>
+                {
+                    if (!popup.IsOpen) { ellipsisTimer.Stop(); return; }
+                    dotCount = (dotCount + 1) % 4;
+                    textBlock.Text = ellipsisBaseText + new string('.', dotCount);
+                };
+                ellipsisTimer.Start();
+                popup.Closed += (_, _) => ellipsisTimer.Stop();
+            }
+
             // Auto-close: wait (CloseAfter - 500ms), then fade to transparent over 500ms.
             const int fadeDurationMs = 500;
             int waitMs = Math.Max(0, options.CloseAfter - fadeDurationMs);
@@ -346,5 +389,13 @@ namespace Timelapse.Util
         public double? OffsetX { get; set; } = null;
         public double? OffsetY { get; set; } = null;
         public bool AttachToCursor { get; set; }
+
+        /// <summary>
+        /// When true, any trailing "." characters on the message are replaced with an ellipsis
+        /// that animates 0, 1, 2, 3 dots and repeats, for as long as the popup is open. The
+        /// notification reserves width for the 3-dot variant up front so it doesn't resize as
+        /// the dot count changes.
+        /// </summary>
+        public bool AnimateEllipsis { get; set; }
     }
 }

@@ -723,25 +723,38 @@ namespace Timelapse.Database
                 string label = $"{Constant.ClassificationCategoriesColumns.Label}";
                 string description = $"{Constant.ClassificationCategoriesColumns.Description}";
                 string newLabel = Sql.Quote(Constant.RecognizerValues.UnknownClassificationLabel);
+                string emptyLabelWhereClause = $" {label} IS NULL OR TRIM({label}) = '' ";
+
+                // Skip the write entirely if there's nothing to repair - avoids running an
+                // (otherwise no-op) UPDATE, and the retry-dialog loop it's wrapped in, on every
+                // single file open.
+                string countQuery = $"{Sql.SelectCountStarFrom} {table} {Sql.Where} {emptyLabelWhereClause}";
+                if (this.Database.ScalarGetScalarFromSelectAsInt(countQuery) == 0)
+                {
+                    return;
+                }
+
                 string query = $"WITH SequencedRows AS (SELECT rowid, ROW_NUMBER() OVER (ORDER BY rowid) as seq FROM {table}"
-                               + $" WHERE {label} IS NULL OR TRIM({label}) = '' )"
+                               + $" WHERE {emptyLabelWhereClause} )"
                                + $" UPDATE {table} SET {label} = CASE "
                                + $" WHEN sr.seq = 1 THEN {newLabel} ELSE {newLabel} || sr.seq END,"
                                + $" {description} = '' FROM SequencedRows sr WHERE {table}.rowid = sr.rowid;";
                 SqlOperationResult repairResult = this.Database.ExecuteNonQueryWithRollback(query);
-                if (!repairResult.Success)
+                // ExecuteNonQueryWithRollback already retried automatically (short budget, ~2.5s)
+                // before reporting failure. Keep offering Retry/Restart/Shut Down for as long as it
+                // keeps failing - no separate fatal dialog is needed here.
+                while (!repairResult.Success)
                 {
-                    // ExecuteNonQueryWithRollback already retried automatically (short budget,
-                    // ~2.5s) before reporting failure. Offer exactly one more manual retry before
-                    // the fatal dialog.
-                    if (Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "repair classification category labels", repairResult) == true)
+                    bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "repair classification category labels", repairResult, this.FilePath);
+                    if (retryChoice != true)
                     {
-                        repairResult = this.Database.ExecuteNonQueryWithRollback(query);
+                        if (retryChoice == false)
+                        {
+                            Application.Current.Shutdown();
+                        }
+                        return;
                     }
-                    if (!repairResult.Success)
-                    {
-                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in RepairClassificationCategoriesIfNeeded", this.FilePath, repairResult);
-                    }
+                    repairResult = this.Database.ExecuteNonQueryWithRollback(query);
                 }
             }
         }
@@ -1268,9 +1281,18 @@ namespace Timelapse.Database
             // Execute all batches in one transaction — one fsync regardless of image count.
             CreateBackupIfNeeded();
             SqlOperationResult addFilesResult = Database.ExecuteNonQueryWithRollback(insertCommands);
-            if (!addFilesResult.Success)
+            while (!addFilesResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in AddFiles", this.FilePath, addFilesResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "add these files to the database", addFilesResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                addFilesResult = Database.ExecuteNonQueryWithRollback(insertCommands);
             }
         }
 
@@ -1492,9 +1514,18 @@ namespace Timelapse.Database
                 // Always invoked from a background thread (DeleteImages' DoDeleteFilesAsync), so it's
                 // safe to opt into the extended BUSY/LOCKED retry budget for network-share resilience.
                 SqlOperationResult deleteResult = Database.ExecuteNonQueryWithRollback(deleteStatements, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
-                if (!deleteResult.Success)
+                while (!deleteResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in DeleteFilesAndMarkers", this.FilePath, deleteResult);
+                    bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "delete these files", deleteResult, this.FilePath);
+                    if (retryChoice != true)
+                    {
+                        if (retryChoice == false)
+                        {
+                            Application.Current.Shutdown();
+                        }
+                        return;
+                    }
+                    deleteResult = Database.ExecuteNonQueryWithRollback(deleteStatements, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 }
             }
         }
@@ -1945,10 +1976,18 @@ namespace Timelapse.Database
 
             List<List<ColumnTuple>> insertionStatements = [columns];
             SqlOperationResult insertMarkerResult = Database.Insert(DBTables.Markers, insertionStatements);
-            if (!insertMarkerResult.Success)
+            while (!insertMarkerResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MarkersTryInsertNewMarkerRow", this.FilePath, insertMarkerResult);
-                return false;
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "add a marker", insertMarkerResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return false;
+                }
+                insertMarkerResult = Database.Insert(DBTables.Markers, insertionStatements);
             }
 
             // PERFORMANCE: This is inefficient, as it rereads the entire Markers table from the database
@@ -1997,9 +2036,18 @@ namespace Timelapse.Database
             // Note that I repeated the null check here, as for some reason it was still coming up as a CA1062 warning
             List<string> whereClauses = [DatabaseColumn.ID + Sql.Equal + imageID];
             SqlOperationResult deleteMarkerResult = Database.Delete(DBTables.Markers, whereClauses);
-            if (!deleteMarkerResult.Success)
+            while (!deleteMarkerResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MarkersRemoveMarkerRow", this.FilePath, deleteMarkerResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "remove a marker", deleteMarkerResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                deleteMarkerResult = Database.Delete(DBTables.Markers, whereClauses);
             }
         }
         #endregion
@@ -2110,10 +2158,18 @@ namespace Timelapse.Database
                 // Create a list matching fields we need to update
                 List<List<ColumnTuple>> newTableTuples = [columnTupleList];
                 SqlOperationResult insertUpsertResult = Database.Insert(tableName, newTableTuples);
-                if (!insertUpsertResult.Success)
+                while (!insertUpsertResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataTablesAndDatabaseUpsertRow (insert)", this.FilePath, insertUpsertResult);
-                    return;
+                    bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save this folder's metadata", insertUpsertResult, this.FilePath);
+                    if (retryChoice != true)
+                    {
+                        if (retryChoice == false)
+                        {
+                            Application.Current.Shutdown();
+                        }
+                        return;
+                    }
+                    insertUpsertResult = Database.Insert(tableName, newTableTuples);
                 }
 
                 // Now add it to the metadataTable
@@ -2124,9 +2180,18 @@ namespace Timelapse.Database
             // If we get to here, then the row exists. So we just need to update it instead
             ColumnTuplesWithWhere ctww = new(columnTupleList, (long)dataTable.Rows[0][DatabaseColumn.ID]);
             SqlOperationResult updateUpsertResult = Database.Update(tableName, ctww);
-            if (!updateUpsertResult.Success)
+            while (!updateUpsertResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataTablesAndDatabaseUpsertRow (update)", this.FilePath, updateUpsertResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save this folder's metadata", updateUpsertResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                updateUpsertResult = Database.Update(tableName, ctww);
             }
         }
 
@@ -2351,18 +2416,36 @@ namespace Timelapse.Database
         public void InsertDetection(List<List<ColumnTuple>> detectionInsertionStatements)
         {
             SqlOperationResult insertDetectionResult = Database.Insert(DBTables.Detections, detectionInsertionStatements);
-            if (!insertDetectionResult.Success)
+            while (!insertDetectionResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertDetection", this.FilePath, insertDetectionResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "import recognition data", insertDetectionResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                insertDetectionResult = Database.Insert(DBTables.Detections, detectionInsertionStatements);
             }
         }
 
         public void InsertDetectionsVideo(List<List<ColumnTuple>> detectionsVideoInsertionStatements)
         {
             SqlOperationResult insertDetVideoResult = Database.Insert(DBTables.DetectionsVideo, detectionsVideoInsertionStatements);
-            if (!insertDetVideoResult.Success)
+            while (!insertDetVideoResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in InsertDetectionsVideo", this.FilePath, insertDetVideoResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "import recognition data", insertDetVideoResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                insertDetVideoResult = Database.Insert(DBTables.DetectionsVideo, detectionsVideoInsertionStatements);
             }
         }
 
@@ -2665,10 +2748,18 @@ namespace Timelapse.Database
                             IndexCreateForDetectionsIfNeeded();
                             // Delete these detections and classifications
                             SqlOperationResult removeResult = Database.ExecuteNonQueryWithRollback(queries, progress, "Removing unneeded recognitions. Please wait...", 500);
-                            if (!removeResult.Success)
+                            while (!removeResult.Success)
                             {
-                                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in recognizer import (remove unneeded detections)", this.FilePath, removeResult);
-                                return RecognizerImportResultEnum.Failure;
+                                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "remove unneeded recognition data", removeResult, this.FilePath);
+                                if (retryChoice != true)
+                                {
+                                    if (retryChoice == false)
+                                    {
+                                        Application.Current.Shutdown();
+                                    }
+                                    return RecognizerImportResultEnum.Failure;
+                                }
+                                removeResult = Database.ExecuteNonQueryWithRollback(queries, progress, "Removing unneeded recognitions. Please wait...", 500);
                             }
                         }
                         // At this point, we have deleted the detections and classifications from those images that are both in the
@@ -3271,10 +3362,18 @@ namespace Timelapse.Database
                 return false;
             }
             SqlOperationResult thresholdResult = Database.Update(DBTables.ImageSet, new ColumnTuple(DatabaseColumn.BoundingBoxDisplayThreshold, threshold));
-            if (!thresholdResult.Success)
+            while (!thresholdResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in TrySetBoundingBoxDisplayThreshold", this.FilePath, thresholdResult);
-                return false;
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save the bounding box display threshold", thresholdResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return false;
+                }
+                thresholdResult = Database.Update(DBTables.ImageSet, new ColumnTuple(DatabaseColumn.BoundingBoxDisplayThreshold, threshold));
             }
             return true;
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.ControlsDataEntry;
@@ -41,9 +42,23 @@ namespace Timelapse.Database
             columnToUpdate.SetWhere(fileID);
 
             SqlOperationResult updateResult = this.Database.Update(DBTables.FileData, columnToUpdate);
-            if (!updateResult.Success)
+            // Database.Update already retried automatically (short budget, ~2.5s) before reporting
+            // failure. Keep offering Retry/Restart/Shut Down for as long as it keeps failing -
+            // TimelapseOperationRetryDialog itself handles Restart (launches a new instance and
+            // shuts this one down) and covers the "give up" case via Shut Down, so no separate
+            // fatal dialog is needed here.
+            while (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFile", this.FilePath, updateResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save your edit", updateResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                updateResult = this.Database.Update(DBTables.FileData, columnToUpdate);
             }
         }
 
@@ -67,9 +82,21 @@ namespace Timelapse.Database
                 columnToUpdate.SetWhere(fileID);
 
                 SqlOperationResult updateResult = this.Database.Update(DBTables.FileData, columnToUpdate);
-                if (!updateResult.Success)
+                while (!updateResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFileAsync", this.FilePath, updateResult);
+                    // Database.Update already retried automatically (short budget, ~2.5s) before
+                    // reporting failure. Keep offering Retry/Restart/Shut Down for as long as it
+                    // keeps failing - no separate fatal dialog is needed here.
+                    bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save your edit", updateResult, this.FilePath);
+                    if (retryChoice != true)
+                    {
+                        if (retryChoice == false)
+                        {
+                            Application.Current.Shutdown();
+                        }
+                        return;
+                    }
+                    updateResult = this.Database.Update(DBTables.FileData, columnToUpdate);
                 }
             }
             finally
@@ -156,9 +183,22 @@ namespace Timelapse.Database
         {
             CreateBackupIfNeeded();
             SqlOperationResult updateResult = Database.Update(DBTables.FileData, filesToUpdate, busyTimeoutMs);
-            if (!updateResult.Success)
+            // Database.Update already retried automatically before reporting failure. Keep offering
+            // Retry/Restart/Shut Down for as long as it keeps failing. Safe to call regardless of
+            // which thread this runs on - TimelapseOperationRetryDialog self-marshals to the UI
+            // thread if needed.
+            while (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(List)", this.FilePath, updateResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, $"update {filesToUpdate.Count} file(s)", updateResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                updateResult = Database.Update(DBTables.FileData, filesToUpdate, busyTimeoutMs);
             }
         }
 
@@ -166,18 +206,36 @@ namespace Timelapse.Database
         {
             List<ColumnTuplesWithWhere> imagesToUpdateList = [filesToUpdate];
             SqlOperationResult updateResult = Database.Update(DBTables.FileData, imagesToUpdateList);
-            if (!updateResult.Success)
+            while (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(ColumnTuplesWithWhere)", this.FilePath, updateResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save your edit", updateResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                updateResult = Database.Update(DBTables.FileData, imagesToUpdateList);
             }
         }
 
         public void UpdateFiles(ColumnTuple columnToUpdate)
         {
             SqlOperationResult updateResult = Database.Update(DBTables.FileData, columnToUpdate);
-            if (!updateResult.Success)
+            while (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFiles(ColumnTuple)", this.FilePath, updateResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save your changes", updateResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                updateResult = Database.Update(DBTables.FileData, columnToUpdate);
             }
         }
 
@@ -291,11 +349,22 @@ namespace Timelapse.Database
                     CreateBackupIfNeeded();
                     return Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 });
-                if (!result.Success)
+                // Database.Update already retried automatically (extended background budget) before
+                // reporting failure. Keep offering Retry/Restart/Shut Down for as long as it keeps
+                // failing - no separate fatal dialog is needed here.
+                while (!result.Success)
                 {
-                    bci?.Reset(false);
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateFilesCore", this.FilePath, result);
-                    return;
+                    bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, $"update {dataLabel} for {count:N0} file(s)", result, this.FilePath);
+                    if (retryChoice != true)
+                    {
+                        bci?.Reset(false);
+                        if (retryChoice == false)
+                        {
+                            Application.Current.Shutdown();
+                        }
+                        return;
+                    }
+                    result = await Task.Run(() => Database.Update(DBTables.FileData, Constant.DatabaseColumn.ID, listOfIDs, dataLabel, value, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs));
                 }
 
                 bci?.Reset(false);
@@ -313,31 +382,42 @@ namespace Timelapse.Database
             // don't trigger backups on image set updates as none of the properties in the image set table is particularly important
             // For example, this avoids creating a backup when a custom selection is reverted to all when Timelapse exits.
             SqlOperationResult updateResult = Database.Update(DBTables.ImageSet, ImageSet.CreateColumnTuplesWithWhereByID());
-            if (!updateResult.Success)
+            // Database.Update already retried automatically (short budget, ~2.5s) before reporting
+            // failure. Keep offering Retry/Restart/Shut Down for as long as it keeps failing.
+            while (!updateResult.Success)
             {
-                // Database.Update already retried automatically (short budget, ~2.5s) before
-                // reporting failure. Offer exactly one more manual retry before the fatal dialog.
-                if (Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save your sort/search settings", updateResult) == true)
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save your sort/search settings", updateResult, this.FilePath);
+                if (retryChoice != true)
                 {
-                    updateResult = Database.Update(DBTables.ImageSet, ImageSet.CreateColumnTuplesWithWhereByID());
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
                 }
-                if (!updateResult.Success)
-                {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateSyncImageSetToDatabase", this.FilePath, updateResult);
-                }
+                updateResult = Database.Update(DBTables.ImageSet, ImageSet.CreateColumnTuplesWithWhereByID());
             }
         }
 
         public void UpdateSyncMarkerToDatabase(MarkerRow marker)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(marker, nameof(marker));
 
             CreateBackupIfNeeded();
             SqlOperationResult updateResult = Database.Update(DBTables.Markers, marker.CreateColumnTuplesWithWhereByID());
-            if (!updateResult.Success)
+            while (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateSyncMarkerToDatabase", this.FilePath, updateResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save your marker changes", updateResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                updateResult = Database.Update(DBTables.Markers, marker.CreateColumnTuplesWithWhereByID());
             }
         }
         #endregion
@@ -351,10 +431,18 @@ namespace Timelapse.Database
             // update markers in database
             CreateBackupIfNeeded();
             SqlOperationResult updateResult = Database.Update(DBTables.Markers, markersToUpdate);
-            if (!updateResult.Success)
+            while (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateMarkers", this.FilePath, updateResult);
-                return;
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "save your marker changes", updateResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                updateResult = Database.Update(DBTables.Markers, markersToUpdate);
             }
 
             // Refresh the markers data table
@@ -450,9 +538,22 @@ namespace Timelapse.Database
                 // All four callers confirmed to run on a background thread (inside Task.Run) — see
                 // SQLiteNeededFixes.md finding #7 — so it's safe to opt into the extended budget.
                 SqlOperationResult updateResult = Database.Update(DBTables.FileData, imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
-                if (!updateResult.Success)
+                // Database.Update already retried automatically (extended background budget) before
+                // reporting failure. Keep offering Retry/Restart/Shut Down for as long as it keeps
+                // failing. TimelapseOperationRetryDialog self-marshals to the UI thread, so it's safe
+                // to call from this background-thread call site.
+                while (!updateResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateAdjustedFileTimes", this.FilePath, updateResult);
+                    bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, $"adjust the date/time of {imagesToUpdate.Count} file(s)", updateResult, this.FilePath);
+                    if (retryChoice != true)
+                    {
+                        if (retryChoice == false)
+                        {
+                            Application.Current.Shutdown();
+                        }
+                        return;
+                    }
+                    updateResult = Database.Update(DBTables.FileData, imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 }
             }
         }
@@ -500,9 +601,18 @@ namespace Timelapse.Database
                 // Sole caller (DateTimeCorrectAmbiguous.xaml.cs) confirmed to run on a background
                 // thread (inside Task.Run) — see SQLiteNeededFixes.md finding #7.
                 SqlOperationResult updateResult = Database.Update(DBTables.FileData, imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
-                if (!updateResult.Success)
+                while (!updateResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateExchangeDayAndMonthInFileDates", this.FilePath, updateResult);
+                    bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, $"swap the day and month for {imagesToUpdate.Count} file(s)", updateResult, this.FilePath);
+                    if (retryChoice != true)
+                    {
+                        if (retryChoice == false)
+                        {
+                            Application.Current.Shutdown();
+                        }
+                        return;
+                    }
+                    updateResult = Database.Update(DBTables.FileData, imagesToUpdate, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 }
             }
         }
@@ -548,9 +658,18 @@ namespace Timelapse.Database
                                    + DatabaseColumn.RelativePath + Sql.BooleanEquals + Sql.Quote(oldPrefixPath);
             }
             SqlOperationResult updateResult = Database.ExecuteNonQueryWithRollback(query);
-            if (!updateResult.Success)
+            while (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in UpdateRelativePathByReplacingPrefix", this.FilePath, updateResult);
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "update the folder path for these files", updateResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                updateResult = Database.ExecuteNonQueryWithRollback(query);
             }
         }
         #endregion

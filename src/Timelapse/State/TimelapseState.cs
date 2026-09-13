@@ -37,12 +37,13 @@ namespace Timelapse.State
         // as otherwise wrong thumbnails (matching previous selections) may be displayed.
         public bool IsNewSelection { get; set; }
 
+        private double _boundingBoxDisplayThreshold;
         public double BoundingBoxDisplayThreshold
         {
-            get;
+            get => _boundingBoxDisplayThreshold;
             set
             {
-                field = value;
+                _boundingBoxDisplayThreshold = value;
                 if (GlobalReferences.MainWindow?.DataHandler?.FileDatabase != null)
                 {
                     GlobalReferences.MainWindow.DataHandler?.FileDatabase.TrySetBoundingBoxDisplayThreshold((float)value);
@@ -101,7 +102,11 @@ namespace Timelapse.State
                 && true == GlobalReferences.MainWindow?.DataHandler?.FileDatabase.TryGetBoundingBoxDisplayThreshold(out float threshold)
                 && Math.Abs(threshold - RecognizerValues.Undefined) > 0.1)
             {
-                BoundingBoxDisplayThreshold = threshold;
+                // Assign the backing field directly rather than going through the
+                // BoundingBoxDisplayThreshold property - the value just came from this same
+                // database, so writing it straight back would be a pointless no-op save on every
+                // single file open.
+                _boundingBoxDisplayThreshold = threshold;
             }
             else
             {

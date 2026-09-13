@@ -411,6 +411,7 @@ namespace Timelapse.Constant
         public const string TimelapseHomePage = "https://timelapse.ucalgary.ca";
         public const string TimelapseGuidesPage = TimelapseHomePage + "/Guides";
         public const string TimelapseFAQPage = TimelapseHomePage + "/faq";
+        public const string TimelapseProblemsWritingDataFAQPage = TimelapseFAQPage + "/faq_problemswritingdata_workarounds/";
         public const string TimelapseVideosPage = TimelapseHomePage + "/Videos";
         public const string TimelapseDownloadPage = TimelapseHomePage + "/Download";
         public const string TimelapseUploadLink = TimelapseHomePage + "/wp-content/uploads/";

@@ -4469,29 +4469,23 @@ namespace Timelapse.Dialog
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
                 Owner = owner,
-                DialogTitle = $"Timelapse v{VersionChecks.GetTimelapseCurrentVersionNumber()} needs to shut down - Issue writing data.",
+                DialogTitle = $"Timelapse needs to shut down - Issue writing data.",
                 Icon = DialogIconType.Error,
                 Problem = $"Timelapse tried to write data to the Timelapse {typeOfFile}, but couldn't. Shutting down is a precaution against data loss." ,
-                Reason = "Expand the [e]Details[/e] section below for reasons as to why this could happen.",
-                Details = "Writing issues could caused by one of the following. As some of them are temporary, its a good idea to restart Timelapse to see if the issue is resolved." +
-                         "[li] You are using a network drive or OneDrive, where" +
-                         "[li 2] the file is temporarily locked by the system, or" +
-                         "[li 2] a network glitch resulted in a communication error." +
-                         "[li] Your hard drive is having issues, e.g., a removable drive being disconnected or corrupted." +
-                         "[li] Folder or file permissions disallow writing to that location." +
-                         $"[li] The {typeOfFile} has become corrupted." +
-                         $"[li] The {typeOfFile} no longer exists at that location." +
-                         "[li] Anti-virus software is blocking access to the file.",
-                Result = "Timelapse will pre-emptively shut down to ensure minimal data loss." +
-                         $"[br]You should not suffer any data loss except, perhaps, the very last operation.",
+                Reason = "This can happen if:" +
+                         "[li] a fileserver, network or OneDrive glitch temporarily blocked access to the file," +
+                         "[li] the database file was temporarily locked by another process," +
+                         "[li] the file is on a removable drive that was briefly disconnected.",
+                Result = "Timelapse will pre-emptively shut down." +
+                        $"[br]You should not suffer any data loss except, perhaps, the very last operation.",
                 Solution = "[ni] [e]Restart Timelapse[/e]. This may be a temporary issue, where you can pick up where you left off. " +
-                           "[ni] [e]If the problem persists:[/e]" +
-                           "[li 2] check to see which of the reasons in the [e]Details[/e] section could be causing it," +
-                           $"[li 2] {emailSaulForHelp}. "
+                          $"[ni] [e]If the problem persists,[/e] see Hint and {emailSaulForHelp}. ",
+                Hint = $"If this happens frequently, workarounds and detailed explanation can be found at  [link:{Constant.ExternalLinks.TimelapseProblemsWritingDataFAQPage}|Timelapse Problems Writing Data FAQ page]."
+
             };
             if (false == string.IsNullOrWhiteSpace(message))
             {
-                dialog.Solution += $"[li 2] include this information in the email: [e]{message}[/e]";
+                dialog.Solution += $" Include this information in the email: [e]{message}[/e]";
             }
             // "Restart Timelapse" via ExtraButton — closes the dialog without setting DialogResult (returns null)
             dialog.ExtraButton.Content = "Restart Timelapse";
@@ -4510,20 +4504,31 @@ namespace Timelapse.Dialog
 
             if (result != true)
             {
-                // User chose Restart — launch a new instance before shutting down,
-                // passing the current file path so Timelapse reopens where it left off.
-                string processPath = Environment.ProcessPath ?? string.Empty;
-                if (!string.IsNullOrEmpty(processPath))
-                {
-                    var psi = new System.Diagnostics.ProcessStartInfo { FileName = processPath, UseShellExecute = true };
-                    if (!string.IsNullOrEmpty(filePath))
-                    {
-                        psi.ArgumentList.Add(filePath);
-                    }
-                    System.Diagnostics.Process.Start(psi);
-                }
+                // User chose Restart (or closed the dialog without an explicit choice) — launch a
+                // new instance before shutting down, passing the current file path so Timelapse
+                // reopens where it left off.
+                LaunchNewTimelapseInstance(filePath);
             }
             Application.Current.Shutdown();
+        }
+
+        // Launches a new Timelapse process, passing filePath (if provided) as an argument so it
+        // can reopen where the user left off. Does not itself shut down the current instance —
+        // callers that intend to replace this process must call Application.Current.Shutdown()
+        // themselves afterward.
+        private static void LaunchNewTimelapseInstance(string filePath)
+        {
+            string processPath = Environment.ProcessPath ?? string.Empty;
+            if (string.IsNullOrEmpty(processPath))
+            {
+                return;
+            }
+            var psi = new System.Diagnostics.ProcessStartInfo { FileName = processPath, UseShellExecute = true };
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                psi.ArgumentList.Add(filePath);
+            }
+            System.Diagnostics.Process.Start(psi);
         }
         #endregion
 
@@ -4543,14 +4548,15 @@ namespace Timelapse.Dialog
                 Icon = DialogIconType.Warning,
                 Problem = "Timelapse tried to read data from your database, but an error occurred." +
                           (string.IsNullOrWhiteSpace(context) ? string.Empty : $"[br][b]Operation:[/b] {context}"),
-                Reason = "This can happen when:" +
-                         "[li] a network or OneDrive glitch temporarily blocked access to the file," +
+                Reason = "This can happen if:" +
+                         "[li] a fileserver, network or OneDrive glitch temporarily blocked access to the file," +
                          "[li] the database file was temporarily locked by another process," +
                          "[li] the file is on a removable drive that was briefly disconnected.",
                 Result = "The operation that just completed may have returned incomplete or inaccurate data." +
                          "[br]No data was modified.",
                 Solution = "[ni] [e]Retry the operation.[/e] Transient errors usually resolve on their own." +
-                           "[ni] If the problem persists, restart Timelapse.",
+                           $"[ni] If the problem persists, restart Timelapse. [/e] Also see Hint and {emailSaulForHelp}. ",
+                Hint = $"If this happens frequently, workarounds and detailed explanation can be found at [link:{Constant.ExternalLinks.TimelapseProblemsWritingDataFAQPage}|Timelapse Problems Writing Data FAQ page].."
             };
             if (result?.Exception != null)
             {
@@ -4567,27 +4573,49 @@ namespace Timelapse.Dialog
         #region TimelapseOperationRetryDialog
         // Shown when a write/repair operation fails after its own automatic short retry budget
         // (~2.5s, inside Database.Update/ExecuteNonQueryWithRollback) has already been exhausted.
-        // Offers exactly one more, consciously-chosen retry before the caller falls back to the
-        // fatal TimelapseNeedsToShutDownDataWriteErrorDialog. Returns true only if the user
-        // clicked Retry; closing the dialog returns null, which the caller should treat the same
-        // as "proceed to the fatal dialog."
-        public static bool? TimelapseOperationRetryDialog(Window owner, string operationDescription, SqlOperationResult result)
+        // Offers a manual retry, a restart (mirroring TimelapseNeedsToShutDownDataWriteErrorDialog's
+        // own Restart option), or an explicit shut-down, before the caller falls back to the fatal
+        // dialog.
+        //
+        // Return value contract:
+        //   true  - user clicked Retry. Caller should retry the operation once.
+        //   false - user explicitly clicked "Shut Down Timelapse". Caller should proceed to the
+        //           fatal dialog exactly as if the manual retry had also failed.
+        //   null  - user clicked "Restart Timelapse", OR closed the dialog without an explicit
+        //           choice (mirrors TimelapseNeedsToShutDownDataWriteErrorDialog's own convention,
+        //           where any non-explicit outcome restarts rather than silently giving up). A new
+        //           Timelapse instance has already been launched and this one is already shutting
+        //           down - the caller must NOT show the fatal dialog or do anything further, and
+        //           should return immediately.
+        public static bool? TimelapseOperationRetryDialog(Window owner, string operationDescription, SqlOperationResult result, string filePath)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            // Some callers of this dialog run on a background thread (e.g. bulk file updates
+            // wrapped in Task.Run) rather than the UI thread. Self-marshal via the owner's
+            // Dispatcher so it's always safe to call from any thread, mirroring the same guard
+            // already used by TimelapseNeedsToShutDownDataWriteErrorDialog.
+            if (!owner.Dispatcher.CheckAccess())
+            {
+                return owner.Dispatcher.Invoke(() => TimelapseOperationRetryDialog(owner, operationDescription, result, filePath));
+            }
+
+            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
             {
                 Owner = owner,
-                DialogTitle = "Warning: a database write error occurred",
+                DialogTitle = "Warning: Issue Writing Data",
                 Icon = DialogIconType.Warning,
                 Problem = $"Timelapse tried to {operationDescription}, but an error occurred.",
-                Reason = "This can happen when:" +
-                         "[li] a network or OneDrive glitch temporarily blocked access to the file," +
+                Reason = "This can happen if:" +
+                         "[li] a fileserver, network or OneDrive glitch temporarily blocked access to the file," +
                          "[li] the database file was temporarily locked by another process," +
                          "[li] the file is on a removable drive that was briefly disconnected.",
-                Result = "Timelapse already retried automatically for a few seconds without success." +
-                         "[br]You can try once more now, or close this dialog to let Timelapse handle it as a more serious problem.",
-                Solution = "[ni] [e]Retry[/e] to try the operation one more time." +
-                           "[ni] If it fails again, Timelapse will show further options.",
+                Result = "Timelapse retried writing your last operation a few times without success." +
+                         "[li]You should not suffer any data loss except, perhaps, the very last operation.",
+                Solution = "[ni] [e]Retry[/e] to try the operation again (worth doing at least once as this may be a temporary glitch)." +
+                           "[ni] [e]Restart Timelapse[/e], where you can pick up where you left off." +
+                           "[ni] [e]Shut Down Timelapse[/e] if you'd rather not continue." +
+                          $"[ni] [e]If the problem persists,[/e] see Hint and {emailSaulForHelp}. Include the text in the Details section.",
+                Hint = $"If this happens frequently, workarounds and detailed explanation can be found at [link:{Constant.ExternalLinks.TimelapseProblemsWritingDataFAQPage}|Timelapse Problems Writing Data FAQ page]."
             };
             if (result?.Exception != null)
             {
@@ -4595,8 +4623,43 @@ namespace Timelapse.Dialog
                                  $"[br][b]Exception:[/b] {result.Exception.Message}";
             }
             dialog.OkButton.Content = "Retry";
+            dialog.CancelButton.Content = "Shut Down Timelapse";
+            dialog.CancelButton.Width = double.NaN;
+            dialog.CancelButton.Padding = new Thickness(10, 0, 10, 0);
+
+            // "Restart Timelapse" via ExtraButton. Note: despite what
+            // TimelapseNeedsToShutDownDataWriteErrorDialog's own comment claims, calling Close()
+            // without setting DialogResult does NOT make ShowDialog() return null in this WPF
+            // runtime - it returns false, indistinguishable from an explicit Cancel/"Shut Down"
+            // click. (That dialog gets away with the wrong assumption only because its own logic,
+            // "if (result != true)", treats false and null identically either way.) Since this
+            // dialog needs a real three-way distinction, track the Restart choice with an explicit
+            // out-of-band flag instead of trusting the dialog's raw return value.
+            bool restartChosen = false;
+            dialog.ExtraButton.Content = "Restart Timelapse";
+            dialog.ExtraButton.Width = double.NaN;
+            dialog.ExtraButton.Padding = new Thickness(10, 0, 10, 0);
+            dialog.ExtraButton.Visibility = Visibility.Visible;
+            dialog.ExtraButton.Click += (_, _) =>
+            {
+                restartChosen = true;
+                dialog.Close();
+            };
+
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
-            return dialog.BuildAndShowDialog();
+            bool? dialogResult = dialog.BuildAndShowDialog();
+
+            if (restartChosen)
+            {
+                // Launch a new instance now and shut this one down, exactly as the fatal dialog
+                // would. Always return null here, regardless of what the underlying ShowDialog()
+                // call produced, so callers can rely on the documented true/false/null contract.
+                LaunchNewTimelapseInstance(filePath);
+                Application.Current.Shutdown();
+                return null;
+            }
+
+            return dialogResult;
         }
         #endregion
     }
