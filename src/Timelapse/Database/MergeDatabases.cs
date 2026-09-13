@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -125,7 +125,7 @@ namespace Timelapse.Database
             SqlOperationResult mergeResult = destinationDdb.ExecuteNonQueryWithRollback(query);
             if (!mergeResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     destinationDdb.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in CheckoutDatabaseWithRelativePath", destinationDdb.FilePath, mergeResult);
             }

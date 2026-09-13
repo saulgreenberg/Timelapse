@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -75,7 +75,7 @@ namespace TimelapseTemplateEditor
             if (!updateMetaStdResult.Success)
             {
                 Mouse.OverrideCursor = null;
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, false,
                     "The problem occurred in DoCreateMetadataStandardFields (MetadataTemplate update)", Globals.TemplateDatabase.FilePath, updateMetaStdResult);
                 return;
             }
@@ -115,7 +115,7 @@ namespace TimelapseTemplateEditor
             if (!updateImgStdResult.Success)
             {
                 Mouse.OverrideCursor = null;
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, false,
                     "The problem occurred in DoCreateMetadataStandardFields (Template update)", Globals.TemplateDatabase.FilePath, updateImgStdResult);
                 return;
             }

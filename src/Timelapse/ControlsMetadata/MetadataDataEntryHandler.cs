@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -698,7 +698,7 @@ namespace Timelapse.ControlsMetadata
             SqlOperationResult updateResult = FileDatabase.Database.Update(tableName, columnToUpdate);
             if (!updateResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     FileDatabase.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in UpdateMetadataTableAndMetadataDatabase", FileDatabase.FilePath, updateResult);
             }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
 using Timelapse.DataStructures;
@@ -70,7 +70,7 @@ namespace TimelapseTemplateEditor.Controls
             if (!Globals.TemplateDatabase.UpdateControlDisplayOrder(Control.SpreadsheetOrder, spreadsheetOrderByDataLabel))
             {
                 string message = "OnSpreadsheetOrderChanged: Timelapse could not save the new spreadsheet order to your template file.";
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false, message, Globals.TemplateDatabase.FilePath);
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, false, message, Globals.TemplateDatabase.FilePath);
                 return;
             }
             Globals.TemplateDataGridControl.DoLayoutUpdated(true);

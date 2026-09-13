@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -314,7 +314,7 @@ namespace TimelapseTemplateEditor.Controls
                     if (!Globals.RootEditor.TemplateDoUpdateControlOrder())
                     {
                         string message = "ControlsPanel_DragDrop: Timelapse could not save the new control order to your template file.";
-                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false, message, Globals.TemplateDatabase.FilePath);
+                        Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, false, message, Globals.TemplateDatabase.FilePath);
                         return;
                     }
                     Globals.TemplateDataGridControl.DoLayoutUpdated(true);

@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -58,14 +58,16 @@ public class SQLiteWrapper
         /// error and is about to back off before trying again. Lets a caller show a transient
         /// "retrying..." notice so a multi-second automatic-retry pause doesn't look like a hang -
         /// without this class taking any dependency on UI/notification types.
-        /// Parameters: a message describing what's being retried; roughly how long (in ms) the
-        /// automatic retry budget will run for, so the caller can size its own notice's auto-close
-        /// timer to match; and whether the notice should be anchored to the cursor (appropriate
-        /// when the retry was triggered by something the user just directly interacted with) or
-        /// shown in a general/centered position (appropriate for retries not tied to a specific
-        /// on-screen action, e.g. database-open-time checks).
+        /// Parameters: a message describing what's being retried; and whether the notice should be
+        /// anchored to the cursor (appropriate when the retry was triggered by something the user
+        /// just directly interacted with) or shown in a general/centered position (appropriate for
+        /// retries not tied to a specific on-screen action, e.g. database-open-time checks).
+        /// The notice has no auto-close timer of its own - the actual retry duration varies with
+        /// how slow each failing attempt is (not just the sleep between attempts), so guessing a
+        /// timeout risked the notice vanishing while retries were still silently in progress.
+        /// <see cref="OnRetryEnd"/> is the sole, authoritative signal to dismiss it.
         /// </summary>
-        public static Action<string, int, bool> OnRetryBegin { get; set; }
+        public static Action<string, bool> OnRetryBegin { get; set; }
 
         /// <summary>
         /// Optional callback invoked at every exit point (success or final failure) of a retry
@@ -268,7 +270,7 @@ public class SQLiteWrapper
                     int delayMs = (attempt + 1) * 200;
                     if (attempt == 0)
                     {
-                        OnRetryBegin?.Invoke("Trying to read data...", 1500, true);
+                        OnRetryBegin?.Invoke("Trying to read data...", true);
                     }
                     TracePrint.PrintMessage($"Database unavailable in GetDataTableFromSelect (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
                     AppLog.Warning($"GetDataTableFromSelect: attempt {attempt + 1}/4 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
@@ -286,7 +288,7 @@ public class SQLiteWrapper
                     int delayMs = (attempt + 1) * 250;
                     if (attempt == 0)
                     {
-                        OnRetryBegin?.Invoke("Trying to read data...", 2500, true);
+                        OnRetryBegin?.Invoke("Trying to read data...", true);
                     }
                     TracePrint.PrintMessage($"Database busy/locked in GetDataTableFromSelect (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
                     AppLog.Warning($"GetDataTableFromSelect: attempt {attempt + 1}/5 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
@@ -366,7 +368,7 @@ public class SQLiteWrapper
                         int delayMs = (attempt + 1) * 200;
                         if (attempt == 0)
                         {
-                            OnRetryBegin?.Invoke("Trying to read data...", 1500, true);
+                            OnRetryBegin?.Invoke("Trying to read data...", true);
                         }
                         TracePrint.PrintMessage($"Database unavailable in GetDataTableFromSelectAsync (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
                         AppLog.Warning($"GetDataTableFromSelectAsync: attempt {attempt + 1}/4 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
@@ -385,7 +387,7 @@ public class SQLiteWrapper
                         int delayMs = (attempt + 1) * 250;
                         if (attempt == 0)
                         {
-                            OnRetryBegin?.Invoke("Trying to read data...", 2500, true);
+                            OnRetryBegin?.Invoke("Trying to read data...", true);
                         }
                         TracePrint.PrintMessage($"Database busy/locked in GetDataTableFromSelectAsync (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
                         AppLog.Warning($"GetDataTableFromSelectAsync: attempt {attempt + 1}/5 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
@@ -440,7 +442,7 @@ public class SQLiteWrapper
                     int delayMs = (attempt + 1) * 200;
                     if (attempt == 0)
                     {
-                        OnRetryBegin?.Invoke("Trying to read data...", 1500, true);
+                        OnRetryBegin?.Invoke("Trying to read data...", true);
                     }
                     TracePrint.PrintMessage($"Database unavailable in GetDistinctValuesInColumn (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
                     AppLog.Warning($"GetDistinctValuesInColumn: attempt {attempt + 1}/4 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
@@ -457,7 +459,7 @@ public class SQLiteWrapper
                     int delayMs = (attempt + 1) * 250;
                     if (attempt == 0)
                     {
-                        OnRetryBegin?.Invoke("Trying to read data...", 2500, true);
+                        OnRetryBegin?.Invoke("Trying to read data...", true);
                     }
                     TracePrint.PrintMessage($"Database busy/locked in GetDistinctValuesInColumn (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
                     AppLog.Warning($"GetDistinctValuesInColumn: attempt {attempt + 1}/5 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
@@ -516,7 +518,7 @@ public class SQLiteWrapper
                     int delayMs = (attempt + 1) * 200;
                     if (attempt == 0)
                     {
-                        OnRetryBegin?.Invoke("Trying to read data...", 1500, true);
+                        OnRetryBegin?.Invoke("Trying to read data...", true);
                     }
                     TracePrint.PrintMessage($"Database unavailable in GetScalarFromSelect (attempt {attempt + 1}/4), retrying in {delayMs} ms…");
                     AppLog.Warning($"GetScalarFromSelect: attempt {attempt + 1}/4 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
@@ -534,7 +536,7 @@ public class SQLiteWrapper
                     int delayMs = (attempt + 1) * 250;
                     if (attempt == 0)
                     {
-                        OnRetryBegin?.Invoke("Trying to read data...", 2500, true);
+                        OnRetryBegin?.Invoke("Trying to read data...", true);
                     }
                     TracePrint.PrintMessage($"Database busy/locked in GetScalarFromSelect (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
                     AppLog.Warning($"GetScalarFromSelect: attempt {attempt + 1}/5 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");
@@ -1243,7 +1245,7 @@ public class SQLiteWrapper
                     {
                         if (busyAttempt == 0)
                         {
-                            OnRetryBegin?.Invoke("Trying to write data...", busyTimeoutMs > 0 ? 7000 : 2500, true);
+                            OnRetryBegin?.Invoke("Trying to write data...", true);
                         }
                         // Transient lock, a momentary readonly bounce, or a low-level I/O error
                         // (commonly seen on mapped network drives when the SMB session briefly
@@ -1355,7 +1357,7 @@ public class SQLiteWrapper
                 {
                     if (openAttempt == 0 && manageRetryNotification)
                     {
-                        OnRetryBegin?.Invoke("Trying to access the database...", 1000, true);
+                        OnRetryBegin?.Invoke("Trying to access the database...", true);
                     }
                     if (openAttempt >= 4)
                     {
@@ -2242,7 +2244,7 @@ public class SQLiteWrapper
                     {
                         // Not cursor-attached: this runs at database-open time, not tied to a
                         // specific on-screen action the user just took.
-                        OnRetryBegin?.Invoke("Trying to check the database...", 2500, false);
+                        OnRetryBegin?.Invoke("Trying to check the database...", false);
                     }
                     TracePrint.PrintMessage($"Database busy/locked in PragmaGetQuickCheck (attempt {attempt + 1}/5), retrying in {delayMs} ms…");
                     AppLog.Warning($"PragmaGetQuickCheck: attempt {attempt + 1}/5 hit {sqliteEx.ResultCode}, retrying in {delayMs} ms.");

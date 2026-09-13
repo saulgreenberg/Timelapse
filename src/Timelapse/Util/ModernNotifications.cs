@@ -308,18 +308,23 @@ namespace Timelapse.Util
             }
 
             // Auto-close: wait (CloseAfter - 500ms), then fade to transparent over 500ms.
-            const int fadeDurationMs = 500;
-            int waitMs = Math.Max(0, options.CloseAfter - fadeDurationMs);
-            var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(waitMs) };
-            timer.Tick += (_, _) =>
+            // CloseAfter <= 0 means "don't auto-close" - the caller takes full responsibility for
+            // calling Dismiss() when appropriate (e.g. a retry notice whose actual duration can't
+            // be predicted up front).
+            if (options.CloseAfter > 0)
             {
-                timer.Stop();
-                var fadeOut = new DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(fadeDurationMs));
-                fadeOut.Completed += (_, _) => popup.IsOpen = false;
-                border.BeginAnimation(UIElement.OpacityProperty, fadeOut);
-            };
-            timer.Start();
-
+                const int fadeDurationMs = 500;
+                int waitMs = Math.Max(0, options.CloseAfter - fadeDurationMs);
+                var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(waitMs) };
+                timer.Tick += (_, _) =>
+                {
+                    timer.Stop();
+                    var fadeOut = new DoubleAnimation(1.0, 0.0, TimeSpan.FromMilliseconds(fadeDurationMs));
+                    fadeOut.Completed += (_, _) => popup.IsOpen = false;
+                    border.BeginAnimation(UIElement.OpacityProperty, fadeOut);
+                };
+                timer.Start();
+            }
         }
 
         private static SolidColorBrush GetBackgroundColor(NotificationType type)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -139,7 +139,7 @@ namespace TimelapseTemplateEditor
             Controls.TemplateSpreadsheetPreviewControl.GenerateSpreadsheet();
             if (!TemplateDoUpdateControlOrder())
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, false,
                     "TemplateDoAddNewRow: Timelapse could not save the new control order to your template file.",
                     Globals.TemplateDatabase?.FilePath);
                 return;

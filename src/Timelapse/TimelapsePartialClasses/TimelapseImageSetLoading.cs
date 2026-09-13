@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -309,7 +309,7 @@ namespace Timelapse
                     if (mismatch.ColumnsToRename.Count > 0 &&
                         !fileDatabase.TryRepairRenamedFileDataColumns(mismatch.ColumnsToRename))
                     {
-                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(this, true,
+                        Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(this, true,
                             "TryRepairRenamedFileDataColumns failed in TryOpenTemplateAndBeginLoadFoldersAsync",
                             fileDatabase.FilePath);
                         return new(false, string.Empty);
@@ -317,7 +317,7 @@ namespace Timelapse
                     if (mismatch.ColumnsToDelete.Count > 0 &&
                         !fileDatabase.TryRepairExtraFileDataColumns(mismatch.ColumnsToDelete))
                     {
-                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(this, true,
+                        Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(this, true,
                             "TryRepairExtraFileDataColumns failed in TryOpenTemplateAndBeginLoadFoldersAsync",
                             fileDatabase.FilePath);
                         return new(false, string.Empty);
@@ -325,7 +325,7 @@ namespace Timelapse
                     if (mismatch.LabelsToAdd.Count > 0 &&
                         !fileDatabase.TryRepairMissingFileDataColumns(mismatch.LabelsToAdd))
                     {
-                        Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(this, true,
+                        Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(this, true,
                             "TryRepairMissingFileDataColumns failed in TryOpenTemplateAndBeginLoadFoldersAsync",
                             fileDatabase.FilePath);
                         return new(false, string.Empty);

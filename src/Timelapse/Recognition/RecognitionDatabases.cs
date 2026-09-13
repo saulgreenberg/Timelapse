@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -62,7 +62,7 @@ namespace Timelapse.Recognition
             SqlOperationResult createInfoResult = database.CreateTable(DBTables.Info, columnDefinitions);
             if (!createInfoResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in CreateRecognitionTables (Info CreateTable)", database.FilePath, createInfoResult);
                 return;
@@ -77,7 +77,7 @@ namespace Timelapse.Recognition
             SqlOperationResult createDetCatResult = database.CreateTable(DBTables.DetectionCategories, columnDefinitions);
             if (!createDetCatResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in CreateRecognitionTables (DetectionCategories CreateTable)", database.FilePath, createDetCatResult);
                 return;
@@ -93,7 +93,7 @@ namespace Timelapse.Recognition
             SqlOperationResult createClassCatResult = database.CreateTable(DBTables.ClassificationCategories, columnDefinitions);
             if (!createClassCatResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in CreateRecognitionTables (ClassificationCategories CreateTable)", database.FilePath, createClassCatResult);
                 return;
@@ -124,7 +124,7 @@ namespace Timelapse.Recognition
             SqlOperationResult createDetResult = database.CreateTable(DBTables.Detections, columnDefinitions);
             if (!createDetResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in CreateRecognitionTables (Detections CreateTable)", database.FilePath, createDetResult);
                 return;
@@ -145,7 +145,7 @@ namespace Timelapse.Recognition
             SqlOperationResult createClassResult = database.CreateTable(DBTables.Classifications, columnDefinitions);
             if (!createClassResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in CreateRecognitionTables (Classifications CreateTable)", database.FilePath, createClassResult);
             }
@@ -166,7 +166,7 @@ namespace Timelapse.Recognition
             SqlOperationResult createDetVideoResult = database.CreateTable(DBTables.DetectionsVideo, columnDefinitions);
             if (!createDetVideoResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in CreateDetectionsVideoTable (DetectionsVideo CreateTable)", database.FilePath, createDetVideoResult);
             }
@@ -202,7 +202,7 @@ namespace Timelapse.Recognition
                 SqlOperationResult clearResult = database.DeleteAllRowsInTables(recognitionTables);
                 if (!clearResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "The problem occurred in ClearRecognitionTables", database.FilePath, clearResult);
                 }
@@ -250,7 +250,7 @@ namespace Timelapse.Recognition
             SqlOperationResult insertInfoResult = detectionDB.Insert(DBTables.Info, insertionStatements);
             if (!insertInfoResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     detectionDB.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in PopulateTables (Info)", detectionDB.FilePath, insertInfoResult);
                 return;
@@ -288,7 +288,7 @@ namespace Timelapse.Recognition
                 SqlOperationResult insertDetCatResult = detectionDB.Insert(DBTables.DetectionCategories, insertionStatements);
                 if (!insertDetCatResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         detectionDB.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "The problem occurred in PopulateTables (DetectionCategories)", detectionDB.FilePath, insertDetCatResult);
                     return;
@@ -322,7 +322,7 @@ namespace Timelapse.Recognition
                 SqlOperationResult insertClassCatResult = detectionDB.Insert(DBTables.ClassificationCategories, insertionStatements);
                 if (!insertClassCatResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         detectionDB.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "The problem occurred in PopulateTables (ClassificationCategories)", detectionDB.FilePath, insertClassCatResult);
                     return;
@@ -523,7 +523,7 @@ namespace Timelapse.Recognition
                 SqlOperationResult insertDetResult = detectionDB.Insert(DBTables.Detections, detectionInsertionStatements, progress, "Adding detections", 1000);
                 if (!insertDetResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         detectionDB.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "The problem occurred in PopulateTables (Detections)", detectionDB.FilePath, insertDetResult);
                     return;
@@ -531,7 +531,7 @@ namespace Timelapse.Recognition
                 SqlOperationResult insertDetVideoResult = detectionDB.Insert(DBTables.DetectionsVideo, detectionVideoInsertionStatements, progress, "Adding detections for Video", 1000);
                 if (!insertDetVideoResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         detectionDB.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "The problem occurred in PopulateTables (DetectionsVideo)", detectionDB.FilePath, insertDetVideoResult);
                     return;

@@ -80,7 +80,6 @@ namespace Timelapse
 
         #region Private Variables
         private bool disposed;
-        private int _readErrorDialogPending; // 0 = none, 1 = dialog pending or showing; accessed via Interlocked
         private readonly DispatcherTimer _titleResizeTimer = new();
         private List<MarkersForCounter> markersOnCurrentFile;   // Holds a list of all markers for each counter on the current file
 
@@ -157,35 +156,31 @@ namespace Timelapse
             GlobalReferences.CancelTokenSource = new();     // Set the CancellationToken/Source. Only set globally
             GlobalReferences.TimelapseState = State;
 
-            // Record SQL read failures in SqlErrorState rather than immediately showing a dialog.
-            // Safe to call from any thread (e.g. GetDataTableFromSelectAsync runs on a thread-pool thread).
-            // Only the first error is recorded; subsequent calls are ignored so that a cascade of async
-            // When a read fails, record the error and show the notice dialog immediately (it is
-            // non-fatal and has an OK button only). The dialog is shown via Dispatcher so it works
-            // whether the error fires on the UI thread or a background thread. Resetting both
-            // _errorFired and SqlErrorState after the dialog closes ensures subsequent errors can
-            // fire again without the gate staying permanently locked.
+            // Any SQL read failure that survives its own automatic retry budget shuts Timelapse
+            // down via the shared TimelapseNeedsToShutDownAsSQLErrorDialog, worded for a read
+            // failure. Read errors don't modify data, but by the time this fires the failed read
+            // has already returned an incomplete/empty result to its caller - continuing to run
+            // risks silently displaying wrong information rather than an outright crash, so this
+            // forces a Restart/Shut Down choice rather than letting the app carry on. Safe to call
+            // from any thread (e.g. GetDataTableFromSelectAsync runs on a thread-pool thread); the
+            // dialog method dispatches to the UI thread itself and guards against a read and write
+            // failure racing each other via its own shared "already shown" gate.
             SQLiteWrapper.OnReadError = (context, sqlOperationResult) =>
             {
                 SqlErrorState.TryRecord(sqlOperationResult, context);
-                if (Interlocked.CompareExchange(ref _readErrorDialogPending, 1, 0) == 0)
-                {
-                    string logMessage = $"SQLite read error. Context: {context}.";
-                    if (!string.IsNullOrEmpty(sqlOperationResult?.ErrorMessage)) logMessage += $" DB error: {sqlOperationResult.ErrorMessage}.";
-                    if (!string.IsNullOrEmpty(sqlOperationResult?.FailingStatement)) logMessage += $" SQL: {sqlOperationResult.FailingStatement}.";
-                    if (sqlOperationResult?.Exception != null) AppLog.Error(logMessage, sqlOperationResult.Exception);
-                    else AppLog.Error(logMessage);
-                    Dialogs.TimelapseReadErrorNoticeDialog(GlobalReferences.MainWindow, sqlOperationResult, context,
-                        onClose: () => _readErrorDialogPending = 0);
-                }
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, null, context,
+                    DataHandler?.FileDatabase?.FilePath, sqlOperationResult, SqlFailureKindEnum.Read);
             };
 
             // Show a transient notice (near the cursor, or centered for retries not tied to a
             // specific on-screen action) while SQLiteWrapper is silently retrying a transient
             // database contention/network error, so a multi-second automatic-retry pause doesn't
-            // look like the app has hung. Dismissed once the retry succeeds, exhausts (a dialog
-            // is about to show), or via its own auto-close timer.
-            SQLiteWrapper.OnRetryBegin = (message, closeAfterMs, attachToCursor) =>
+            // look like the app has hung. No auto-close timer: how long the retry sequence
+            // actually takes depends on how slow each failing attempt is, not just the sleep
+            // between attempts, so a guessed timeout could let the notice vanish while retries
+            // were still silently in progress - leaving a confusing gap before the eventual
+            // failure dialog. OnRetryEnd (below) is the only thing that dismisses this.
+            SQLiteWrapper.OnRetryBegin = (message, attachToCursor) =>
             {
                 ModernNotifier notifier = GlobalReferences.MainWindow?.ToastNotifier;
                 if (notifier == null)
@@ -194,11 +189,11 @@ namespace Timelapse
                 }
                 if (attachToCursor)
                 {
-                    notifier.ShowInformationByCursor(message, closeAfterMs, animateEllipsis: true);
+                    notifier.ShowInformationByCursor(message, closeAfterMs: 0, animateEllipsis: true);
                 }
                 else
                 {
-                    notifier.ShowInformation(message, new NotificationOptions { CloseAfter = closeAfterMs, ShowCloseButton = true, AnimateEllipsis = true });
+                    notifier.ShowInformation(message, new NotificationOptions { CloseAfter = 0, ShowCloseButton = true, AnimateEllipsis = true });
                 }
                 // The retry loop that just triggered this is about to block the calling thread
                 // (often the UI thread) with a synchronous Thread.Sleep. ShowNotification queues

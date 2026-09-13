@@ -1,4 +1,4 @@
-﻿using Microsoft.WindowsAPICodePack.Dialogs;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -36,9 +36,11 @@ namespace Timelapse.Dialog
 {
     public static class Dialogs
     {
-        // Ensures TimelapseNeedsToShutDownDataWriteErrorDialog is shown at most once per process lifetime.
-        // Multiple concurrent write failures can arrive on background threads simultaneously; only the
-        // first one that wins the CAS reaches the dialog-and-shutdown logic.
+        // Ensures TimelapseNeedsToShutDownAsSQLErrorDialog is shown at most once per process lifetime.
+        // Multiple concurrent read or write failures can arrive on background threads
+        // simultaneously; only the first one that wins the CAS reaches the dialog-and-shutdown
+        // logic - shared across both failure kinds so a read and a write failure racing each
+        // other can't both pop a fatal dialog at once.
         private static int _shutdownDialogShown; // 0 = not yet shown; 1 = shown or showing
 
         #region Common test strings
@@ -4449,17 +4451,19 @@ namespace Timelapse.Dialog
             return dialog.BuildAndShowDialog();
         }
 
-        public static void TimelapseNeedsToShutDownDataWriteErrorDialog(Window owner, bool? isDDBfile=null, string message="", string filePath="", SqlOperationResult sqlResult=null)
+        public static void TimelapseNeedsToShutDownAsSQLErrorDialog(Window owner, bool? isDDBfile=null, string message="", string filePath="", SqlOperationResult sqlResult=null, SqlFailureKindEnum failureKind = SqlFailureKindEnum.Write)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
             if (!owner.Dispatcher.CheckAccess())
             {
-                owner.Dispatcher.Invoke(() => TimelapseNeedsToShutDownDataWriteErrorDialog(owner, isDDBfile, message, filePath, sqlResult));
+                owner.Dispatcher.Invoke(() => TimelapseNeedsToShutDownAsSQLErrorDialog(owner, isDDBfile, message, filePath, sqlResult, failureKind));
                 return;
             }
             if (Interlocked.CompareExchange(ref _shutdownDialogShown, 1, 0) != 0) return;
+
+            bool isRead = failureKind == SqlFailureKindEnum.Read;
             string typeOfFile = isDDBfile.HasValue ? (isDDBfile.Value ? "data (.ddb) file" : "template (.tdb) file") : "database file";
-            string logMessage = $"TimelapseNeedsToShutDownDataWriteErrorDialog: Timelapse is shutting down due to a write error on the {typeOfFile}.";
+            string logMessage = $"TimelapseNeedsToShutDownAsSQLErrorDialog: Timelapse is shutting down due to a {(isRead ? "read" : "write")} error on the {typeOfFile}.";
             if (!string.IsNullOrEmpty(filePath)) logMessage += $" File: '{filePath}'.";
             if (!string.IsNullOrEmpty(message)) logMessage += $" Context: {message}.";
             if (!string.IsNullOrEmpty(sqlResult?.ErrorMessage)) logMessage += $" DB error: {sqlResult.ErrorMessage}.";
@@ -4469,15 +4473,23 @@ namespace Timelapse.Dialog
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
                 Owner = owner,
-                DialogTitle = $"Timelapse needs to shut down - Issue writing data.",
+                DialogTitle = isRead
+                    ? "Timelapse needs to shut down - Issue reading data."
+                    : "Timelapse needs to shut down - Issue writing data.",
                 Icon = DialogIconType.Error,
-                Problem = $"Timelapse tried to write data to the Timelapse {typeOfFile}, but couldn't. Shutting down is a precaution against data loss." ,
+                Problem = isRead
+                    ? "Timelapse tried to read data from your database, but an error occurred." +
+                      (string.IsNullOrWhiteSpace(message) ? string.Empty : $"[br][b]Operation:[/b] {message}")
+                    : $"Timelapse tried to write data to the Timelapse {typeOfFile}, but couldn't. Shutting down is a precaution against data loss.",
                 Reason = "This can happen if:" +
                          "[li] a fileserver, network or OneDrive glitch temporarily blocked access to the file," +
                          "[li] the database file was temporarily locked by another process," +
-                         "[li] the file is on a removable drive that was briefly disconnected.",
-                Result = "Timelapse will pre-emptively shut down." +
-                        $"[br]You should not suffer any data loss except, perhaps, the very last operation.",
+                         "[li] the file is no longer available(e.g., deleted, a disconnected removable drive, etc).",
+                Result = isRead
+                    ? "The operation that just completed may have returned incomplete or inaccurate data." +
+                      "[br]No data was modified, but Timelapse is shutting down as a precaution rather than continuing to display possibly-incomplete information."
+                    : "Timelapse will pre-emptively shut down." +
+                      "[br]You should not suffer any data loss except, perhaps, the very last operation.",
                 Solution = "[ni] [e]Restart Timelapse[/e]. This may be a temporary issue, where you can pick up where you left off. " +
                           $"[ni] [e]If the problem persists,[/e] see Hint and {emailSaulForHelp}. ",
                 Hint = $"If this happens frequently, workarounds and detailed explanation can be found at  [link:{Constant.ExternalLinks.TimelapseProblemsWritingDataFAQPage}|Timelapse Problems Writing Data FAQ page]."
@@ -4486,6 +4498,11 @@ namespace Timelapse.Dialog
             if (false == string.IsNullOrWhiteSpace(message))
             {
                 dialog.Solution += $" Include this information in the email: [e]{message}[/e]";
+            }
+            if (sqlResult?.Exception != null)
+            {
+                dialog.Details = $"[b]Error message:[/b] {sqlResult.ErrorMessage}" +
+                                 $"[br][b]Exception:[/b] {sqlResult.Exception.Message}";
             }
             // "Restart Timelapse" via ExtraButton — closes the dialog without setting DialogResult (returns null)
             dialog.ExtraButton.Content = "Restart Timelapse";
@@ -4532,48 +4549,10 @@ namespace Timelapse.Dialog
         }
         #endregion
 
-        #region TimelapseReadErrorNoticeDialog
-        public static void TimelapseReadErrorNoticeDialog(Window owner, SqlOperationResult result, string context, Action onClose = null)
-        {
-            ThrowIf.IsNullArgument(owner, nameof(owner));
-            if (!owner.Dispatcher.CheckAccess())
-            {
-                owner.Dispatcher.BeginInvoke(() => TimelapseReadErrorNoticeDialog(owner, result, context, onClose));
-                return;
-            }
-            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
-            {
-                Owner = owner,
-                DialogTitle = "Warning: a database read error occurred",
-                Icon = DialogIconType.Warning,
-                Problem = "Timelapse tried to read data from your database, but an error occurred." +
-                          (string.IsNullOrWhiteSpace(context) ? string.Empty : $"[br][b]Operation:[/b] {context}"),
-                Reason = "This can happen if:" +
-                         "[li] a fileserver, network or OneDrive glitch temporarily blocked access to the file," +
-                         "[li] the database file was temporarily locked by another process," +
-                         "[li] the file is on a removable drive that was briefly disconnected.",
-                Result = "The operation that just completed may have returned incomplete or inaccurate data." +
-                         "[br]No data was modified.",
-                Solution = "[ni] [e]Retry the operation.[/e] Transient errors usually resolve on their own." +
-                           $"[ni] If the problem persists, restart Timelapse. [/e] Also see Hint and {emailSaulForHelp}. ",
-                Hint = $"If this happens frequently, workarounds and detailed explanation can be found at [link:{Constant.ExternalLinks.TimelapseProblemsWritingDataFAQPage}|Timelapse Problems Writing Data FAQ page].."
-            };
-            if (result?.Exception != null)
-            {
-                dialog.Details = $"[b]Error message:[/b] {result.ErrorMessage}" +
-                                 $"[br][b]Exception:[/b] {result.Exception.Message}";
-            }
-            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
-            dialog.BuildAndShowDialog();
-            SQLiteWrapper.ResetAllReadErrorState();
-            onClose?.Invoke();
-        }
-        #endregion
-
         #region TimelapseOperationRetryDialog
         // Shown when a write/repair operation fails after its own automatic short retry budget
         // (~2.5s, inside Database.Update/ExecuteNonQueryWithRollback) has already been exhausted.
-        // Offers a manual retry, a restart (mirroring TimelapseNeedsToShutDownDataWriteErrorDialog's
+        // Offers a manual retry, a restart (mirroring TimelapseNeedsToShutDownAsSQLErrorDialog's
         // own Restart option), or an explicit shut-down, before the caller falls back to the fatal
         // dialog.
         //
@@ -4582,7 +4561,7 @@ namespace Timelapse.Dialog
         //   false - user explicitly clicked "Shut Down Timelapse". Caller should proceed to the
         //           fatal dialog exactly as if the manual retry had also failed.
         //   null  - user clicked "Restart Timelapse", OR closed the dialog without an explicit
-        //           choice (mirrors TimelapseNeedsToShutDownDataWriteErrorDialog's own convention,
+        //           choice (mirrors TimelapseNeedsToShutDownAsSQLErrorDialog's own convention,
         //           where any non-explicit outcome restarts rather than silently giving up). A new
         //           Timelapse instance has already been launched and this one is already shutting
         //           down - the caller must NOT show the fatal dialog or do anything further, and
@@ -4593,7 +4572,7 @@ namespace Timelapse.Dialog
             // Some callers of this dialog run on a background thread (e.g. bulk file updates
             // wrapped in Task.Run) rather than the UI thread. Self-marshal via the owner's
             // Dispatcher so it's always safe to call from any thread, mirroring the same guard
-            // already used by TimelapseNeedsToShutDownDataWriteErrorDialog.
+            // already used by TimelapseNeedsToShutDownAsSQLErrorDialog.
             if (!owner.Dispatcher.CheckAccess())
             {
                 return owner.Dispatcher.Invoke(() => TimelapseOperationRetryDialog(owner, operationDescription, result, filePath));
@@ -4608,7 +4587,7 @@ namespace Timelapse.Dialog
                 Reason = "This can happen if:" +
                          "[li] a fileserver, network or OneDrive glitch temporarily blocked access to the file," +
                          "[li] the database file was temporarily locked by another process," +
-                         "[li] the file is on a removable drive that was briefly disconnected.",
+                         "[li] the file is  no longer available (e.g., deleted, a disconnected removable drive, etc).",
                 Result = "Timelapse retried writing your last operation a few times without success." +
                          "[li]You should not suffer any data loss except, perhaps, the very last operation.",
                 Solution = "[ni] [e]Retry[/e] to try the operation again (worth doing at least once as this may be a temporary glitch)." +
@@ -4628,7 +4607,7 @@ namespace Timelapse.Dialog
             dialog.CancelButton.Padding = new Thickness(10, 0, 10, 0);
 
             // "Restart Timelapse" via ExtraButton. Note: despite what
-            // TimelapseNeedsToShutDownDataWriteErrorDialog's own comment claims, calling Close()
+            // TimelapseNeedsToShutDownAsSQLErrorDialog's own comment claims, calling Close()
             // without setting DialogResult does NOT make ShowDialog() return null in this WPF
             // runtime - it returns false, indistinguishable from an explicit Cancel/"Shut Down"
             // click. (That dialog gets away with the wrong assumption only because its own logic,

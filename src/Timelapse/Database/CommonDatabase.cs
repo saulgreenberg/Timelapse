@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -836,7 +836,7 @@ namespace Timelapse.Database
             SqlOperationResult syncResult = Database.Update(DBTables.Template, ctw);
             if (!syncResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in SyncControlToDatabase", this.FilePath, syncResult);
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in SyncControlToDatabase", this.FilePath, syncResult);
                 return;
             }
             LoadControlsFromTemplateDBSortedByControlOrder();
@@ -882,7 +882,7 @@ namespace Timelapse.Database
             SqlOperationResult syncControlsResult = Database.Insert(DBTables.Template, newTableTuples);
             if (!syncControlsResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in SyncControlsToEmptyDatabase", this.FilePath, syncControlsResult);
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in SyncControlsToEmptyDatabase", this.FilePath, syncControlsResult);
                 return;
             }
 
@@ -909,7 +909,7 @@ namespace Timelapse.Database
             SqlOperationResult syncMetaResult = Database.Insert(DBTables.MetadataTemplate, newTableTuples);
             if (!syncMetaResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in SyncMetadataControlsToEmptyDatabase", this.FilePath, syncMetaResult);
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in SyncMetadataControlsToEmptyDatabase", this.FilePath, syncMetaResult);
                 return;
             }
 
@@ -935,7 +935,7 @@ namespace Timelapse.Database
             SqlOperationResult syncMetaInfoResult = Database.Insert(DBTables.MetadataInfo, newTableTuples);
             if (!syncMetaInfoResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in SyncMetadataInfoToEmptyDatabase", this.FilePath, syncMetaInfoResult);
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in SyncMetadataInfoToEmptyDatabase", this.FilePath, syncMetaInfoResult);
                 return;
             }
 
@@ -1050,7 +1050,7 @@ namespace Timelapse.Database
             SqlOperationResult createResult = database.CreateTable(DBTables.MetadataTemplate, templateTableColumns);
             if (!createResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in CreateEmptyMetadataTemplateTable (MetadataTemplate CreateTable)", database.FilePath, createResult);
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in CreateEmptyMetadataTemplateTable (MetadataTemplate CreateTable)", database.FilePath, createResult);
             }
         }
 
@@ -1068,7 +1068,7 @@ namespace Timelapse.Database
             SqlOperationResult createResult = database.CreateTable(DBTables.MetadataInfo, metadataAliasTableColumns);
             if (!createResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in CreateEmptyMetadataInfoTable (MetadataInfo CreateTable)", database.FilePath, createResult);
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in CreateEmptyMetadataInfoTable (MetadataInfo CreateTable)", database.FilePath, createResult);
             }
         }
 
@@ -1435,7 +1435,7 @@ namespace Timelapse.Database
             SqlOperationResult deleteLevelResult = Database.ExecuteNonQueryWithRollback(allStatements);
             if (!deleteLevelResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in MetadataDeleteLevelFromDatabase", this.FilePath, deleteLevelResult);
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in MetadataDeleteLevelFromDatabase", this.FilePath, deleteLevelResult);
             }
         }
 
@@ -1589,7 +1589,7 @@ namespace Timelapse.Database
             SqlOperationResult syncMetaControlResult = Database.Update(DBTables.MetadataTemplate, ctw);
             if (!syncMetaControlResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in SyncMetadataControlsToDatabase", this.FilePath, syncMetaControlResult);
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase), "The problem occurred in SyncMetadataControlsToDatabase", this.FilePath, syncMetaControlResult);
             }
         }
 
@@ -1757,7 +1757,7 @@ namespace Timelapse.Database
             SqlOperationResult createResult = database.CreateTable(DBTables.TemplateInfo, templateInfoColumns);
             if (!createResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false, "The problem occurred in CreateAndPopulateTemplateInfoTable (TemplateInfo CreateTable)", database.FilePath, createResult);
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, false, "The problem occurred in CreateAndPopulateTemplateInfoTable (TemplateInfo CreateTable)", database.FilePath, createResult);
                 return;
             }
 
@@ -1772,7 +1772,7 @@ namespace Timelapse.Database
             SqlOperationResult insertTemplateInfoResult = database.Insert(DBTables.TemplateInfo, templateContents);
             if (!insertTemplateInfoResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in CreateAndPopulateTemplateInfoTable", database.FilePath, insertTemplateInfoResult);
             }
@@ -1797,7 +1797,7 @@ namespace Timelapse.Database
             SqlOperationResult setVersionResult = Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.VersionCompatibility, versionNumber);
             if (!setVersionResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "SetColumnToACommonValue failed in SetTemplateVersionCompatibility", this.FilePath, setVersionResult);
             }
@@ -1823,7 +1823,7 @@ namespace Timelapse.Database
             SqlOperationResult setStandardResult = Database.SetColumnToACommonValue(DBTables.TemplateInfo, DatabaseColumn.Standard, standard);
             if (!setStandardResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "SetColumnToACommonValue failed in SetTemplateStandard", this.FilePath, setStandardResult);
             }
@@ -1853,7 +1853,7 @@ namespace Timelapse.Database
             SqlOperationResult upsertInfoResult = Database.UpsertRow(DBTables.MetadataInfo, primaryKeyTuple, columnTuples);
             if (!upsertInfoResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     this.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in UpsertMetadataInfoTableRow", this.FilePath, upsertInfoResult);
             }
@@ -1921,7 +1921,7 @@ namespace Timelapse.Database
             SqlOperationResult createResult = database.CreateTable(DBTables.Template, templateTableColumns);
             if (!createResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow, false, "The problem occurred in CreateEmptyTemplateTable (Template CreateTable)", database.FilePath, createResult);
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, false, "The problem occurred in CreateEmptyTemplateTable (Template CreateTable)", database.FilePath, createResult);
             }
         }
 
@@ -1968,7 +1968,7 @@ namespace Timelapse.Database
             SqlOperationResult insertStandardResult = database.Insert(DBTables.Template, standardControls);
             if (!insertStandardResult.Success)
             {
-                Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                     database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                     "The problem occurred in PopulateTemplateTableWithStandardControls", database.FilePath, insertStandardResult);
             }
@@ -1985,7 +1985,7 @@ namespace Timelapse.Database
                 SqlOperationResult addExportColResult = database.SchemaAddColumnToEndOfTable(DBTables.Template, scd);
                 if (!addExportColResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "SchemaAddColumnToEndOfTable failed in AddExportToCSVColumnIfNeeded", database.FilePath, addExportColResult);
                     return;
@@ -1997,7 +1997,7 @@ namespace Timelapse.Database
                 SqlOperationResult updateExportResult = database.Update(DBTables.Template, ctww);
                 if (!updateExportResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "The problem occurred in AddExportToCSVColumnIfNeeded", database.FilePath, updateExportResult);
                 }
@@ -2018,7 +2018,7 @@ namespace Timelapse.Database
                 SqlOperationResult renameVersionResult = database.SchemaRenameColumn(DBTables.TemplateInfo, "VersionCompatability", Constant.DatabaseColumn.VersionCompatibility);
                 if (!renameVersionResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "SchemaRenameColumn failed in AddTemplateInfoTableOrRowIfNeeded", database.FilePath, renameVersionResult);
                     return;
@@ -2039,7 +2039,7 @@ namespace Timelapse.Database
                 SqlOperationResult insertInfoResult = database.Insert(DBTables.TemplateInfo, templateContents);
                 if (!insertInfoResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "The problem occurred in AddTemplateInfoTableOrRowIfNeeded", database.FilePath, insertInfoResult);
                 }
@@ -2057,7 +2057,7 @@ namespace Timelapse.Database
                 SqlOperationResult addStdColResult = database.SchemaAddColumnToEndOfTable(DBTables.TemplateInfo, scd);
                 if (!addStdColResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "SchemaAddColumnToEndOfTable failed in AddStandardToTemplateInfoColumnIfNeeded", database.FilePath, addStdColResult);
                     return;
@@ -2068,7 +2068,7 @@ namespace Timelapse.Database
                 SqlOperationResult updateStdResult = database.Update(DBTables.TemplateInfo, ctww);
                 if (!updateStdResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "The problem occurred in AddStandardToTemplateInfoColumnIfNeeded", database.FilePath, updateStdResult);
                 }
@@ -2086,7 +2086,7 @@ namespace Timelapse.Database
                 SqlOperationResult addBcColResult = database.SchemaAddColumnToEndOfTable(DBTables.TemplateInfo, scd);
                 if (!addBcColResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "SchemaAddColumnToEndOfTable failed in AddBackwardsCompatibilityToTemplateInfoColumnIfNeeded", database.FilePath, addBcColResult);
                     return;
@@ -2097,7 +2097,7 @@ namespace Timelapse.Database
                 SqlOperationResult updateBcResult = database.Update(DBTables.TemplateInfo, ctww);
                 if (!updateBcResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "The problem occurred in AddBackwardsCompatibilityToTemplateInfoColumnIfNeeded", database.FilePath, updateBcResult);
                 }
@@ -2115,7 +2115,7 @@ namespace Timelapse.Database
                 SqlOperationResult addStdIsColResult = database.SchemaAddColumnToEndOfTable(DBTables.ImageSet, scd);
                 if (!addStdIsColResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "SchemaAddColumnToEndOfTable failed in AddStandardToImageSetColumnIfNeeded", database.FilePath, addStdIsColResult);
                     return;
@@ -2126,7 +2126,7 @@ namespace Timelapse.Database
                 SqlOperationResult updateStdIsResult = database.Update(DBTables.ImageSet, ctww);
                 if (!updateStdIsResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "The problem occurred in AddStandardToImageSetColumnIfNeeded", database.FilePath, updateStdIsResult);
                 }
@@ -2144,7 +2144,7 @@ namespace Timelapse.Database
                 SqlOperationResult addBcIsColResult = database.SchemaAddColumnToEndOfTable(DBTables.ImageSet, scd);
                 if (!addBcIsColResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "SchemaAddColumnToEndOfTable failed in AddBackwardsCompatibilityToImageSetColumnIfNeeded", database.FilePath, addBcIsColResult);
                     return;
@@ -2155,7 +2155,7 @@ namespace Timelapse.Database
                 SqlOperationResult updateBcIsResult = database.Update(DBTables.ImageSet, ctww);
                 if (!updateBcIsResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownDataWriteErrorDialog(GlobalReferences.MainWindow,
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
                         database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
                         "The problem occurred in AddBackwardsCompatibilityToImageSetColumnIfNeeded", database.FilePath, updateBcIsResult);
                 }
