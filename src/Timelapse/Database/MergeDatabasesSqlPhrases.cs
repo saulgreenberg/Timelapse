@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Timelapse.Constant;
 using Timelapse.DataTables;
@@ -25,9 +26,9 @@ namespace Timelapse.Database
                    $"{InfoColumns.DetectionCompletionTime} {Sql.Equal} {Sql.Quote(detection_completion_time)} {Sql.Comma} " +
                    $"{InfoColumns.Classifier} {Sql.Equal} {Sql.Quote(classifier)} {Sql.Comma} " +
                    $"{InfoColumns.ClassificationCompletionTime} {Sql.Equal} {Sql.Quote(classification_completion_time)} {Sql.Comma}" +
-                   $"{InfoColumns.TypicalDetectionThreshold} {Sql.Equal} {(Math.Round(typical_detection_threshold * 100) / 100)} {Sql.Comma} " +
-                   $"{InfoColumns.ConservativeDetectionThreshold} {Sql.Equal} {(Math.Round(conservative_detection_threshold * 100) / 100)} {Sql.Comma} " +
-                   $"{InfoColumns.TypicalClassificationThreshold} {Sql.Equal} {(Math.Round(typical_classification_threshold * 100) / 100)} {Sql.Semicolon} {Environment.NewLine}";
+                   $"{InfoColumns.TypicalDetectionThreshold} {Sql.Equal} {(Math.Round(typical_detection_threshold * 100) / 100).ToString(CultureInfo.InvariantCulture)} {Sql.Comma} " +
+                   $"{InfoColumns.ConservativeDetectionThreshold} {Sql.Equal} {(Math.Round(conservative_detection_threshold * 100) / 100).ToString(CultureInfo.InvariantCulture)} {Sql.Comma} " +
+                   $"{InfoColumns.TypicalClassificationThreshold} {Sql.Equal} {(Math.Round(typical_classification_threshold * 100) / 100).ToString(CultureInfo.InvariantCulture)} {Sql.Semicolon} {Environment.NewLine}";
         }
         #endregion
 

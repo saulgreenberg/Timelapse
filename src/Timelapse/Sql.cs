@@ -294,10 +294,15 @@ namespace Timelapse
         // Form: Update tableName SET columnName = newValue;
         public static string UpdateColumnInTable(string tableName, string columnName, object newValue)
         {
-            if (newValue is string)
+            if (newValue is string stringValue)
             {
                 // If the new value is a string, its best to quote it
-                newValue = Sql.Quote(newValue.ToString());
+                newValue = Sql.Quote(stringValue);
+            }
+            else if (newValue is IFormattable formattableValue)
+            {
+                // Use InvariantCulture to ensure that the decimal point is always a '.' in case of region formats that use a comma
+                newValue = formattableValue.ToString(null, CultureInfo.InvariantCulture);
             }
             return $"{Sql.Update} {tableName} {Sql.Set} {columnName} {Sql.Equal} {newValue} {Sql.Semicolon} {Environment.NewLine}";
         }
@@ -410,18 +415,20 @@ namespace Timelapse
                 // SELECT COUNT  ( * )  FROM DataTable WHERE ( ( img_individual_count IS NULL  OR img_individual_count =  ''  ) )
                 case Sql.IntegerType:
                 {
-                    if (false == IsCondition.IsNumeric(value))
-                    {
-                        value = "0"; // Sql.Quote(value);
-                    }
+                    // Re-parse and re-emit with InvariantCulture so the embedded SQL literal is always period-decimal,
+                    // even if the incoming value was somehow formatted with a region's comma decimal separator.
+                    value = double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double intCandidate)
+                        ? intCandidate.ToString(CultureInfo.InvariantCulture)
+                        : "0";
                     return Sql.Cast + Sql.OpenParenthesis + dataLabel + Sql.AsInteger + Sql.CloseParenthesis + mathOperator + value;
                 }
                 case Sql.RealType:
                 {
-                    if (false == IsCondition.IsNumeric(value))
-                    {
-                        value = "0";//Sql.Quote(value);
-                    }
+                    // Re-parse and re-emit with InvariantCulture so the embedded SQL literal is always period-decimal,
+                    // even if the incoming value was somehow formatted with a region's comma decimal separator.
+                    value = double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double realCandidate)
+                        ? realCandidate.ToString(CultureInfo.InvariantCulture)
+                        : "0";
                     return Sql.Cast + Sql.OpenParenthesis + dataLabel + Sql.AsReal + Sql.CloseParenthesis + mathOperator + value;
                 }
                 default:

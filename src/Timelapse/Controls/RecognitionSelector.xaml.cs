@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -1759,7 +1760,7 @@ namespace Timelapse.Controls
                 //        THEN 1 ELSE 0 END) AS Empty
                 //  FROM per_image
 
-                string betweenConf = $"{Sql.Between} {lowerConfidenceValue} {Sql.And} {higherConfidenceValue}";
+                string betweenConf = $"{Sql.Between} {lowerConfidenceValue.ToString(CultureInfo.InvariantCulture)} {Sql.And} {higherConfidenceValue.ToString(CultureInfo.InvariantCulture)}";
                 string count_all = Sql.Quote("All");
                 string count_empty = Sql.Quote("Empty");
                 const string has_prefix = "has_";
@@ -1794,7 +1795,7 @@ namespace Timelapse.Controls
                     query += $"    {Sql.Sum} ( \"{has_prefix + kvp.Value}\" ) {Sql.As} \"{kvp.Value}\" {Sql.Comma} {lf}";
                 }
 
-                query += $"    {Sql.Sum} ( {Sql.CaseWhen} {max_conf} {Sql.LessThan} {Math.Min(lowerConfidenceValue, higherConfidenceValue) - .00001} {lf}"
+                query += $"    {Sql.Sum} ( {Sql.CaseWhen} {max_conf} {Sql.LessThan} {(Math.Min(lowerConfidenceValue, higherConfidenceValue) - .00001).ToString(CultureInfo.InvariantCulture)} {lf}"
                        + $"       {thenOneElse0EndAs} {count_empty}"
                        + $"  {Sql.From} {per_image}";
                 return query;
@@ -1827,8 +1828,8 @@ namespace Timelapse.Controls
                 query += (false == string.IsNullOrWhiteSpace(where))
                                ? $"     {where} {lf}     {Sql.And}"
                                : $"     {Sql.Where} ";
-                query += $"     {detConf} {Sql.Between} {lowerDetectionConf} {Sql.And} {higherDetectionConf}{lf}"
-                               + $"     {Sql.And} {detClassificationConf} {Sql.Between} {lowerClassificationConf} {Sql.And} {higherClassificationConf}{lf}"
+                query += $"     {detConf} {Sql.Between} {lowerDetectionConf.ToString(CultureInfo.InvariantCulture)} {Sql.And} {higherDetectionConf.ToString(CultureInfo.InvariantCulture)}{lf}"
+                               + $"     {Sql.And} {detClassificationConf} {Sql.Between} {lowerClassificationConf.ToString(CultureInfo.InvariantCulture)} {Sql.And} {higherClassificationConf.ToString(CultureInfo.InvariantCulture)}{lf}"
                                + $"  {Sql.GroupBy} {detClassification}";
                 return query;
             }
@@ -2014,7 +2015,7 @@ namespace Timelapse.Controls
                                + $"   {Sql.From} ({lf}"
                                + $"     {Sql.Select} {lf}"
                                + $"       {tmpTableName2}.{EpisodePrefix}, {lf}"
-                               + $"       {Sql.Max} ({Sql.CaseWhen} {detConf} {Sql.Between} {lowerDetectionConfidence} {Sql.And} {higherDetectionConfidence} {lf}"
+                               + $"       {Sql.Max} ({Sql.CaseWhen} {detConf} {Sql.Between} {lowerDetectionConfidence.ToString(CultureInfo.InvariantCulture)} {Sql.And} {higherDetectionConfidence.ToString(CultureInfo.InvariantCulture)} {lf}"
                                + $"            {thenOneElse0EndAs} {HasHighConfDetection} {lf}"
                                + $"     {Sql.From} {DBTables.Detections} {lf}"
                                + $"     {Sql.InnerJoin} {tmpTableName3} {lf}"
@@ -2132,7 +2133,7 @@ namespace Timelapse.Controls
                                + $"    {Sql.InnerJoin} {tmpTable3}{lf}"
                                + $"        {Sql.On} {tmpTable3}{Sql.Dot}{ImageId}{Sql.Equal}{detId}  {lf}"
 
-                               + $"     {Sql.Where} {detConf} {Sql.Between} {lowerDetectionConfidence} {Sql.And} {higherDetectionConfidence} {lf}"
+                               + $"     {Sql.Where} {detConf} {Sql.Between} {lowerDetectionConfidence.ToString(CultureInfo.InvariantCulture)} {Sql.And} {higherDetectionConfidence.ToString(CultureInfo.InvariantCulture)} {lf}"
                                + $") {Sql.As} {DistinctCategoryEpisodes} {lf}"
                                + $"{Sql.InnerJoin} {tmpTable2}{lf}"
                                + $"        {Sql.On} {tmpTable2}{Sql.Dot}{EpisodePrefix}{Sql.Equal}{DistinctCategoryEpisodes}{Sql.Dot}{EpisodePrefix}  {lf}"
@@ -2208,8 +2209,8 @@ namespace Timelapse.Controls
                              + $"        {Sql.On} {tmpTable4}{Sql.Dot}{ImageId}{Sql.Equal}{detId}  {lf}"
                              + $"    {Sql.InnerJoin} {tmpTable3}{lf}"
                              + $"        {Sql.On} {tmpTable3}{Sql.Dot}{ImageId}{Sql.Equal}{detId}  {lf}"
-                             + $"     {Sql.Where} {detConf} {Sql.Between} {lowerDetectionConfidence} {Sql.And} {higherDetectionConfidence} {lf}"
-                             + $"        {Sql.And} {DBTables.Detections}.{DetectionColumns.ClassificationConf} {Sql.Between} {lowerClassificationConfidence} {Sql.And} {higherClassificationConfidence}{lf}"
+                             + $"     {Sql.Where} {detConf} {Sql.Between} {lowerDetectionConfidence.ToString(CultureInfo.InvariantCulture)} {Sql.And} {higherDetectionConfidence.ToString(CultureInfo.InvariantCulture)} {lf}"
+                             + $"        {Sql.And} {DBTables.Detections}.{DetectionColumns.ClassificationConf} {Sql.Between} {lowerClassificationConfidence.ToString(CultureInfo.InvariantCulture)} {Sql.And} {higherClassificationConfidence.ToString(CultureInfo.InvariantCulture)}{lf}"
                              + $") {Sql.As} {DistinctClassificationEpisodes} {lf}"
                              + $"{Sql.InnerJoin} {tmpTable2}{lf}"
                              + $"        {Sql.On} {tmpTable2}{Sql.Dot}{EpisodePrefix}{Sql.Equal}{DistinctClassificationEpisodes}{Sql.Dot}{EpisodePrefix}  {lf}"
