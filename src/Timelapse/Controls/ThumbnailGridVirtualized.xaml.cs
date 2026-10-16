@@ -61,7 +61,6 @@ namespace Timelapse.Controls
         private int zoomAnchorFileIndex;   // file index that anchors zoom — persists across zoom steps, only updated on manual scroll
         private bool suppressAnchorUpdate; // true while a zoom-triggered ScrollChanged is still pending
         private int zoomLevel;             // discrete zoom counter; 0 = deactivated, 1 = initial view, N = more zoomed out
-        private double initialCellHeight;  // cellHeight at zoomLevel 1; all levels derived from this × ZoomStep^(level-1)
         private readonly DispatcherTimer snapAnimTimer;
         private double snapAnimStart;
         private double snapAnimTarget;
@@ -222,7 +221,6 @@ namespace Timelapse.Controls
             zoomAnchorFileIndex = 0;
             suppressAnchorUpdate = false;
             zoomLevel = 0;
-            initialCellHeight = 0;
             BeginAnimation(OpacityProperty, null);
             Opacity = 1.0;
             VirtualCanvas.BeginAnimation(OpacityProperty, null);
@@ -254,27 +252,33 @@ namespace Timelapse.Controls
             // does not drift with each zoom step.
             int? anchorFileIndex = IsGridActive ? zoomAnchorFileIndex : null;
 
-            // Discrete zoom levels make every zoom-out exactly reversible by one zoom-in.
-            // Level 0 = deactivated. Level 1 = initial view (initialCellHeight).
-            // Level N: cellHeight = initialCellHeight * ZoomStep^(N-1).
-            const double ZoomStep = 0.8;
+            // Sample aspect ratio from the top-left visible image up front - the column-count-driven
+            // sizing below needs it to convert a target column count into a cell height, and RebuildPool
+            // needs it again further down to convert cell height back into cell width.
+            BitmapSource sampleBm = FileTable[FileTableStartIndex].LoadBitmap(
+                RootPathToImages, ImageValues.PreviewWidth32,
+                ImageDisplayIntentEnum.Ephemeral, ImageDimensionEnum.UseWidth, out _);
+            double aspectRatio = (sampleBm == null || sampleBm.PixelHeight == 0)
+                ? Constant.ThumbnailGrid.AspectRatioDefault
+                : (double)sampleBm.PixelWidth / sampleBm.PixelHeight;
+
+            // Discrete zoom levels make every zoom-out exactly reversible by one zoom-in: cell height is
+            // a pure function of (zoomLevel, contentWidth, aspectRatio), never derived incrementally from
+            // whatever the previous step happened to be.
+            // Level 0 = deactivated. Level N (N >= 1): target column count = N * ColumnStep, i.e. 2, 4, 6, 8...
+            const int ColumnStep = 2;
+            double contentWidthForSizing = ScrollViewer.ViewportWidth > 0 ? ScrollViewer.ViewportWidth : currentGridWidth;
 
             if (zoomIn == false)
             {
-                if (zoomLevel == 0)
-                {
-                    zoomLevel = 1;
-                    initialCellHeight = newGridHeight / 3.0;
-                    cellHeight = initialCellHeight;
-                }
-                else
-                {
-                    double proposed = initialCellHeight * Math.Pow(ZoomStep, zoomLevel);
-                    if (proposed < Constant.ThumbnailGrid.MinumumThumbnailHeight)
-                        return ThumbnailGridRefreshStatus.AtMaximumZoomLevel;
-                    zoomLevel++;
-                    cellHeight = proposed;
-                }
+                int nextLevel = zoomLevel + 1;
+                int targetColumns = nextLevel * ColumnStep;
+                double proposedCellWidth = contentWidthForSizing / targetColumns;
+                double proposedCellHeight = proposedCellWidth / aspectRatio;
+                if (zoomLevel > 0 && proposedCellHeight < Constant.ThumbnailGrid.MinumumThumbnailHeight)
+                    return ThumbnailGridRefreshStatus.AtMaximumZoomLevel;
+                zoomLevel = nextLevel;
+                cellHeight = proposedCellHeight;
             }
             else if (zoomIn == true)
             {
@@ -330,19 +334,13 @@ namespace Timelapse.Controls
                     return ThumbnailGridRefreshStatus.AtZeroZoomLevel;
                 }
                 zoomLevel--;
-                cellHeight = initialCellHeight * Math.Pow(ZoomStep, zoomLevel - 1);
+                int targetColumns = zoomLevel * ColumnStep;
+                double proposedCellWidth = contentWidthForSizing / targetColumns;
+                cellHeight = proposedCellWidth / aspectRatio;
             }
 
             if (cellHeight <= 0)
                 return ThumbnailGridRefreshStatus.Aborted;
-
-            // Sample aspect ratio from the top-left visible image
-            BitmapSource sampleBm = FileTable[FileTableStartIndex].LoadBitmap(
-                RootPathToImages, ImageValues.PreviewWidth32,
-                ImageDisplayIntentEnum.Ephemeral, ImageDimensionEnum.UseWidth, out _);
-            double aspectRatio = (sampleBm == null || sampleBm.PixelHeight == 0)
-                ? Constant.ThumbnailGrid.AspectRatioDefault
-                : (double)sampleBm.PixelWidth / sampleBm.PixelHeight;
 
             CancelUpdate();
             RebuildPool(cellHeight * aspectRatio, cellHeight, anchorFileIndex);
