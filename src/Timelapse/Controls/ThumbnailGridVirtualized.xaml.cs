@@ -273,14 +273,20 @@ namespace Timelapse.Controls
             // Discrete zoom levels make every zoom-out exactly reversible by one zoom-in: cell height is
             // a pure function of (zoomLevel, contentWidth, aspectRatio), never derived incrementally from
             // whatever the previous step happened to be.
-            // Level 0 = deactivated. Level N (N >= 1): target column count = N * ColumnStep, i.e. 2, 4, 6, 8...
-            const int ColumnStep = 2;
+            // Level 0 = deactivated. Levels 1,2,3 target 2,3,4 columns; from level 3 on, target columns
+            // continues as even numbers: 4, 6, 8, 10...
+            static int TargetColumnsForLevel(int level) => level switch
+            {
+                1 => 2,
+                2 => 3,
+                _ => 2 * (level - 1)
+            };
             double contentWidthForSizing = ScrollViewer.ViewportWidth > 0 ? ScrollViewer.ViewportWidth : currentGridWidth;
 
             if (zoomIn == false)
             {
                 int nextLevel = zoomLevel + 1;
-                int targetColumns = nextLevel * ColumnStep;
+                int targetColumns = TargetColumnsForLevel(nextLevel);
                 double proposedCellWidth = contentWidthForSizing / targetColumns;
                 double proposedCellHeight = proposedCellWidth / aspectRatio;
                 if (zoomLevel > 0 && proposedCellHeight < Constant.ThumbnailGrid.MinumumThumbnailHeight)
@@ -342,7 +348,7 @@ namespace Timelapse.Controls
                     return ThumbnailGridRefreshStatus.AtZeroZoomLevel;
                 }
                 zoomLevel--;
-                int targetColumns = zoomLevel * ColumnStep;
+                int targetColumns = TargetColumnsForLevel(zoomLevel);
                 double proposedCellWidth = contentWidthForSizing / targetColumns;
                 cellHeight = proposedCellWidth / aspectRatio;
             }
