@@ -246,6 +246,14 @@ namespace Timelapse.Controls
             currentGridWidth = newGridWidth;
             currentGridHeight = newGridHeight;
 
+            // Force any pending layout (Measure/Arrange) to run now, synchronously. WPF skips layout for
+            // Collapsed elements, so on the very first call after SwitchToThumbnailGridVirtualizedView()
+            // flips Visibility to Visible, ScrollViewer.ViewportWidth/ViewportHeight below would otherwise
+            // still reflect whatever they were the last time this control was actually laid out (stale if
+            // the window was resized while it was collapsed) rather than its current Width/Height (which
+            // MarkableImageCanvas_SizeChanged keeps correctly in sync throughout, even while collapsed).
+            UpdateLayout();
+
             // Pass the persistent zoom anchor so RebuildPool scrolls to the row that contains
             // the same file after column count changes. zoomAnchorFileIndex is only updated on
             // manual scrolls — zoom-triggered ScrollChanged events are suppressed so the anchor
