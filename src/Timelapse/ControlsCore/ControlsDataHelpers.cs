@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 using Timelapse.Constant;
 using Timelapse.ControlsDataEntry;
 using Timelapse.ControlsMetadata;
@@ -231,7 +232,10 @@ namespace Timelapse.ControlsCore
                     Dialogs.InvalidDataFieldInput(window, Control.AlphaNumeric, textBox.Text);
                 }
 
-                textBox.Text = string.Empty;
+                // Deferred via BeginInvoke(Send) - see TextBoxHandleDecimalInputOnly's "." case above for
+                // why a synchronous Text reassignment inside TextChanged (nested in WPF's text-input call
+                // stack) risks "Cannot Reopen undo unit while another unit is already open."
+                textBox.Dispatcher.BeginInvoke(DispatcherPriority.Send, new Action(() => textBox.Text = string.Empty));
                 return false;
             }
 
@@ -297,7 +301,10 @@ namespace Timelapse.ControlsCore
                     Dialogs.InvalidDataFieldInput(window, Control.AlphaNumeric + "Glob", textBox.Text);
                 }
 
-                textBox.Text = string.Empty;
+                // Deferred via BeginInvoke(Send) - see TextBoxHandleDecimalInputOnly's "." case above for
+                // why a synchronous Text reassignment inside TextChanged (nested in WPF's text-input call
+                // stack) risks "Cannot Reopen undo unit while another unit is already open."
+                textBox.Dispatcher.BeginInvoke(DispatcherPriority.Send, new Action(() => textBox.Text = string.Empty));
                 return false;
             }
 
@@ -408,8 +415,19 @@ namespace Timelapse.ControlsCore
             // If the preview is just ".", then transform it into 0. (so its a legal input)
             if (tmpString == ".")
             {
-                textBox.Text ="0.";
-                textBox.CaretIndex = 2;
+                // Deferred via BeginInvoke(Send): this runs inside PreviewTextInput, on the call stack
+                // of WPF's text-input processing (TextEditorTyping.OnTextInput) while it still has an
+                // undo transaction open for this keystroke. Reassigning textBox.Text synchronously here
+                // re-enters WPF's undo machinery before that transaction closes, throwing "Cannot Reopen
+                // undo unit while another unit is already open." Posting via BeginInvoke runs the
+                // reassignment as a new top-level dispatcher operation after the current keystroke's
+                // undo unit has closed. Send priority keeps it effectively immediate (before any
+                // subsequent keystroke/click), so the visible flip from "." to "0." is imperceptible.
+                textBox.Dispatcher.BeginInvoke(DispatcherPriority.Send, new Action(() =>
+                {
+                    textBox.Text = "0.";
+                    textBox.CaretIndex = 2;
+                }));
                 args.Handled = true;
                 return true;
             }

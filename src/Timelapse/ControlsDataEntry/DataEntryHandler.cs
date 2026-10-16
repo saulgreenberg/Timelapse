@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
@@ -1380,9 +1381,22 @@ namespace Timelapse.ControlsDataEntry
         // depending upon whether we are in the single image or  theThumbnailGrid view respectively.
         public void UpdateRowsDependingOnThumbnailGridState(string datalabel, string content)
         {
-            UpdateRowsDependingOnThumbnailGridStateAsync(datalabel, content)
-                .ContinueWith(t => Trace.WriteLine(t.Exception),
-                              TaskContinuationOptions.OnlyOnFaulted);
+            // Deferred via BeginInvoke(Send) rather than called inline: this method is invoked
+            // synchronously from TextChanged/ValueChanged handlers, which run on the call stack of
+            // WPF's text-input processing (TextEditorTyping.OnTextInput) while it still has an undo
+            // transaction open. UpdateFileAsync below can synchronously reach a SQLite retry wait that
+            // pumps the dispatcher (SQLiteWrapper.OnRetryDelay / TimelapseWindow's Dispatcher.PushFrame
+            // hook) to keep the "retrying..." notice responsive; if that pump happens while still nested
+            // inside the open undo transaction, a subsequent keystroke processed during the pump re-enters
+            // WPF's UndoManager and throws "Cannot Reopen undo unit while another unit is already open."
+            // Posting via BeginInvoke ensures this runs as a new top-level dispatcher operation (after the
+            // current keystroke's undo unit has closed) rather than nested inside it. Send priority keeps
+            // the write effectively immediate - ahead of any subsequent click/keystroke - so this doesn't
+            // introduce a meaningful data-loss window.
+            Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Send, new Action(() =>
+                UpdateRowsDependingOnThumbnailGridStateAsync(datalabel, content)
+                    .ContinueWith(t => Trace.WriteLine(t.Exception),
+                                  TaskContinuationOptions.OnlyOnFaulted)));
         }
 
         public async Task UpdateRowsDependingOnThumbnailGridStateAsync(string datalabel, string content)

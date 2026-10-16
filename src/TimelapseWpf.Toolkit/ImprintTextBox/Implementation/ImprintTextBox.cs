@@ -353,17 +353,26 @@ namespace TimelapseWpf.Toolkit
       // This ensures TextChanged fires properly even if the new text matches a previous value
       if (_wasShowingImprint && !string.IsNullOrEmpty(Text) && AlwaysInvokeTextChanged)
       {
-        // Set re-entry guard to prevent infinite loop during SetText calls
-        _isHandlingImprintTransition = true;
         _wasShowingImprint = false;
 
-        // Force TextChanged to fire again by using SetText
-        // This ensures any external handlers process the transition properly
-        // Note: SetText preserves cursor position internally
-        SetText(Text);
-
-        // Clear re-entry guard after SetText completes
-        _isHandlingImprintTransition = false;
+        // This TextChanged handler runs on the call stack of WPF's text-input processing
+        // (TextEditorTyping.OnTextInput) while it still has an undo transaction open for the
+        // keystroke that triggered the imprint-to-text transition. SetText reassigns Text
+        // synchronously, which re-enters WPF's undo machinery before that transaction closes and
+        // can throw "Cannot Reopen undo unit while another unit is already open." Posting via
+        // BeginInvoke runs SetText as a new top-level dispatcher operation after the current
+        // keystroke's undo unit has closed; Send priority keeps it effectively immediate. The
+        // re-entry guard moves inside the deferred callback so it still brackets the SetText call
+        // (and the TextChanged storm it triggers) rather than being cleared before SetText runs.
+        Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Send, new System.Action(() =>
+        {
+          _isHandlingImprintTransition = true;
+          // Force TextChanged to fire again by using SetText
+          // This ensures any external handlers process the transition properly
+          // Note: SetText preserves cursor position internally
+          SetText(Text);
+          _isHandlingImprintTransition = false;
+        }));
       }
       else
       {

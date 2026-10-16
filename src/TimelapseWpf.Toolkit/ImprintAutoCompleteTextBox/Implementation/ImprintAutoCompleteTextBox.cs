@@ -21,6 +21,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace TimelapseWpf.Toolkit
 {
@@ -273,10 +274,23 @@ namespace TimelapseWpf.Toolkit
         int cursorPosition = CaretIndex - (Text.Length - searchText.Length);
         if (cursorPosition < 0) cursorPosition = 0;
 
-        _suppressTextChanged = true;
-        Text = searchText;
-        CaretIndex = cursorPosition;
-        _suppressTextChanged = false;
+        // Deferred via BeginInvoke(Send): this handler runs on the call stack of WPF's text-input
+        // processing (TextEditorTyping.OnTextInput) while it still has an undo transaction open for
+        // this keystroke. Reassigning Text synchronously here re-enters WPF's undo machinery before
+        // that transaction closes, which can throw "Cannot Reopen undo unit while another unit is
+        // already open." Posting via BeginInvoke runs the reassignment as a new top-level dispatcher
+        // operation after the current keystroke's undo unit has closed; Send priority keeps it
+        // effectively immediate.
+        Dispatcher.BeginInvoke(DispatcherPriority.Send, new Action(() =>
+        {
+          _suppressTextChanged = true;
+          Text = searchText;
+          CaretIndex = cursorPosition;
+          _suppressTextChanged = false;
+          // Re-sync tooltip now that the deferred Text change has actually applied - the immediate
+          // "ToolTip = Text" below runs first and would otherwise capture the pre-trim value.
+          ToolTip = Text;
+        }));
       }
 
       // Use appropriate autocomplete mode
@@ -601,12 +615,23 @@ namespace TimelapseWpf.Toolkit
             // Apply the autocomplete suggestion
             if (!string.IsNullOrEmpty(autocompletion))
             {
-              _suppressTextChanged = true;
-              Text = autocompletion;
-              CaretIndex = textLength;
-              SelectionStart = textLength;
-              SelectionLength = autocompletion.Length - textLength;
-              _suppressTextChanged = false;
+              // Deferred via BeginInvoke(Send) - see OnTextChangedForAutocomplete's trim case above for
+              // why a synchronous Text reassignment here (nested in WPF's text-input call stack) risks
+              // "Cannot Reopen undo unit while another unit is already open." Send priority keeps the
+              // inline suggestion effectively immediate (before any subsequent keystroke is processed).
+              Dispatcher.BeginInvoke(DispatcherPriority.Send, new Action(() =>
+              {
+                _suppressTextChanged = true;
+                Text = autocompletion;
+                CaretIndex = textLength;
+                SelectionStart = textLength;
+                SelectionLength = autocompletion.Length - textLength;
+                _suppressTextChanged = false;
+                // Re-sync tooltip now that the deferred Text change has actually applied - the
+                // immediate "ToolTip = Text" below runs first and would otherwise capture the
+                // pre-completion value.
+                ToolTip = Text;
+              }));
 
               _mostRecentAutocompletion = autocompletion;
             }
