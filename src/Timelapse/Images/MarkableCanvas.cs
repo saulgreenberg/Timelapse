@@ -688,7 +688,18 @@ namespace Timelapse.Images
         {
             if (ThumbnailGridVirtualized == null)
                 return ThumbnailGridRefreshStatus.Aborted;
-            return ThumbnailGridVirtualized.Refresh(ThumbnailGridVirtualized.ActualWidth, ThumbnailGridVirtualized.ActualHeight, zoomIn);
+            // Use this MarkableCanvas's own ActualWidth/ActualHeight rather than
+            // ThumbnailGridVirtualized's. WPF skips layout (Measure/Arrange) for Collapsed elements, so
+            // while in single-image view ThumbnailGridVirtualized.ActualWidth/ActualHeight stay frozen at
+            // whatever they were the last time it was visible (or 0 if never shown) - stale if the window
+            // was resized in the meantime. SwitchToThumbnailGridVirtualizedView() flips Visibility to
+            // Visible and this method is called synchronously right after, before WPF has had a chance to
+            // run a layout pass for the newly-visible control, so the staleness wouldn't resolve itself in
+            // time. MarkableCanvas itself is never collapsed, so its own ActualWidth/ActualHeight are
+            // always current - and MarkableImageCanvas_SizeChanged already keeps
+            // ThumbnailGridVirtualized.Width/Height in sync with these same values, so this is exactly
+            // what the control would be sized to anyway once its own layout pass runs.
+            return ThumbnailGridVirtualized.Refresh(ActualWidth, ActualHeight, zoomIn);
         }
 
         #region Public / Private methods: Draw Bounding Box
