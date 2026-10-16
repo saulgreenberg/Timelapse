@@ -1070,6 +1070,7 @@ namespace Timelapse.Database
 
                             case DatabaseColumn.DateTime:
                                 // The DateTime should always be filled in, so use that.
+                                Debug.Print(imageProperties.File);
                                 queryValues.Append($"{Sql.Quote(DateTimeHandler.ToStringDatabaseDateTime(imageProperties.DateTime))}{Sql.Comma}");
                                 break;
 
@@ -2637,6 +2638,11 @@ namespace Timelapse.Database
                             // 3rd: remap the actual json classification numbers to the new updated category numbers if needed
                             foreach (image image in jsonRecognizer.images)
                             {
+                                if (image.detections == null)
+                                {
+                                    // The json file may actually report some detections as null rather than an empty list, in which case we just skip it.
+                                    continue;
+                                }
                                 foreach (detection detection in image.detections)
                                 {
                                     foreach (object[] classification in detection.classifications)

@@ -315,12 +315,18 @@ namespace Timelapse.Recognition
                 string sTotalImages = $"{jsonRecognizer.images.Count:N0}";
                 int i = 0;
 
+                // Normalize path separators from Unix / to windows \ to avoid conflicts.
+                // This must be done for every image up front (not just the ones examined below), as later
+                // comparisons against the database's RelativePath column are exact, separator-sensitive matches.
+                foreach (image image in jsonRecognizer.images)
+                {
+                    image.file = image.file.Replace('/', '\\');
+                }
+
                 // Skip certain conditions if the subFolder is empty
                 bool nonEmptySubfolder = false == string.IsNullOrWhiteSpace(subFolderPrefix);
                 foreach (image image in jsonRecognizer.images)
                 {
-                    // Normalize path separators from Unix / to windows \ to avoid conflicts
-                    image.file = image.file.Replace('/', '\\');
                     if (i % 10000 == 0)
                     {
                         if (cancelToken.Token.IsCancellationRequested)
