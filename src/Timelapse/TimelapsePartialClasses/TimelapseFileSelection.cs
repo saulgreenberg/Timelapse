@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Timelapse.Constant;
@@ -8,6 +9,7 @@ using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
+using Timelapse.SearchingAndSorting;
 
 // ReSharper disable once CheckNamespace
 namespace Timelapse
@@ -169,6 +171,21 @@ namespace Timelapse
             StatusBar.SetCurrentFile(DataHandler.ImageCache.CurrentRow + 1);  // We add 1 because its a 0-based list
             StatusBar.SetCount(DataHandler.FileDatabase.CountAllCurrentlySelectedFiles);
             FileNavigatorSlider_EnableOrDisableValueChangedCallback(true);
+            if (selection == FileSelectionEnum.All)
+            {
+                // "All files" means no folder filter is in effect - clear the RelativePath search
+                // term's own use-flag too (regardless of which caller is switching to All: the
+                // top-level Select | All files menu item, either tree's own "All" node, or the
+                // fallback-to-All above when a selection came up empty), so it doesn't keep
+                // showing/implying a specific folder is still active - e.g. Custom Selection's
+                // RelativePath row otherwise stays checked against a stale remembered folder even
+                // though the tree itself now correctly highlights "All".
+                SearchTerm relativePathSearchTerm = DataHandler.FileDatabase.CustomSelection.SearchTerms.FirstOrDefault(term => term.DataLabel == DatabaseColumn.RelativePath);
+                if (relativePathSearchTerm != null)
+                {
+                    relativePathSearchTerm.UseForSearching = false;
+                }
+            }
             DataHandler.FileDatabase.FileSelectionEnum = selection;    // Remember the current selection
             this.MetadataUI.ResetNavigationButtonsForMetadataTabs();   // Reset the navigation buttons for the MetadataUI (if any) as changed selection may affect what relative paths are present
             BusyCancelIndicator.Reset(false);

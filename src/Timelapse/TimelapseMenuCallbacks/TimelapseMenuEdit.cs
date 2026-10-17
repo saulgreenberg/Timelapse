@@ -1106,6 +1106,7 @@ namespace Timelapse
 
                 // Now update the database
                 DataHandler.FileDatabase.UpdateFiles(columnTuplesWithWhereList);
+                DataHandler.FileDatabase.InvalidateAllFoldersCache();
                 await FilesSelectAndShowAsync().ConfigureAwait(true);
             }
         }

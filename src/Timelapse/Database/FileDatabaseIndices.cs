@@ -15,6 +15,12 @@ namespace Timelapse.Database
         // -IndexFile
         // -IndexRelativePathFile
         // -IndexRelativePathDateTimeFile
+        // -IndexDeleteFlag - speeds up ExistsRowThatMatchesSelectionForAllFilesOrConstrainedRelativePathFiles's
+        //  EXISTS check (e.g. for the Select menu's "marked for deletion" count), which otherwise has to scan
+        //  every row when nothing is currently marked for deletion.
+        // This single method is called from every place a database is created, opened, or has files added to
+        // it (FileDatabase.cs, TimelapseImageSetLoading.cs), so adding a new index here is sufficient on its
+        // own - no other call site needs to change.
         public void IndexCreateForFileAndRelativePathIfNeeded()
         {
             List<Tuple<string, string, string>> tuples =
@@ -22,8 +28,14 @@ namespace Timelapse.Database
                 new(DatabaseValues.IndexRelativePath, DBTables.FileData, DatabaseColumn.RelativePath),
                 new(DatabaseValues.IndexFile, DBTables.FileData, DatabaseColumn.File),
                 new(DatabaseValues.IndexRelativePathFile, DBTables.FileData, DatabaseColumn.RelativePath + "," + DatabaseColumn.File),
-                new(DatabaseValues.IndexRelativePathDateTimeFile, DBTables.FileData, 
-                   $"{DatabaseColumn.RelativePath}, {DatabaseColumn.DateTime}, {DatabaseColumn.File}")
+                new(DatabaseValues.IndexRelativePathDateTimeFile, DBTables.FileData,
+                   $"{DatabaseColumn.RelativePath}, {DatabaseColumn.DateTime}, {DatabaseColumn.File}"),
+                // COLLATE NOCASE must match ExistsRowThatMatchesSelectionForAllFilesOrConstrainedRelativePathFiles's
+                // query, which explicitly does "WHERE DeleteFlag = 'true' COLLATE NOCASE". SQLite only uses an
+                // index for a predicate's declared collating sequence - a plain (BINARY-collated) index on
+                // DeleteFlag would NOT be used by that NOCASE comparison, silently falling back to the same
+                // full-table-scan this index is meant to avoid.
+                new(DatabaseValues.IndexDeleteFlag, DBTables.FileData, DatabaseColumn.DeleteFlag + Sql.CollateNocase)
             ];
             Database.IndexCreateIfNotExists(tuples);
         }

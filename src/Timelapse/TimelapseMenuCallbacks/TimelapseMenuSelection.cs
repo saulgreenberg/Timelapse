@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Threading;
 using Timelapse.Constant;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
@@ -126,7 +128,21 @@ namespace Timelapse
             // Repopulate the treeview if needed.
             if (this.tv.Items.Count == 0)
             {
+                // Freshly populating it triggers OnItemsSourceChanged, which defers its own call to
+                // ExpandToActivePathOnly - no need to also call it here.
                 this.MenuItemSelectByFolder_GetRelativePaths();
+            }
+            else
+            {
+                // Unlike Custom Selection's RelativePath dropdown (a fresh dialog, and fresh tree,
+                // every time it's opened), this tree is a single instance that persists for the
+                // window's lifetime - on a reopen, nothing else re-syncs its visual state (which item
+                // is highlighted, which branches are expanded) to the SelectedPath
+                // MenuItemSetRelativePathSearchTerm just (re)computed above, so it would otherwise
+                // stay frozen at whatever it showed during the tree's own last open - e.g. still
+                // highlighting a previously-active folder after the overall selection has since
+                // changed to "All files" elsewhere (such as the top-level Select | All files menu item).
+                this.tv.ExpandToActivePathOnly();
             }
         }
 
@@ -136,17 +152,32 @@ namespace Timelapse
 
             if (string.IsNullOrEmpty(relativePathSearchTerm?.DatabaseValue))
             {
-                // Nothing relevant found so just collapse everything
-                this.tv.SelectedPath = string.Empty;
-                this.tv.FocusSelection = false;
+                // No folder remembered at all - "All" (the tree's own permanent root) is the active
+                // node, and genuinely so (not merely "shown but not focused" - see below), so it must
+                // be focused or ExpandAndShowPathDirectly will explicitly deselect it.
+                this.tv.SelectedPath = TreeViewWithRelativePaths.AllFilesPath;
+                this.tv.FocusSelection = true;
                 this.tv.UnselectAll();
                 this.tv.CollapseAll();
                 return;
             }
 
+            if (DataHandler.FileDatabase.FileSelectionEnum == FileSelectionEnum.All)
+            {
+                // "All files" is the active selection - "All" (see AllFilesPath) is the genuinely
+                // active node here regardless of whatever folder still happens to be remembered in
+                // the (unused while in this mode) search term, so it must be focused too.
+                this.tv.FocusSelection = true;
+                this.tv.SelectedPath = TreeViewWithRelativePaths.AllFilesPath;
+                return;
+            }
+
             if (false == relativePathSearchTerm.UseForSearching || DataHandler.FileDatabase.FileSelectionEnum != FileSelectionEnum.Folders)
             {
-                // Expand the search term, but we don't want it focused
+                // A folder is remembered in the search term, but it isn't actually constraining the
+                // current selection (e.g. its own checkbox is off, or it's one of several Custom
+                // criteria rather than the sole "Folders" selection) - show where it is without
+                // marking it as the active node.
                 this.tv.FocusSelection = false;
                 this.tv.SelectedPath = relativePathSearchTerm.DatabaseValue;
                 return;
@@ -190,7 +221,43 @@ namespace Timelapse
             // Add the current folders in the database to the treeview
             this.MenuItemSelectByFolder_ResetFolderList();
         }
-        private async void MenuItemSelectByFolderTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+
+        private async void MenuItemSelectByFolderExpandAll_Click(object sender, RoutedEventArgs e)
+        {
+            // Set Handled synchronously, before any await - once this method yields, the Click
+            // event has already finished routing and setting Handled afterward would have no effect.
+            e.Handled = true;
+
+            // ExpandAll fully realizes every container in the tree and can take a few seconds on a
+            // large (6000+ entry) tree, so show an hourglass for its duration. Mouse.OverrideCursor
+            // alone wouldn't actually get painted until ExpandAll's own synchronous work finishes -
+            // nothing yields back to the dispatcher in between for WPF to render the change - so
+            // yielding once at Render priority first forces that paint to happen before the long
+            // call starts.
+            Mouse.OverrideCursor = Cursors.Wait;
+            await Dispatcher.Yield(DispatcherPriority.Render);
+            try
+            {
+                this.tv.ExpandAll();
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
+        }
+
+        private void MenuItemSelectByFolderCollapseAll_Click(object sender, RoutedEventArgs e)
+        {
+            this.tv.CollapseAll();
+            e.Handled = true;
+        }
+
+        private void MenuItemSelectByFolderExpandActive_Click(object sender, RoutedEventArgs e)
+        {
+            this.tv.ExpandToActivePathOnly();
+            e.Handled = true;
+        }
+        private async void MenuItemSelectByFolderTreeView_ActivePathSelected(object sender, EventArgs e)
         {
             try
             {
@@ -204,10 +271,6 @@ namespace Timelapse
 
         private async Task MenuItemSelectByFolderTreeView_SelectedItemChangedAsync(object sender)
         {
-            if (this.tv.DontInvoke)
-            {
-                return;
-            }
             if (sender is not TreeViewWithRelativePaths TreeViewWithRelativePaths)
             {
                 return;
@@ -220,10 +283,9 @@ namespace Timelapse
                 return;
             }
 
-            // If its select all folders, then
-            if (TreeViewWithRelativePaths.SelectedPath == "All files")
+            // If the "All" root (see TreeViewWithRelativePaths.AllFilesPath) was picked, show all folders
+            if (TreeViewWithRelativePaths.SelectedPath == Controls.TreeViewWithRelativePaths.AllFilesPath)
             {
-                // its all folders, so just select all folders
                 await FilesSelectAndShowAsync(DataHandler.ImageCache.Current.ID, FileSelectionEnum.All).ConfigureAwait(true);
                 return;
             }

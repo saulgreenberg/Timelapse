@@ -234,6 +234,10 @@ namespace Timelapse.Dialog
                     fileDatabase.classificationDescriptionsDictionary = null;
                     fileDatabase.CreateClassificationDescriptionsDictionaryIfNeeded();
 
+                    // The merge above inserts rows via raw SQL (not FileDatabase.AddFiles), and can
+                    // introduce RelativePath values not previously present in the destination database.
+                    fileDatabase.InvalidateAllFoldersCache();
+
                     atLeastOneMergeSucceeded = true;
                 }
 

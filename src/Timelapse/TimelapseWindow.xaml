@@ -492,43 +492,67 @@
                               Click="MenuItemSelectFiles_Click" 
                               ToolTip="Shows all files in the root folder and its subfolders"/>
                     <MenuItem Name="MenuItemSelectByRelativePath" IsEnabled="True"
-                              Header="All files in a folder and its subfolders&#x2026;" 
+                              Header="All files in a folder and its subfolders&#x2026;"
                               SubmenuOpened="MenuItemSelectByFolder_SubmenuOpening">
-                        <controls:TreeViewWithRelativePaths  
-                            x:Name="tv"
-                            ItemsSource="{Binding}"
-                            Margin="-35,0,-50,0" Padding="5" HorizontalAlignment="Stretch"
-                            MaxHeight ="400"
-                            SelectedItemChanged="MenuItemSelectByFolderTreeView_SelectedItemChanged" >
-                            <TreeView.ItemContainerStyle>
-                                <Style TargetType="{x:Type TreeViewItem}">
-                                    <Setter Property="IsExpanded" Value="True"/>
-                                    <Setter Property="BorderThickness" Value="1.5"/>
-                                    <Style.Triggers>
-                                        <Trigger Property="IsSelected" Value="True">
-                                            <Setter Property="BorderBrush" Value="#adc6e5"/>
-                                        </Trigger>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Setter Property="BorderBrush" Value="LightBlue" />
-                                            <!--<Setter Property="Foreground" Value="Black" />
-                                            <Setter Property="Background" Value="LightBlue" />-->
-                                        </Trigger>
-                                        <MultiTrigger>
-                                            <MultiTrigger.Conditions>
-                                                <Condition Property="IsSelected" Value="True"/>
-                                                <Condition Property="IsSelectionActive" Value="False"/>
-                                            </MultiTrigger.Conditions>
-                                            <Setter Property="BorderBrush" Value="LightGray"/>
-                                        </MultiTrigger>
-                                    </Style.Triggers>
-                                    <Style.Resources>
-                                        <Style TargetType="Border">
-                                            <Setter Property="CornerRadius" Value="2"/>
-                                        </Style>
-                                    </Style.Resources>
-                                </Style>
-                            </TreeView.ItemContainerStyle>
-                        </controls:TreeViewWithRelativePaths>
+                        <!-- The treeview's MaxHeight below is kept comfortably under typical available
+                             screen space so this submenu's overall height rarely needs WPF's own
+                             outer menu scroll-chrome (which would scroll this entire StackPanel, buttons
+                             included, as a single block). Overflow is instead absorbed by the treeview's
+                             own internal ScrollViewer, keeping the Expand/Collapse all buttons pinned
+                             above it. -->
+                        <StackPanel Margin="-35,0,-50,0">
+                            <!-- Focusable="False": clicking a focusable button moves keyboard focus to it, and
+                                 WPF auto-scrolls the nearest scrollable ancestor to bring the newly-focused
+                                 element into view - since these buttons sit at the top, that scroll-into-view
+                                 would yank the view back to the top, undoing/overriding ExpandAll's own
+                                 scroll-to-active-item. Not being focusable avoids triggering that. -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                <TextBlock Text="Expand:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <Button Content="All" Padding="8,2" Margin="0,0,4,0" Focusable="False" Click="MenuItemSelectByFolderExpandAll_Click"/>
+                                <Button Content="Active" Padding="8,2" Margin="0,0,8,0" Focusable="False" Click="MenuItemSelectByFolderExpandActive_Click"/>
+                                <Button Content="Collapse all" Padding="8,2" Focusable="False" Click="MenuItemSelectByFolderCollapseAll_Click"/>
+                            </StackPanel>
+                            <controls:TreeViewWithRelativePaths
+                                x:Name="tv"
+                                ItemsSource="{Binding}"
+                                Padding="5" HorizontalAlignment="Stretch"
+                                MaxHeight ="380"
+                                ActivePathSelected="MenuItemSelectByFolderTreeView_ActivePathSelected" >
+                                <TreeView.ItemContainerStyle>
+                                    <Style TargetType="{x:Type TreeViewItem}">
+                                        <!-- No blanket IsExpanded="True" default: at thousands of entries, defaulting
+                                             every node to expanded means fully rendering every single row just to
+                                             open the menu, which is expensive regardless of search/lookup algorithm
+                                             efficiency. Only the path down to the active item (if any) is expanded,
+                                             via TreeView_OnLoaded/ShowSelectedPathItem; "Expand all" remains available
+                                             as an explicit, infrequent, user-chosen action. -->
+                                        <Setter Property="BorderThickness" Value="1.5"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="BorderBrush" Value="#adc6e5"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="BorderBrush" Value="LightBlue" />
+                                                <!--<Setter Property="Foreground" Value="Black" />
+                                                <Setter Property="Background" Value="LightBlue" />-->
+                                            </Trigger>
+                                            <MultiTrigger>
+                                                <MultiTrigger.Conditions>
+                                                    <Condition Property="IsSelected" Value="True"/>
+                                                    <Condition Property="IsSelectionActive" Value="False"/>
+                                                </MultiTrigger.Conditions>
+                                                <Setter Property="BorderBrush" Value="LightGray"/>
+                                            </MultiTrigger>
+                                        </Style.Triggers>
+                                        <Style.Resources>
+                                            <Style TargetType="Border">
+                                                <Setter Property="CornerRadius" Value="2"/>
+                                            </Style>
+                                        </Style.Resources>
+                                    </Style>
+                                </TreeView.ItemContainerStyle>
+                            </controls:TreeViewWithRelativePaths>
+                        </StackPanel>
                     </MenuItem>
 
                     <MenuItem Name="MenuItemSelectFilesMarkedForDeletion" IsCheckable="True" IsChecked="False" 

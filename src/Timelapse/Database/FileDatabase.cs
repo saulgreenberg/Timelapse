@@ -1295,6 +1295,7 @@ namespace Timelapse.Database
                 }
                 addFilesResult = Database.ExecuteNonQueryWithRollback(insertCommands);
             }
+            InvalidateAllFoldersCache();
         }
 
         /// <summary>
@@ -1365,11 +1366,40 @@ namespace Timelapse.Database
         #endregion
 
         #region Return a new sorted list containing the distinct relative paths in the database
+        // Cache for GetFoldersFromRelativePaths() below - computing it requires a DB query plus
+        // O(n) ancestor-folder synthesis, and it's consumed by UI that can be opened repeatedly in a
+        // session (the Select menu's folder submenu, the Custom Selection dialog's RelativePath picker).
+        // Invalidated only by InvalidateAllFoldersCache(), called from operations that actually add,
+        // delete, or rename RelativePath-bearing rows - NOT from plain reselection/resort, so switching
+        // between selections repeatedly doesn't discard it. See InvalidateAllFoldersCache for the full
+        // list of call sites that must call it.
+        private List<string> allFoldersFromRelativePathsCache;
+
+        // Clears the cache above. Call this from any operation that inserts, deletes, or renames
+        // FileData rows in a way that could change the set of distinct RelativePath values in the
+        // whole database: AddFiles, DeleteFilesAndMarkers, UpdateRelativePathByReplacingPrefix (folder
+        // editor rename/move), the database merge/checkin path (MergeCheckinDatabaseFiles.xaml.cs, which
+        // inserts rows via raw SQL rather than AddFiles), and the "find missing file/folder" repair
+        // handlers (TimelapseMenuEdit.cs, TimelapseCheckAndCorrectFolders.cs, which call the generic
+        // UpdateFiles(...) rather than a RelativePath-specific method). Deliberately NOT called from
+        // ResetAfterPossibleRelativePathChanges()/SelectFilesAsync - that fires on every reselection
+        // (including ones that don't touch folders at all, e.g. switching to "Files marked for
+        // deletion"), which would defeat the point of caching this.
+        public void InvalidateAllFoldersCache()
+        {
+            allFoldersFromRelativePathsCache = null;
+        }
+
         // Return a new sorted list containing the distinct relative paths in the database,
         // and the (unique) parents of each relative path entry.
         // For example, if the relative paths were a/b, a/b/c, a/b/d and d/c it would return
         // a | a/b | a/b/c, a/b/d | d | d/c
         public List<string> GetFoldersFromRelativePaths()
+        {
+            return allFoldersFromRelativePathsCache ??= ComputeFoldersFromRelativePaths();
+        }
+
+        private List<string> ComputeFoldersFromRelativePaths()
         {
             List<object> relativePathList = GetDistinctValuesInColumn(DBTables.FileData, DatabaseColumn.RelativePath);
             List<string> allPaths = [];
@@ -1528,6 +1558,7 @@ namespace Timelapse.Database
                     }
                     deleteResult = Database.ExecuteNonQueryWithRollback(deleteStatements, ThrottleValues.BackgroundWriteExtendedBusyTimeoutMs);
                 }
+                InvalidateAllFoldersCache();
             }
         }
         #endregion

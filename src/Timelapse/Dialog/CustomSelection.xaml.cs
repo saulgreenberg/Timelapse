@@ -64,6 +64,7 @@ namespace Timelapse.Dialog
         // The RelativePath control is implemented as a combination DropDownButton with a TreeViewRelativePathMenu as its content
         private TreeViewWithRelativePaths treeViewWithRelativePaths;
         private DropDownButton RelativePathButton;
+        private Button expandActiveButton;
 
         // Remember note fields that contain Episode data
         private string NoteDataLabelContainingEpisodeData;
@@ -1555,8 +1556,8 @@ namespace Timelapse.Dialog
             await UpdateSearchDialogFeedback();
         }
 
-        // The RelativePathControl SelectedItemChanged callback: This does the work when a relative path is selected
-        private async void RelativePathControl_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        // The RelativePathControl ActivePathSelected callback: This does the work when a relative path is genuinely picked
+        private async void RelativePathControl_ActivePathSelected(object sender, EventArgs e)
         {
             try
             {
@@ -1570,27 +1571,30 @@ namespace Timelapse.Dialog
 
         private async Task RelativePathControl_SelectedItemChangedAsync(object sender)
         {
-            if (this.treeViewWithRelativePaths.DontInvoke)
-            {
-                return;
-            }
-
             if (sender is not TreeViewWithRelativePaths treeView)
             {
                 return;
             }
 
+            treeView.FocusSelection = true;
+            this.RelativePathButton.IsOpen = false;
+            int row = Grid.GetRow(this.RelativePathButton);  // Get the row number... should always be a valid int
 
-            if (treeView.SelectedValue == null)
+            if (treeView.SelectedPath == TreeViewWithRelativePaths.AllFilesPath)
             {
+                // "All" (see TreeViewWithRelativePaths.AllFilesPath) means "don't constrain by any
+                // particular folder" - the existing, already-correct way to express that for this
+                // search term is to switch its own "use" checkbox off, rather than writing the "All"
+                // sentinel itself into DatabaseValue, which the query builder wouldn't recognize (it
+                // would just search for a literal, almost certainly nonexistent, folder named "All").
+                CheckBox useThisSearchTerm = GetGridElement<CheckBox>(SelectColumn, row);
+                useThisSearchTerm.IsChecked = false;
+                this.RelativePathButton.Content = TreeViewWithRelativePaths.AllFilesPath;
                 return;
             }
 
-            treeView.FocusSelection = true;
             this.RelativePathButton.Content = treeView.SelectedPath;
-            int row = Grid.GetRow(this.RelativePathButton);  // Get the row number... should always be a valid int
             this.Database.CustomSelection.SearchTerms[row - 1].DatabaseValue = treeView.SelectedPath; // Set the corresponding value to the current selection
-            this.RelativePathButton.IsOpen = false;
             await this.UpdateSearchDialogFeedback();
         }
 
@@ -1941,18 +1945,47 @@ namespace Timelapse.Dialog
 
             // Add the TreeViewWithRelativePaths control as the DropDown button's drop down.
             // This treeview is specialized to show relative paths
+            // MaxHeight is set comfortably under RelativePathButton's MaxDropDownHeight (350) above so
+            // overflow is absorbed by the treeview's own internal ScrollViewer rather than by
+            // DropDownButton's outer one, which wraps its entire DropDownContent (buttons included) as a
+            // single scrollable block - without this, a long folder list would scroll the Expand/Collapse
+            // all buttons out of view along with the tree instead of keeping them pinned above it.
             this.treeViewWithRelativePaths = new()
             {
                 DontInvoke = true,
+                MaxHeight = 300
             };
-            this.RelativePathButton.DropDownContent = treeViewWithRelativePaths;
+
+            // Expand: All / Active, and Collapse all buttons shown above the treeview in the dropdown.
+            // Focusable = false: clicking a focusable button moves keyboard focus to it, and WPF
+            // auto-scrolls the nearest scrollable ancestor (here, DropDownButton's own ScrollViewer,
+            // which wraps this whole panel) to bring the newly-focused element into view - since these
+            // buttons sit at the top, that would yank the view back to the top, undoing/overriding
+            // ExpandAll's own scroll-to-active-item. Not being focusable avoids triggering that.
+            TextBlock expandLabel = new() { Text = "Expand:", FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 4, 4) };
+            Button expandAllButton = new() { Content = "All", Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 4, 4), Focusable = false };
+            expandAllButton.Click += async (_, _) => await ExpandAllWithWaitCursorAsync();
+            this.expandActiveButton = new() { Content = "Active", Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 8, 4), Focusable = false };
+            this.expandActiveButton.Click += (_, _) => this.treeViewWithRelativePaths.ExpandToActivePathOnly();
+            Button collapseAllButton = new() { Content = "Collapse all", Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 0, 0, 4), Focusable = false };
+            collapseAllButton.Click += (_, _) => this.treeViewWithRelativePaths.CollapseAll();
+            StackPanel expandCollapseButtonRow = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+            expandCollapseButtonRow.Children.Add(expandLabel);
+            expandCollapseButtonRow.Children.Add(expandAllButton);
+            expandCollapseButtonRow.Children.Add(this.expandActiveButton);
+            expandCollapseButtonRow.Children.Add(collapseAllButton);
+
+            StackPanel relativePathDropDownPanel = new();
+            relativePathDropDownPanel.Children.Add(expandCollapseButtonRow);
+            relativePathDropDownPanel.Children.Add(this.treeViewWithRelativePaths);
+            this.RelativePathButton.DropDownContent = relativePathDropDownPanel;
 
             // Populate the treeview. Enable it only if it has content
             this.RelativePathControlRepopulateIfNeeded();
             this.treeViewWithRelativePaths.FocusSelection = true;
             this.RelativePathButton.IsEnabled = this.treeViewWithRelativePaths.HasContent && checkboxforUsingRelativePath is { IsChecked: true };
             checkboxforUsingRelativePath?.IsEnabled = this.treeViewWithRelativePaths.HasContent;
-            this.treeViewWithRelativePaths.SelectedItemChanged += RelativePathControl_SelectedItemChanged;
+            this.treeViewWithRelativePaths.ActivePathSelected += RelativePathControl_ActivePathSelected;
             RelativePathButton.GotFocus += ControlsDataHelpers.Control_GotFocus;
             RelativePathButton.LostFocus += ControlsDataHelpers.Control_LostFocus;
 
@@ -1962,23 +1995,57 @@ namespace Timelapse.Dialog
             this.treeViewWithRelativePaths.DontInvoke = false;
         }
 
+        // ExpandAll fully realizes every container in the tree and can take a few seconds on a large
+        // (6000+ entry) tree, so show an hourglass for its duration. Mouse.OverrideCursor alone
+        // wouldn't actually get painted until ExpandAll's own synchronous work finishes - nothing
+        // yields back to the dispatcher in between for WPF to render the change - so yielding once
+        // at Render priority first forces that paint to happen before the long call starts.
+        private async Task ExpandAllWithWaitCursorAsync()
+        {
+            Mouse.OverrideCursor = Cursors.Wait;
+            await Dispatcher.Yield(DispatcherPriority.Render);
+            try
+            {
+                this.treeViewWithRelativePaths.ExpandAll();
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+            }
+        }
+
         private void RelativePathControlSetSearchTerm()
         {
             SearchTerm relativePathSearchTerm = this.Database?.CustomSelection?.SearchTerms.FirstOrDefault(term => term.DataLabel == DatabaseColumn.RelativePath);
 
             if (string.IsNullOrEmpty(relativePathSearchTerm?.DatabaseValue))
             {
-                // Nothing relevant found so just collapse everything
-                this.treeViewWithRelativePaths.SelectedPath = string.Empty;
-                this.treeViewWithRelativePaths.FocusSelection = false;
+                // No folder remembered at all - "All" (the tree's own permanent root) is the active
+                // node, and genuinely so (not merely "shown but not focused" - see below), so it must
+                // be focused or ExpandAndShowPathDirectly will explicitly deselect it.
+                this.treeViewWithRelativePaths.SelectedPath = TreeViewWithRelativePaths.AllFilesPath;
+                this.treeViewWithRelativePaths.FocusSelection = true;
                 this.treeViewWithRelativePaths.UnselectAll();
                 this.treeViewWithRelativePaths.CollapseAll();
                 return;
             }
 
+            if (this.Database.FileSelectionEnum == FileSelectionEnum.All)
+            {
+                // "All files" is the active selection - "All" (see AllFilesPath) is the genuinely
+                // active node here regardless of whatever folder still happens to be remembered in
+                // the (unused while in this mode) search term, so it must be focused too.
+                this.treeViewWithRelativePaths.FocusSelection = true;
+                this.treeViewWithRelativePaths.SelectedPath = TreeViewWithRelativePaths.AllFilesPath;
+                return;
+            }
+
             if (false == relativePathSearchTerm.UseForSearching || this.Database.FileSelectionEnum != FileSelectionEnum.Folders)
             {
-                // Expand the search term, but we don't want it focused
+                // A folder is remembered in the search term, but it isn't actually constraining the
+                // current selection (its own checkbox is off, or it's one of several Custom criteria
+                // rather than the sole "Folders" selection) - show where it is without marking it as
+                // the active node.
                 this.treeViewWithRelativePaths.FocusSelection = false;
                 this.treeViewWithRelativePaths.SelectedPath = relativePathSearchTerm.DatabaseValue;
                 return;

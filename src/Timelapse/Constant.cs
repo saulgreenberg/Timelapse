@@ -309,6 +309,7 @@ namespace Timelapse.Constant
         public const string IndexRelativePathFile = "IndexRelativePathFile";
         public const string IndexRelativePathDateTimeFile = "IndexRelativePathDateTimeFile";
         public const string IndexFile = "IndexFile";
+        public const string IndexDeleteFlag = "IndexDeleteFlag";
         public const string IndexDetectionID = "IndexDetectionID";
         public const string IndexDetectionVideoID = "IndexDetectionVideoID";
         public const string IndexDetectionsClassificationConfidence = "IndexDetectionsClassificationConfidence";

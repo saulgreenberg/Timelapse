@@ -631,6 +631,7 @@ namespace Timelapse.Database
         {
             string query;
             this.ResetAfterPossibleRelativePathChanges();
+            this.InvalidateAllFoldersCache();
             if (isInteriorNode)
             {
                 query = Sql.Update + DBTables.FileData

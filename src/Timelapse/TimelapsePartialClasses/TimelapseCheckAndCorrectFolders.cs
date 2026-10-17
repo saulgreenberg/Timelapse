@@ -87,6 +87,7 @@ namespace Timelapse
                         ColumnTuplesWithWhere columnToUpdateWithWhere = new(columnToUpdate, key);
                         fileDatabase.UpdateFiles(columnToUpdateWithWhere);
                     }
+                    fileDatabase.InvalidateAllFoldersCache();
 
                     // Similarly, update the folder location for each level database table if needed
                     if (null != fileDatabase.MetadataTablesByLevel)
