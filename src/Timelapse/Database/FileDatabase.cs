@@ -3585,6 +3585,21 @@ namespace Timelapse.Database
                             CustomSelection = new(Controls);
                             return FileSelectionEnum.All;
                         }
+
+                        // The check above (Except) only compares set membership, not order, so a
+                        // user who merely reordered - rather than added or removed - choices in the
+                        // template would otherwise keep showing this search term's stale, pre-reorder
+                        // list here. Refresh it to match the current template's order, built the same
+                        // way CustomSelection's own constructor does (fresh choices, then an empty
+                        // item prepended if non-empty) - not by reusing "choices" above, which has an
+                        // empty item appended at the end instead, conditionally on IncludeEmptyChoice,
+                        // just for the Except comparisons.
+                        List<string> currentOrderList = [.. Choices.ChoicesFromJson(row.List).ChoiceList];
+                        if (currentOrderList.Count > 0)
+                        {
+                            currentOrderList.Insert(0, string.Empty);
+                        }
+                        stFromJson.List = currentOrderList;
                     }
                 }
 
