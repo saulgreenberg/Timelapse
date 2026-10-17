@@ -111,6 +111,23 @@ namespace Timelapse
                 return;
             }
 
+            // Ctrl+Space: toggle video play/pause regardless of where keyboard focus currently is.
+            // Plain Space already does this via MarkableCanvas_PreviewKeyDown, but that only fires
+            // while focus is within MarkableCanvas itself - when a data entry control has focus,
+            // Space is correctly consumed by the control instead (e.g. typing a space), so Ctrl+Space
+            // is offered as an alternative that works either way. TryTogglePlayOrPause already no-ops
+            // (returns false) if the video player isn't visible, so no separate check is needed here;
+            // Handled is only set on an actual toggle, so this doesn't swallow Ctrl+Space when there's
+            // no video to play.
+            if (currentKey.Key == Key.Space && IsCondition.IsKeyControlDown())
+            {
+                if (MarkableCanvas.VideoPlayer.TryTogglePlayOrPause())
+                {
+                    currentKey.Handled = true;
+                }
+                return;
+            }
+
             // Next, - but only if forceSendToMainWindow is true,
             // don't interpret keyboard shortcuts if the focus is on a control in the control grid, as the text entered may be directed
             // to the controls within it. That is, if a textbox or combo box or other control has the focus, then take no as this is normal text input

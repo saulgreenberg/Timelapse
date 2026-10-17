@@ -3982,7 +3982,8 @@ namespace Timelapse.Dialog
                 "[li][b] P[/b] Temporarily show a popup displaying surrounding images in this episode, even those not in the current selection" +
 
                 "[br 8][f 5][b]Video Player:[/b][/f]" +
-                "[li 2]〔[b]Space[/b]〕🖯 Play / Pause toggle button" +
+                "[li 2]〔[b]Space[/b]〕🖯 toggles the Play / Pause toggle button" +
+                "[li 2] 〔Ctl〕〔[b]Space[/b]〕🖯 within a data field also toggles the Play / Pause toggle button" +
                 "[li 2][b]R[/b] 🖯 [e]Best Recognition button[/e]]";
 
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
