@@ -40,6 +40,10 @@ namespace Timelapse
             {
                 splash = new SplashWindow();
                 splash.Show();
+                // ReSharper disable once AccessToDisposedClosure
+                // splashReady.Wait() below blocks until this Set() call completes, so splashReady
+                // can never be disposed (by this method returning, or the using declaration above)
+                // before this line runs - ReSharper can't see that guarantee across threads.
                 splashReady.Set();
                 Dispatcher.Run();
             })

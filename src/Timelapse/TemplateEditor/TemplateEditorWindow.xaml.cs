@@ -72,6 +72,7 @@ namespace TimelapseTemplateEditor
             };
         }
 
+        // ReSharper disable once AsyncVoidEventHandlerMethod
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Get the window and its size from its previous location

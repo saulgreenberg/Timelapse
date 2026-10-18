@@ -4579,7 +4579,7 @@ namespace Timelapse.Dialog
                 return owner.Dispatcher.Invoke(() => TimelapseOperationRetryDialog(owner, operationDescription, result, filePath));
             }
 
-            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            var dialog = new FormattedDialog()
             {
                 Owner = owner,
                 DialogTitle = "Warning: Issue Writing Data",

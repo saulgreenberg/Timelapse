@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using Timelapse.Constant;
 using Timelapse.Enums;
-using Timelapse.Util;
 using Control = Timelapse.Constant.Control;
 
 // ReSharper disable UnusedMember.Global

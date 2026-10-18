@@ -222,6 +222,7 @@ namespace Timelapse
             this.MenuItemSelectByFolder_ResetFolderList();
         }
 
+        // ReSharper disable once AsyncVoidEventHandlerMethod
         private async void MenuItemSelectByFolderExpandAll_Click(object sender, RoutedEventArgs e)
         {
             // Set Handled synchronously, before any await - once this method yields, the Click
