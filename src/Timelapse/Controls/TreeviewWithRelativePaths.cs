@@ -54,6 +54,10 @@ namespace Timelapse.Controls
         #region Private properties
         private ItemProvider ItemProvider { get; set; }
         private List<Item> ItemList { get; set; }
+
+        // Set while a mouse click on an item's label (not its expand/collapse arrow) is being
+        // processed - such a click is always a deliberate pick, even of an ancestor of the active path
+        private PathItem userClickedPathItem;
         #endregion
 
         #region Constructor
@@ -105,14 +109,43 @@ namespace Timelapse.Controls
             // fix is making sure it never does.
             this.PreviewMouseLeftButtonDown += TreeViewWithRelativePaths_PreventAllRootCollapseOnClick;
             this.PreviewKeyDown += TreeViewWithRelativePaths_PreventAllRootCollapseOnKey;
+            this.AddHandler(MouseLeftButtonDownEvent, new MouseButtonEventHandler(TreeViewWithRelativePaths_ApplyUserClick), true);
         }
 
+        // Also records a click on an item's label (as opposed to its expand/collapse arrow) as a
+        // deliberate user pick - see userClickedPathItem and TreeViewWithRelativePaths_ApplyUserClick.
         private void TreeViewWithRelativePaths_PreventAllRootCollapseOnClick(object sender, MouseButtonEventArgs e)
         {
-            if (e.OriginalSource is DependencyObject source && IsAllRootToggleArrow(source))
+            this.userClickedPathItem = null;
+            if (e.OriginalSource is not DependencyObject source)
             {
-                e.Handled = true;
+                return;
             }
+            TreeViewItem tvi = FindHostingTreeViewItem(source, out bool viaToggleArrow);
+            if (viaToggleArrow)
+            {
+                if (tvi is { DataContext: PathItem { Path: AllFilesPath } })
+                {
+                    e.Handled = true;
+                }
+                return;
+            }
+            this.userClickedPathItem = tvi?.DataContext as PathItem;
+        }
+
+        // Registered with handledEventsToo, since TreeViewItem marks MouseLeftButtonDown as handled.
+        // Runs after TreeViewItem has already selected itself (and fired SelectedItemChanged, if it
+        // wasn't already selected). Also covers clicking an ancestor that already shows as selected
+        // (e.g., after a collapse moved the highlight there), where SelectedItemChanged never fires.
+        private void TreeViewWithRelativePaths_ApplyUserClick(object sender, MouseButtonEventArgs e)
+        {
+            PathItem clicked = this.userClickedPathItem;
+            if (clicked != null && false == this.DontInvoke)
+            {
+                // No-op if SelectedPath already equals the clicked path
+                this.SelectAndHighlightPathItem(clicked);
+            }
+            this.userClickedPathItem = null;
         }
 
         private void TreeViewWithRelativePaths_PreventAllRootCollapseOnKey(object sender, KeyEventArgs e)
@@ -123,23 +156,22 @@ namespace Timelapse.Controls
             }
         }
 
-        // Walks up from the click's original source looking for a ToggleButton (the expand/collapse
-        // arrow in TreeViewItem's default template) before reaching the TreeViewItem itself, then
-        // checks whether that TreeViewItem is specifically All's own (as opposed to some other item's
-        // arrow, which must keep working normally).
-        private static bool IsAllRootToggleArrow(DependencyObject source)
+        // Walks up from the click's original source to its hosting TreeViewItem, noting whether it
+        // passed through a ToggleButton (the expand/collapse arrow in TreeViewItem's default
+        // template) on the way.
+        private static TreeViewItem FindHostingTreeViewItem(DependencyObject source, out bool viaToggleArrow)
         {
+            viaToggleArrow = false;
             DependencyObject current = source;
-            bool passedThroughToggleButton = false;
             while (current != null && current is not TreeViewItem)
             {
                 if (current is ToggleButton)
                 {
-                    passedThroughToggleButton = true;
+                    viaToggleArrow = true;
                 }
                 current = VisualTreeHelper.GetParent(current);
             }
-            return passedThroughToggleButton && current is TreeViewItem { DataContext: PathItem { Path: AllFilesPath } };
+            return current as TreeViewItem;
         }
 
         private void OnAnyTreeViewItemExpanded(object sender, RoutedEventArgs e)
@@ -397,12 +429,11 @@ namespace Timelapse.Controls
                 // TreeView.HandleSelectionAndCollapsed moving selection up because the real active
                 // item - a descendant - just got hidden by a manual collapse of pathItem, not a
                 // genuine new selection. Don't let that overwrite SelectedPath with the shallower
-                // path, or the original deep selection is permanently lost once re-expanded. (Trade-
-                // off: a deliberate click directly on the ancestor's own label, right after a deeper
-                // item was active, is indistinguishable from this and will also be ignored here - an
-                // acceptable rare edge case against silently losing the real selection on every
-                // manual collapse.)
-                if (!string.IsNullOrWhiteSpace(this.SelectedPath) &&
+                // path, or the original deep selection is permanently lost once re-expanded. A
+                // deliberate mouse click on the ancestor's own label (userClickedPathItem is set) is
+                // a genuine pick, so it bypasses this check.
+                if (this.userClickedPathItem == null &&
+                    !string.IsNullOrWhiteSpace(this.SelectedPath) &&
                     this.SelectedPath.StartsWith(pathItem.Path + "\\", StringComparison.Ordinal))
                 {
                     return;
