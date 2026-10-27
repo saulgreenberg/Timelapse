@@ -79,7 +79,6 @@ namespace Timelapse
         #endregion
 
         #region Private Variables
-        private bool disposed;
         private readonly DispatcherTimer _titleResizeTimer = new();
         private List<MarkersForCounter> markersOnCurrentFile;   // Holds a list of all markers for each counter on the current file
 
@@ -394,30 +393,6 @@ namespace Timelapse
                     Dialogs.CouldNotDeleteFoldlerOnExitDialog(this, deletedFolderPath);
                 }
             }
-        }
-        #endregion
-
-
-        #region Disposing
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                DataHandler?.Dispose();
-                MetadataDataHandler?.Dispose();
-            }
-            disposed = true;
         }
         #endregion
 
