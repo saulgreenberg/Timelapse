@@ -4455,6 +4455,14 @@ namespace Timelapse.Dialog
         public static void TimelapseNeedsToShutDownAsSQLErrorDialog(Window owner, bool? isDDBfile=null, string message="", string filePath="", SqlOperationResult sqlResult=null, SqlFailureKindEnum failureKind = SqlFailureKindEnum.Write)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            // During an atomic database update, the failure instead rolls back the whole update, which then reports it.
+            // This check must come before marshalling to the UI thread, as the atomic scope belongs to the calling code.
+            if (SQLiteWrapper.IsInAtomicScope)
+            {
+                AppLog.Warning($"TimelapseNeedsToShutDownAsSQLErrorDialog: not shown, as the failure rolls back the atomic update in progress. Context: {message}");
+                SQLiteWrapper.RecordFailureInAtomicScope(sqlResult ?? SqlOperationResult.Fail(message));
+                return;
+            }
             if (!owner.Dispatcher.CheckAccess())
             {
                 owner.Dispatcher.Invoke(() => TimelapseNeedsToShutDownAsSQLErrorDialog(owner, isDDBfile, message, filePath, sqlResult, failureKind));
@@ -4570,6 +4578,14 @@ namespace Timelapse.Dialog
         public static bool? TimelapseOperationRetryDialog(Window owner, string operationDescription, SqlOperationResult result, string filePath)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
+            // During an atomic database update, the failure instead rolls back the whole update, which then reports it.
+            // Returning null tells the caller to stop at once.
+            if (SQLiteWrapper.IsInAtomicScope)
+            {
+                AppLog.Warning($"TimelapseOperationRetryDialog: not shown, as the failure rolls back the atomic update in progress. Operation: {operationDescription}");
+                SQLiteWrapper.RecordFailureInAtomicScope(result ?? SqlOperationResult.Fail(operationDescription));
+                return null;
+            }
             // Some callers of this dialog run on a background thread (e.g. bulk file updates
             // wrapped in Task.Run) rather than the UI thread. Self-marshal via the owner's
             // Dispatcher so it's always safe to call from any thread, mirroring the same guard
@@ -4640,6 +4656,69 @@ namespace Timelapse.Dialog
             }
 
             return dialogResult;
+        }
+        #endregion
+
+        #region TemplateUpdateFailedDialog
+        // Shown when updating a .ddb to match a changed template failed, where the update was rolled back
+        // so the file is exactly as it was. Returns the user's choice; closing the dialog counts as Cancel.
+        public static TemplateUpdateFailedChoiceEnum TemplateUpdateFailedDialog(Window owner, string filePath, SqlOperationResult result)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            if (!owner.Dispatcher.CheckAccess())
+            {
+                return owner.Dispatcher.Invoke(() => TemplateUpdateFailedDialog(owner, filePath, result));
+            }
+
+            Mouse.OverrideCursor = null;
+            var dialog = new FormattedDialog()
+            {
+                Owner = owner,
+                DialogTitle = "Your data file could not be updated to match the changed template",
+                Icon = DialogIconType.Warning,
+                Problem = $"Timelapse tried to update your data file to match the changed template, but an error occurred.[br][b]Nothing was changed:[/b] your data file is exactly as it was before.",
+                Reason = "This can happen if:" +
+                         "[li] a fileserver, network or OneDrive glitch temporarily blocked access to the file," +
+                         "[li] another program (or another Timelapse user) is using the data file," +
+                         "[li] the file is no longer available (e.g., deleted, a disconnected removable drive, etc).",
+                Solution = "[ni] [e]Try again[/e] to repeat the update with the same choices you just made (worth doing at least once, as this may be a temporary glitch)." +
+                           "[ni] [e]Use original template[/e] to open your data file without updating it, using the template stored in it." +
+                           "[ni] [e]Cancel[/e] to stop opening this data file." +
+                           $"[ni] [e]If the problem persists,[/e] see Hint and {emailSaulForHelp}. Include the text in the Details section.",
+                Hint = "Until Timelapse has reopened your data file, don't move, copy or delete it, or any file next to it whose name ends with '-journal'." +
+                       $"[br]If this happens frequently, workarounds and detailed explanation can be found at [link:{Constant.ExternalLinks.TimelapseProblemsWritingDataFAQPage}|Timelapse Problems Writing Data FAQ page]."
+            };
+            if (result != null)
+            {
+                dialog.Details = $"[b]File:[/b] {filePath}" +
+                                 $"[br][b]Error message:[/b] {result.ErrorMessage}" +
+                                 (result.Exception != null ? $"[br][b]Exception:[/b] {result.Exception.Message}" : string.Empty);
+            }
+            dialog.OkButton.Content = "Try again";
+            dialog.OkButton.Width = double.NaN;
+            dialog.OkButton.Padding = new Thickness(10, 0, 10, 0);
+            dialog.CancelButton.Content = "Cancel";
+
+            // As noted in TimelapseOperationRetryDialog, closing the dialog via the ExtraButton returns false
+            // (the same as Cancel), so that choice is tracked with a flag.
+            bool useOriginalTemplateChosen = false;
+            dialog.ExtraButton.Content = "Use original template";
+            dialog.ExtraButton.Width = double.NaN;
+            dialog.ExtraButton.Padding = new Thickness(10, 0, 10, 0);
+            dialog.ExtraButton.Visibility = Visibility.Visible;
+            dialog.ExtraButton.Click += (_, _) =>
+            {
+                useOriginalTemplateChosen = true;
+                dialog.Close();
+            };
+
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            bool? dialogResult = dialog.BuildAndShowDialog();
+            if (useOriginalTemplateChosen)
+            {
+                return TemplateUpdateFailedChoiceEnum.UseOriginalTemplate;
+            }
+            return dialogResult == true ? TemplateUpdateFailedChoiceEnum.TryAgain : TemplateUpdateFailedChoiceEnum.Cancel;
         }
         #endregion
     }

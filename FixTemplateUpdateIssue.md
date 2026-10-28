@@ -83,12 +83,9 @@ The user's log contains:
 
 ### A. One all-or-nothing transaction (chosen)
 
-Every change in the update either commits together or rolls back together. Other parts of Timelapse (merging, export) and external programs never see a half-updated `.ddb`. A failure leaves the file exactly as it was, and the user is told so and can try again. See the design and risk analysis below.
+Every change in the update either commits together or rolls back together. Other parts of Timelapse (merging, export) and external programs never see a half-updated `.ddb`. A failure leaves the file exactly as it was, and the user is told so and can try again. See the implementation and risk analysis below.
 
-This turned out to be much less invasive than first thought:
-- SQLite schema changes (`CREATE`, `DROP`, `ALTER TABLE`) are transactional.
-- The bundled SQLite (3.50.4) supports native `ALTER TABLE … RENAME COLUMN` and `DROP COLUMN`, so no table rebuilds are needed.
-- `SQLiteWrapper.ExecuteNonQueryWithRollback(pre, statements, post)` already runs a statement list in one transaction, with `PRAGMA foreign_keys = OFF` before `BEGIN` and whole-transaction retry on BUSY, LOCKED or IOERR.
+It is implemented (see "Option A: implementation" below). It was less invasive than first thought, because SQLite schema changes (`CREATE`, `DROP`, `ALTER TABLE`) are transactional, and every connection to the database is opened inside `SQLiteWrapper`.
 
 ### B. Change DataTable first, replace TemplateTable last, make every step repeatable (rejected)
 
@@ -98,67 +95,71 @@ The next open would redo an interrupted update. **Rejected** because the `.ddb` 
 
 This builds on B. It saves the wizard's decisions first, so the next open can finish the update silently. **Rejected** for the same reason as B: the file is inconsistent until the next Timelapse open.
 
-## Option A: design
+## Option A: implementation
 
-**Plan, then run.** All reads happen before the transaction, and none happen inside it.
+The first design generated the whole update as a list of SQL statements before running it. It was replaced by a simpler approach with the same guarantee: the **existing** update code runs unchanged, on one shared connection inside one transaction. This reuses the SQL Timelapse already runs, and later steps still see earlier steps' changes. Steps such as `SyncControlsToEmptyDatabase` reload in-memory controls from the database partway through, which a pre-built statement list could not support.
 
-**1. Prepare (read-only; nothing in the `.ddb` changes).**
-- Compare the templates and show the wizard, as today.
-- Make a backup (see risk 7).
-- Read the current schema of every table that will change: DataTable, Markers, level tables, MetadataInfo.
-- From `templateSyncResults`, the `.tdb`'s in-memory controls and the schema snapshot, generate the full statement list:
+**`SQLiteWrapper.RunAtomicallyAsync(work)`** (an "atomic scope"):
+- Opens one connection, sets `PRAGMA foreign_keys = OFF` (before `BEGIN`, where SQLite honours it), then `BEGIN IMMEDIATE`. This takes the write lock at the start, so if another program is writing, the update fails before doing anything.
+- While `work` runs, every wrapper method called from it uses that connection and transaction. This includes calls from tasks it starts, and calls on any other wrapper for the same file. The scope is tracked per async flow (`AsyncLocal`), so unrelated code keeps using its own connections: its reads see the old state, and its writes wait for the lock.
+- Inside the scope, the wrapper's own transactions, retries and foreign-key pragmas are skipped, because the scope owns the transaction.
+- **Any failure fails the whole scope**, even when the caller ignores the result. This covers failed writes, failed reads, and a transaction that SQLite ended itself after an I/O error. Once a step has failed, every later operation in the scope is refused, so nothing can run outside the transaction.
+- At the end, it commits only if the work returned Ok and nothing failed. Otherwise it rolls back and returns the first failure.
+- During a scope, `TimelapseNeedsToShutDownAsSQLErrorDialog` and `TimelapseOperationRetryDialog` are not shown. Helpers inside the update (for example `SyncControlToDatabase`) call them on failure. Instead, they record the failure, so the scope rolls back and reports it once.
 
-| Change | Statement(s) |
-|---|---|
-| Added image field | `ALTER TABLE DataTable ADD COLUMN …`; plus `Markers` for counters |
-| Renamed field | `ALTER TABLE DataTable RENAME COLUMN a TO b`; plus `Markers` if present |
-| Deleted field | `ALTER TABLE DataTable DROP COLUMN x`; plus `Markers`; plus the empty-Markers-rows `DELETE`, with its where-clause built from the **final** counter list |
-| Level tables | `CREATE TABLE` (appended level), `DROP TABLE` (level now empty), `ADD/RENAME/DROP COLUMN` |
-| Template tables | `DROP` + `CREATE` + `INSERT` for TemplateTable, MetadataTemplate and MetadataInfo, from the `.tdb` |
-| Control type changed | `UPDATE ImageSet SET SearchTerms = ''` |
-| Attribute-only changes (Condition 4) | `UPDATE TemplateTable SET … WHERE DataLabel = …` |
+**`FileDatabase.OnExistingDatabaseOpenedAsync`:**
+1. Makes the backup, as before.
+2. Runs `UpdateDatabaseToMatchTemplateAsync` (the former body, which now returns failures instead of showing the shutdown dialog) inside `RunAtomicallyAsync`. This covers image-level and folder-level changes in one transaction.
+3. **On failure:**
+   - Everything is rolled back.
+   - The in-memory controls and metadata are reloaded from the unchanged file.
+   - `Dialogs.TemplateUpdateFailedDialog` explains that *nothing was changed*, and offers three choices:
+     - **Try again** repeats the update with the same wizard answers, which are held in `templateSyncResults`.
+     - **Use original template** opens the file unchanged, with the template stored in it.
+     - **Cancel** stops opening the file. `FileDatabase.TemplateUpdateCancelled` tells the image-set loader to abort quietly.
+4. After a successful commit, it runs the recognition-table migrations (`UpdateOldStyleRecognitionTablesIfNeeded`, `RepairClassificationCategoriesIfNeeded`). These are outside the scope because the first one VACUUMs, which is impossible inside a transaction. They were already independent, repeatable steps.
 
-**2. Run.** Call `ExecuteNonQueryWithRollback([PRAGMA foreign_keys = OFF], script, [PRAGMA foreign_keys = ON])` on a background thread, with a busy indicator.
+**Not included in the scope:**
+- `UpgradeFileDBSchemaDefaultsFromTemplate`, which runs later in the load and changes only column defaults. It is a single transaction of its own.
+- The backwards-compatibility upgrades in `UpgradeDatabasesAndCompareTemplatesAsync`, which run before the wizard.
 
-**3. After the commit.**
-- Run `PRAGMA quick_check`.
-- Reload the in-memory controls, metadata and data-label maps from the `.ddb`.
-- Continue loading as today.
-
-**On failure.** The transaction rolls back. The in-memory objects were never changed, because only the plan used them. Timelapse shows a single dialog:
-
-> *Timelapse could not update your data file to match the changed template. **Nothing was changed**: your data file is exactly as it was. This is usually caused by a temporary network or file-access problem.* **[Try again] [Open with original template] [Cancel]**
-
-**Try again** re-reads the schema, rebuilds the script from the **same wizard answers**, and runs it again. Log the failing script for diagnosis.
-
-**Rules for the implementation**
-- Nothing inside the update may call `TimelapseNeedsToShutDownAsSQLErrorDialog`. Generating the script must never touch the database.
-- Foreign keys must be off **before** `BEGIN`. SQLite ignores the pragma inside a transaction.
-- Generate SQL with the existing `Sql.Quote` helpers. Data labels and defaults, including apostrophes, must be quoted exactly as `CreateFileDataColumnDefinition` does.
-- If the schema snapshot shows a column can't be dropped natively (it's indexed, unique, used in a view or trigger, or a primary key), fall back to a table rebuild **inside the same transaction**. Foreign keys are already off, so that's safe.
-- Suggested order of work: image level first (DataTable, Markers, template tables), then folder levels (the most complex part: appended levels, empty levels, incompatible hierarchies).
+**Departures from the first design:**
+- There is no post-commit `quick_check`. It reads the whole file, which is slow for large files on network drives, and SQLite's journal already guarantees an all-or-nothing commit.
+- The update is not moved to a background thread.
+- The backup is still made by `CreateBackupIfNeeded` (risk 7).
 
 ## Option A: what could go wrong
 
 | # | Risk | What happens | Mitigation |
 |---|---|---|---|
-| 1 | **I/O error mid-transaction** (this user's case) | The wrapper rolls back and retries the whole script (about 2.5 s), then shows the "nothing changed" dialog. If the rollback itself fails, SQLite leaves a hot journal (`.ddb-journal`). The next writer to open the file (Timelapse's first `quick_check`) rolls it back automatically. | Standard SQLite behaviour; nothing extra needed. |
-| 2 | **The journal is lost:** a user deletes `.ddb-journal`, a sync tool syncs the `.ddb` without it, or the `.ddb` is copied elsewhere before being reopened | Real corruption. This is already true of any Timelapse write, but a long transaction widens the window. | Reliable backup (7); post-commit `quick_check`; the dialog says not to move or copy the file until Timelapse has reopened it. |
-| 3 | **Foreign-key cascade:** `Detections` references `DataTable` with `ON DELETE CASCADE`, connections use `ForeignKeys = true`, and `DROP TABLE` on a parent deletes its rows first | All Detections and Classifications are deleted | Native `ALTER` never drops `DataTable`; foreign keys are off before `BEGIN`. (See the bug fix below, which this risk uncovered.) |
-| 4 | **Another program has the file open** (a second user, an R or Python script, a merge) | `COMMIT` returns BUSY; the wrapper retries, then fails cleanly | The dialog says the file seems to be in use: close other programs and try again. |
-| 5 | **Two users update the same `.ddb` at once** | The first commits; the second fails (for example, duplicate column) and rolls back | Safe. On reopening, the templates match. |
-| 6 | **Time and space** | `ADD` and `RENAME` only edit the schema. `DROP COLUMN` rewrites every row, so the journal is about the size of the table and that much free space is needed (if it's lacking, the update rolls back cleanly). Other programs are locked out meanwhile. | Background thread and busy indicator. Today's rebuilds cost at least as much. |
-| 7 | **The pre-update backup is unreliable today:** `CreateBackupIfNeeded` skips it if one was made recently, uses `File.Copy` (which ignores the journal), and gives up silently | A backup taken while the file is being written, or while a hot journal exists, can be corrupt | For template updates, always back up using SQLite's online backup API (`connection.BackupDatabase`). If that fails, warn and let the user choose. |
-| 8 | **Native `DROP COLUMN` refused** | Clean rollback | Detect from the schema snapshot and rebuild that table inside the transaction. |
-| 9 | **A bug in the generated SQL** | Clean rollback; never half-applied | Unit tests on copies of real `.ddb` files. |
-| 10 | **Failure after the commit, during the in-memory reload** | The file is consistent (new state); only the session's in-memory data is stale | Close the image set with the read-error dialog. The next open is fine. |
-| 11 | **SQLite on network file systems:** atomic commit depends on the FS honouring flushes and locks; SQLite warns that some don't | Possible corruption in rare FS failures | Not fully avoidable; the same as every Timelapse write. Rely on the backup and the post-commit `quick_check`. |
+| 1 | **I/O error mid-transaction** (this user's case) | The scope rolls back, with no automatic retry (it can't know what the error did to the transaction), and the "nothing was changed" dialog offers Try again. If the rollback itself fails, SQLite leaves a hot journal (`.ddb-journal`), and the next connection to the file rolls it back automatically. | Standard SQLite behaviour. Tested: a failed step, an ignored failed step and an exception all leave the file unchanged. |
+| 2 | **The journal is lost:** a user deletes `.ddb-journal`, a sync tool syncs the `.ddb` without it, or the `.ddb` is copied elsewhere before being reopened | Real corruption. This is already true of any Timelapse write, but a long transaction widens the window. | The dialog says not to move, copy or delete the file or its `-journal` file until Timelapse has reopened it. Reliable backup (7). |
+| 3 | **Foreign-key cascade:** `Detections` references `DataTable` with `ON DELETE CASCADE`, and the update rebuilds (drops) `DataTable` | All Detections and Classifications are deleted | Foreign keys are off for the whole scope, set before `BEGIN`. Tested: rename, delete and add on `DataTable` in a scope leave every Detections row intact. (See the bug fix below, which this risk uncovered.) |
+| 4 | **Another program is writing to the file** (a second user, an R or Python script, a merge) | `BEGIN IMMEDIATE` fails after SQLite's busy wait (about 3.5 s in testing), before anything is changed | The dialog lists this cause; the user closes the other program and clicks Try again. |
+| 5 | **Two users update the same `.ddb` at once** | The second can't start until the first commits; it then fails (for example, a duplicate column) and rolls back | Safe. On reopening, the templates match. |
+| 6 | **Time and space** | Table rebuilds (delete or rename a column) copy every row, so the journal is about the size of the table and that much free space is needed. If it's lacking, the update rolls back cleanly. Other programs can read but not write meanwhile. | The same work as before, now in one transaction instead of several. |
+| 7 | **The pre-update backup is unreliable:** `CreateBackupIfNeeded` skips it if one was made recently, uses `File.Copy` (which ignores the journal), and gives up silently | A backup taken while the file is being written, or while a hot journal exists, can be corrupt | **Not yet done:** for template updates, always back up using SQLite's online backup API (`connection.BackupDatabase`); if that fails, warn and let the user choose. Less urgent now that a failed update changes nothing. |
+| 8 | **Code in the scope that cannot run in a transaction** (`VACUUM`, `PRAGMA journal_mode`) | It fails, and the update rolls back | Kept out of the scope (the recognition migrations run after the commit). |
+| 9 | **Other code writing to the same file during the update** (for example, a UI timer) | Its write waits on the scope's lock, and may fail with its own retry dialog | The update runs while the image set is loading, when nothing else uses the file. |
+| 10 | **Failure after the commit,** in the rest of the load | The file is consistent (new state); only the session's in-memory data may be stale | Existing load-time error handling. The next open is fine. |
+| 11 | **SQLite on network file systems:** atomic commit depends on the FS honouring flushes and locks; SQLite warns that some don't | Possible corruption in rare FS failures | Not fully avoidable; the same as every Timelapse write. Rely on the backup. |
 
 ### Testing
 
-- **Fault injection:** add a test hook that makes statement *k* fail. For every *k*, the `.ddb`'s schema and row checksums must be identical to before.
-- **Success cases:** on copies of real `.ddb` files with adds, deletes, renames and level changes, the result must match what the current code produces.
-- **Network:** on a share, disconnect mid-update and hold a read lock from another process. Expect the "nothing changed" dialog and a clean reopen.
+- **Done:** a scratch harness ran `RunAtomicallyAsync` on test databases with a cascading Detections table. Seven checks passed:
+  - success commits everything, with recognitions intact;
+  - a returned failure, an ignored failed operation and an exception each leave the file unchanged, and operations after a failure are refused;
+  - reads inside the scope, including from `Task.Run`, see its writes;
+  - a reader outside the scope sees the old state without blocking;
+  - behaviour outside a scope is unchanged;
+  - another writer holding the lock makes the scope fail cleanly.
+- **In Timelapse:** on copies of real `.ddb` files, check that adds, deletes, renames and level changes give the same result as before, with recognitions intact.
+- **Failure path in Timelapse:**
+  1. Open the `.ddb` in DB Browser for SQLite.
+  2. Make an edit without clicking "Write Changes", so DB Browser holds the write lock.
+  3. Open the image set in Timelapse with a changed template. Expect the "nothing was changed" dialog.
+  4. Revert the edit in DB Browser, then click Try again. The update should succeed.
+- **Network:** on a share, disconnect mid-update. Expect the dialog and a clean reopen.
 
 ### What option A does not do
 

@@ -143,6 +143,258 @@ public class SQLiteWrapper
         }
         #endregion
 
+        #region Atomic scope
+        // An atomic scope makes a whole sequence of database operations all-or-nothing, e.g., updating a .ddb to match
+        // a changed template. While the scope's work runs, every method of this wrapper (or of any other wrapper on the
+        // same file) called from that work, including from tasks it starts, shares one connection and one transaction.
+        // Later reads thus see earlier writes, and existing methods need no changes to take part.
+        // If anything fails, the whole transaction is rolled back and the file is left exactly as it was.
+        // The scope belongs to the async flow that started it (AsyncLocal), so unrelated code running at the same time
+        // keeps using its own connections: its reads still work, but its writes wait on (and may fail on) the scope's lock.
+        private static readonly AsyncLocal<AtomicScope> currentAtomicScope = new();
+
+        private sealed class AtomicScope(string connectionString, SQLiteConnection connection)
+        {
+            public string ConnectionString { get; } = connectionString;
+            public SQLiteConnection Connection { get; } = connection;
+
+            // The first failure in the scope. Once set, no further operations are allowed and the scope rolls back.
+            public SqlOperationResult Failure { get; set; }
+
+            // False once the scope has ended. A task or timer started by the work can outlive the scope while still
+            // carrying it in its AsyncLocal, so the scope must also be checked for this, not just for null.
+            public bool IsActive { get; set; } = true;
+        }
+
+        // The current flow's atomic scope, or null if there is none or it has ended
+        private static AtomicScope ActiveAtomicScope => currentAtomicScope.Value is { IsActive: true } scope ? scope : null;
+
+        // True if the calling code is running inside an atomic scope (on any database)
+        public static bool IsInAtomicScope => ActiveAtomicScope != null;
+
+        // Inside an atomic scope, record the failure so the whole scope rolls back, even if the caller ignores the result.
+        // Returns the result unchanged, so it can wrap a return statement.
+        public static SqlOperationResult RecordFailureInAtomicScope(SqlOperationResult result)
+        {
+            AtomicScope scope = ActiveAtomicScope;
+            if (scope != null && result is { Success: false })
+            {
+                scope.Failure ??= result;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Run work so that all its changes to this database are committed together, or not at all.
+        /// The work returns a failure result (or throws) to abandon the changes; any failed database operation
+        /// inside it also abandons them, even if the work ignores that operation's result.
+        /// Foreign keys are off for the whole scope, as the work may drop and rebuild tables that others reference.
+        /// Scopes cannot be nested, and the work must not VACUUM or change journal_mode (neither works inside a transaction).
+        /// </summary>
+        /// <returns>Ok if the changes were committed; otherwise the first failure, where nothing was changed.</returns>
+        public async Task<SqlOperationResult> RunAtomicallyAsync(Func<Task<SqlOperationResult>> work)
+        {
+            ThrowIf.IsNullArgument(work, nameof(work));
+            if (ActiveAtomicScope != null)
+            {
+                throw new InvalidOperationException("Atomic scopes cannot be nested.");
+            }
+
+            SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+            SQLiteTransaction transaction = null;
+            try
+            {
+                SqlOperationResult openFailure = OpenConnectionWithRetry(connection, "RunAtomicallyAsync");
+                if (openFailure != null)
+                {
+                    return openFailure;
+                }
+
+                // PRAGMA foreign_keys is ignored inside a transaction, so it must be set before BEGIN.
+                // The default (serializable) transaction is BEGIN IMMEDIATE: it takes the write lock now,
+                // so another program writing to the file makes the scope fail here, before any work is done.
+                PragmaSetForeignKeys(connection, false);
+                transaction = connection.BeginTransaction();
+
+                AtomicScope scope = new(ConnectionString, connection);
+                currentAtomicScope.Value = scope;
+                SqlOperationResult workResult;
+                try
+                {
+                    workResult = await work().ConfigureAwait(true);
+                }
+                catch (Exception exception)
+                {
+                    workResult = SqlOperationResult.Fail("Unexpected error during an atomic database update", exception);
+                }
+                finally
+                {
+                    scope.IsActive = false;
+                    currentAtomicScope.Value = null;
+                }
+
+                SqlOperationResult failure = scope.Failure
+                                             ?? (workResult is { Success: true } ? null : workResult ?? SqlOperationResult.Fail("An atomic database update returned no result"));
+                if (failure == null && connection.AutoCommit)
+                {
+                    // SQLite ends a transaction itself after some errors (e.g., an I/O error), and anything run after that
+                    // would have been committed piecemeal. Operations check for this (see OpenConnection), so this is a backstop.
+                    failure = SqlOperationResult.Fail("The atomic database update's transaction was ended unexpectedly by SQLite");
+                }
+                if (failure != null)
+                {
+                    RollbackQuietly(transaction);
+                    AppLog.Warning($"RunAtomicallyAsync: rolled back, so the database is unchanged. {failure.ErrorMessage}" +
+                                   (string.IsNullOrEmpty(failure.FailingStatement) ? string.Empty : $" SQL: {failure.FailingStatement}"),
+                                   failure.Exception);
+                    return failure;
+                }
+
+                transaction.Commit();
+                return SqlOperationResult.Ok();
+            }
+            catch (Exception exception)
+            {
+                // Most likely the BEGIN or the COMMIT failed (e.g., another program holds a lock, or an I/O error).
+                // If the commit was interrupted, SQLite rolls the file back from its journal the next time it is opened.
+                RollbackQuietly(transaction);
+                AppLog.Warning("RunAtomicallyAsync: failed to begin or commit, so the database is unchanged.", exception);
+                return SqlOperationResult.Fail("Failure beginning or committing an atomic database update", exception);
+            }
+            finally
+            {
+                transaction?.Dispose();
+                connection.Dispose();
+            }
+        }
+
+        private static void RollbackQuietly(SQLiteTransaction transaction)
+        {
+            try
+            {
+                if (transaction?.Connection != null)
+                {
+                    transaction.Rollback();
+                }
+            }
+            catch
+            {
+                // The connection may already be broken; SQLite then rolls back from the journal when the file is next opened
+            }
+        }
+
+        // True if the calling code is in an atomic scope on this database file, returning that scope
+        private bool IsInAtomicScopeOfThisDatabase(out AtomicScope scope)
+        {
+            scope = ActiveAtomicScope;
+            if (scope != null && string.Equals(scope.ConnectionString, ConnectionString, StringComparison.Ordinal))
+            {
+                return true;
+            }
+            scope = null;
+            return false;
+        }
+
+        // Throws if the scope can no longer be used: an earlier operation failed, or SQLite ended the transaction itself
+        private static void ThrowIfAtomicScopeUnusable(AtomicScope scope)
+        {
+            if (scope.Failure != null)
+            {
+                throw new InvalidOperationException($"An earlier step of this atomic database update failed: {scope.Failure.ErrorMessage}");
+            }
+            if (scope.Connection.AutoCommit)
+            {
+                scope.Failure = SqlOperationResult.Fail("The atomic database update's transaction was ended unexpectedly by SQLite");
+                throw new InvalidOperationException(scope.Failure.ErrorMessage);
+            }
+        }
+
+        // A connection for a single operation: the atomic scope's shared connection when the calling code is in a scope
+        // on this database (left open on disposal), otherwise a newly opened connection (closed on disposal).
+        private readonly struct ConnectionLease(SQLiteConnection connection, bool isOwned) : IDisposable
+        {
+            public SQLiteConnection Connection { get; } = connection;
+
+            public void Dispose()
+            {
+                if (isOwned)
+                {
+                    Connection.Dispose();
+                }
+            }
+        }
+
+        private ConnectionLease OpenConnection()
+        {
+            if (IsInAtomicScopeOfThisDatabase(out AtomicScope scope))
+            {
+                ThrowIfAtomicScopeUnusable(scope);
+                return new(scope.Connection, false);
+            }
+            SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
+            try
+            {
+                connection.Open();
+            }
+            catch
+            {
+                connection.Dispose();
+                throw;
+            }
+            return new(connection, true);
+        }
+
+        // Begins a transaction on the connection, or returns null inside an atomic scope, where the work is already
+        // in the scope's transaction. Callers use transaction?.Commit() and transaction?.Rollback().
+        private SQLiteTransaction BeginTransactionUnlessInAtomicScope(SQLiteConnection connection)
+        {
+            return IsInAtomicScopeOfThisDatabase(out _) ? null : connection.BeginTransaction();
+        }
+
+        // ExecuteNonQueryWithRollbackCore's form inside an atomic scope: no transaction of its own, no retries
+        // (a retry could not undo what an error did to the scope's transaction), and no pre/post statements
+        // (these are only foreign_keys and journal_mode pragmas, which do nothing or fail inside a transaction).
+        private static SqlOperationResult ExecuteNonQueryInAtomicScope(AtomicScope scope, IReadOnlyList<string> statements)
+        {
+            string mostRecentStatement = null;
+            try
+            {
+                ThrowIfAtomicScopeUnusable(scope);
+                using SQLiteCommand command = new(scope.Connection);
+                foreach (string statement in statements)
+                {
+                    mostRecentStatement = statement;
+                    command.CommandText = statement;
+                    command.ExecuteNonQuery();
+                }
+                return SqlOperationResult.Ok();
+            }
+            catch (Exception exception)
+            {
+                string excerpt = mostRecentStatement?.Length > 500
+                    ? mostRecentStatement[..500] + "…"
+                    : mostRecentStatement ?? "(none)";
+                TracePrint.PrintMessage($"Failure near executing statement '{excerpt}' in an atomic scope: {exception}");
+                return RecordFailureInAtomicScope(SqlOperationResult.Fail($"Failure near executing statement '{excerpt}'", exception, mostRecentStatement));
+            }
+        }
+
+        // Reports a failed read: inside an atomic scope it fails the scope (whose owner reports it),
+        // otherwise it raises OnReadError, but only for the first read error across all threads.
+        private static void ReportReadError(string context, SqlOperationResult result)
+        {
+            if (IsInAtomicScope)
+            {
+                RecordFailureInAtomicScope(result);
+                return;
+            }
+            if (Interlocked.Exchange(ref _errorFired, 1) == 0)
+            {
+                OnReadError?.Invoke(context, result);
+            }
+        }
+        #endregion
+
         #region Create Table
         // A simplified table creation routine. It expects the column definitions to be supplied
         // as a column_name, data type key value pair. 
@@ -246,8 +498,8 @@ public class SQLiteWrapper
                 try
                 {
                     // Open the connection
-                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                    connection.Open();
+                    using ConnectionLease lease = OpenConnection();
+                    SQLiteConnection connection = lease.Connection;
                     using SQLiteCommand command = new(connection);
                     command.CommandText = query;
                     // Debug.Print(query);
@@ -300,11 +552,10 @@ public class SQLiteWrapper
                     {
                         OnRetryEnd?.Invoke();
                     }
-                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                        OnReadError?.Invoke("GetDataTableFromSelect", SqlOperationResult.Fail(
-                            $"SQL read failure in GetDataTableFromSelect: {exception.Message}" +
-                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
-                            exception, query));
+                    ReportReadError("GetDataTableFromSelect", SqlOperationResult.Fail(
+                        $"SQL read failure in GetDataTableFromSelect: {exception.Message}" +
+                        (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
+                        exception, query));
                     return dataTable;
                 }
             }
@@ -325,8 +576,8 @@ public class SQLiteWrapper
                 {
                     try
                     {
-                        using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                        connection.Open();
+                        using ConnectionLease lease = OpenConnection();
+                        SQLiteConnection connection = lease.Connection;
                         SQLiteCommand command = new(connection);
                         try
                         {
@@ -399,11 +650,10 @@ public class SQLiteWrapper
                         {
                             OnRetryEnd?.Invoke();
                         }
-                        if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                            OnReadError?.Invoke("GetDataTableFromSelectAsync", SqlOperationResult.Fail(
-                                $"SQL read failure in GetDataTableFromSelectAsync: {exception.Message}" +
-                                (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
-                                exception, query));
+                        ReportReadError("GetDataTableFromSelectAsync", SqlOperationResult.Fail(
+                            $"SQL read failure in GetDataTableFromSelectAsync: {exception.Message}" +
+                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
+                            exception, query));
                         return dataTable;
                     }
                 }
@@ -418,8 +668,8 @@ public class SQLiteWrapper
             {
                 try
                 {
-                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                    connection.Open();
+                    using ConnectionLease lease = OpenConnection();
+                    SQLiteConnection connection = lease.Connection;
                     using SQLiteCommand command = new(connection);
                     command.CommandText = String.Format(Sql.SelectDistinct + " {0} " + Sql.From + "{1}", columnName, tableName);
                     using SQLiteDataReader reader = command.ExecuteReader();
@@ -471,12 +721,11 @@ public class SQLiteWrapper
                     {
                         OnRetryEnd?.Invoke();
                     }
-                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                        OnReadError?.Invoke("GetDistinctValuesInColumn", SqlOperationResult.Fail(
-                            $"SQL read failure in GetDistinctValuesInColumn (table '{tableName}', column '{columnName}'): {exception.Message}" +
-                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
-                            exception,
-                            String.Format(Sql.SelectDistinct + " {0} " + Sql.From + "{1}", columnName, tableName)));
+                    ReportReadError("GetDistinctValuesInColumn", SqlOperationResult.Fail(
+                        $"SQL read failure in GetDistinctValuesInColumn (table '{tableName}', column '{columnName}'): {exception.Message}" +
+                        (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
+                        exception,
+                        String.Format(Sql.SelectDistinct + " {0} " + Sql.From + "{1}", columnName, tableName)));
                     return distinctValues;
                 }
             }
@@ -495,8 +744,8 @@ public class SQLiteWrapper
             {
                 try
                 {
-                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                    connection.Open();
+                    using ConnectionLease lease = OpenConnection();
+                    SQLiteConnection connection = lease.Connection;
                     using SQLiteCommand command = new(connection);
                     //#pragma warning disable CA2100 // Review SQL queries for security vulnerabilities
                     command.CommandText = query;
@@ -548,11 +797,10 @@ public class SQLiteWrapper
                     {
                         OnRetryEnd?.Invoke();
                     }
-                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                        OnReadError?.Invoke("GetScalarFromSelect", SqlOperationResult.Fail(
-                            $"SQL read failure in GetScalarFromSelect: {exception.Message}" +
-                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
-                            exception, query));
+                    ReportReadError("GetScalarFromSelect", SqlOperationResult.Fail(
+                        $"SQL read failure in GetScalarFromSelect: {exception.Message}" +
+                        (attempt > 0 ? $" (failed after {attempt} retry attempt(s), was retrying on {lastRetryReason})" : ""),
+                        exception, query));
                     return null;
                 }
             }
@@ -1117,6 +1365,12 @@ public class SQLiteWrapper
                 return SqlOperationResult.Ok();
             }
 
+            // Inside an atomic scope, the statements join the scope's transaction instead (see RunAtomicallyAsync)
+            if (IsInAtomicScopeOfThisDatabase(out AtomicScope scope))
+            {
+                return ExecuteNonQueryInAtomicScope(scope, statements);
+            }
+
             // Not a `using` declaration: on a READONLY retry (see below) this connection is
             // disposed and replaced with a fresh one mid-loop, so disposal is handled explicitly
             // in the `finally` below instead.
@@ -1539,8 +1793,8 @@ public class SQLiteWrapper
 
             try
             {
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
+                using ConnectionLease lease = OpenConnection();
+                SQLiteConnection connection = lease.Connection;
                 // Rename the table
                 SchemaRenameTable(connection, originalTableName, newTableName);
                 return SqlOperationResult.Ok();
@@ -1548,7 +1802,7 @@ public class SQLiteWrapper
             catch (Exception exception)
             {
                 TracePrint.PrintMessage($"Failure in SchemaRenameTable. {exception}");
-                return SqlOperationResult.Fail("Failure in SchemaRenameTable", exception);
+                return RecordFailureInAtomicScope(SqlOperationResult.Fail("Failure in SchemaRenameTable", exception));
             }
         }
 
@@ -1559,8 +1813,8 @@ public class SQLiteWrapper
             string destTable = $"_TempTable_{Guid.NewGuid():N}";
             try
             {
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
+                using ConnectionLease lease = OpenConnection();
+                SQLiteConnection connection = lease.Connection;
 
                 // Build the CREATE TABLE SQL inline so all steps share the same connection and transaction.
                 // (Calling the public CreateTable() would open a second connection, excluding that step from the transaction.)
@@ -1576,7 +1830,7 @@ public class SQLiteWrapper
                 PragmaSetForeignKeys(connection, false);
                 try
                 {
-                    using SQLiteTransaction transaction = connection.BeginTransaction();
+                    using SQLiteTransaction transaction = BeginTransactionUnlessInAtomicScope(connection);
                     try
                     {
                         using (SQLiteCommand createCmd = new(createSql, connection))
@@ -1589,11 +1843,11 @@ public class SQLiteWrapper
                         DropTable(connection, sourceTable);
                         SchemaRenameTable(connection, destTable, sourceTable);
 
-                        transaction.Commit();
+                        transaction?.Commit();
                     }
                     catch
                     {
-                        transaction.Rollback();
+                        transaction?.Rollback();
                         throw;
                     }
                 }
@@ -1607,7 +1861,7 @@ public class SQLiteWrapper
             catch (Exception exception)
             {
                 TracePrint.PrintMessage($"Failure in SchemaAlterTableWithNewColumnDefinitions. {exception}");
-                return SqlOperationResult.Fail("Failure in SchemaAlterTableWithNewColumnDefinitions", exception);
+                return RecordFailureInAtomicScope(SqlOperationResult.Fail("Failure in SchemaAlterTableWithNewColumnDefinitions", exception));
             }
         }
 
@@ -1619,8 +1873,8 @@ public class SQLiteWrapper
                 try
                 {
                     // Open the connection
-                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                    connection.Open();
+                    using ConnectionLease lease = OpenConnection();
+                    SQLiteConnection connection = lease.Connection;
                     using SQLiteDataReader reader = GetSchema(connection, tableName);
                     List<string> columnsList = [];
                     while (reader.Read())
@@ -1643,11 +1897,10 @@ public class SQLiteWrapper
                 }
                 catch (Exception exception)
                 {
-                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                        OnReadError?.Invoke("SchemaGetColumns", SqlOperationResult.Fail(
-                            $"SQL read failure in SchemaGetColumns (table '{tableName}'): {exception.Message}" +
-                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s))" : ""),
-                            exception));
+                    ReportReadError("SchemaGetColumns", SqlOperationResult.Fail(
+                        $"SQL read failure in SchemaGetColumns (table '{tableName}'): {exception.Message}" +
+                        (attempt > 0 ? $" (failed after {attempt} retry attempt(s))" : ""),
+                        exception));
                     return null;
                 }
             }
@@ -1662,8 +1915,8 @@ public class SQLiteWrapper
                 try
                 {
                     // Open the connection
-                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                    connection.Open();
+                    using ConnectionLease lease = OpenConnection();
+                    SQLiteConnection connection = lease.Connection;
                     using SQLiteDataReader reader = GetSchema(connection, tableName);
                     Dictionary<string, string> columndefaultsDict = [];
                     while (reader.Read())
@@ -1686,11 +1939,10 @@ public class SQLiteWrapper
                 }
                 catch (Exception exception)
                 {
-                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                        OnReadError?.Invoke("SchemaGetColumnsAndDefaultValues", SqlOperationResult.Fail(
-                            $"SQL read failure in SchemaGetColumnsAndDefaultValues (table '{tableName}'): {exception.Message}" +
-                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s))" : ""),
-                            exception));
+                    ReportReadError("SchemaGetColumnsAndDefaultValues", SqlOperationResult.Fail(
+                        $"SQL read failure in SchemaGetColumnsAndDefaultValues (table '{tableName}'): {exception.Message}" +
+                        (attempt > 0 ? $" (failed after {attempt} retry attempt(s))" : ""),
+                        exception));
                     return null;
                 }
             }
@@ -1702,8 +1954,8 @@ public class SQLiteWrapper
             {
                 try
                 {
-                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                    connection.Open();
+                    using ConnectionLease lease = OpenConnection();
+                    SQLiteConnection connection = lease.Connection;
                     List<string> currentColumnNames = GetSchemaColumnNamesAsList(connection, sourceTable);
                     if (attempt > 0)
                     {
@@ -1721,11 +1973,10 @@ public class SQLiteWrapper
                 }
                 catch (Exception exception)
                 {
-                    if (Interlocked.Exchange(ref _errorFired, 1) == 0)
-                        OnReadError?.Invoke("SchemaIsColumnInTable", SqlOperationResult.Fail(
-                            $"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}" +
-                            (attempt > 0 ? $" (failed after {attempt} retry attempt(s))" : ""),
-                            exception));
+                    ReportReadError("SchemaIsColumnInTable", SqlOperationResult.Fail(
+                        $"SQL read failure in SchemaIsColumnInTable (table '{sourceTable}', column '{currentColumnName}'): {exception.Message}" +
+                        (attempt > 0 ? $" (failed after {attempt} retry attempt(s))" : ""),
+                        exception));
                     return false;
                 }
             }
@@ -1754,8 +2005,8 @@ public class SQLiteWrapper
 
             try
             {
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
+                using ConnectionLease lease = OpenConnection();
+                SQLiteConnection connection = lease.Connection;
 
                 // Some basic error checking to make sure we can do the operation
                 List<string> columnNames = GetSchemaColumnNamesAsList(connection, tableName);
@@ -1804,7 +2055,7 @@ public class SQLiteWrapper
             catch (Exception exception)
             {
                 TracePrint.PrintMessage($"Failure in SchemaAddColumnToTable. {exception}");
-                return SqlOperationResult.Fail("Failure in SchemaAddColumnToTable", exception);
+                return RecordFailureInAtomicScope(SqlOperationResult.Fail("Failure in SchemaAddColumnToTable", exception));
             }
         }
 
@@ -1816,8 +2067,8 @@ public class SQLiteWrapper
 
             try
             {
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
+                using ConnectionLease lease = OpenConnection();
+                SQLiteConnection connection = lease.Connection;
                 // Some basic error checking to make sure we can do the operation
                 if (string.IsNullOrEmpty(columnName.Trim()))
                 {
@@ -1843,7 +2094,7 @@ public class SQLiteWrapper
                 PragmaSetForeignKeys(connection, false);
                 try
                 {
-                    using SQLiteTransaction transaction = connection.BeginTransaction();
+                    using SQLiteTransaction transaction = BeginTransactionUnlessInAtomicScope(connection);
                     try
                     {
                         using (SQLiteCommand command = new(sql, connection))
@@ -1858,11 +2109,11 @@ public class SQLiteWrapper
                         // Rename the table
                         SchemaRenameTable(connection, destTable, sourceTable);
 
-                        transaction.Commit();
+                        transaction?.Commit();
                     }
                     catch
                     {
-                        transaction.Rollback();
+                        transaction?.Rollback();
                         throw;
                     }
                 }
@@ -1876,7 +2127,7 @@ public class SQLiteWrapper
             catch (Exception exception)
             {
                 TracePrint.PrintMessage($"Failure in SchemaDeleteColumn. {exception}");
-                return SqlOperationResult.Fail("Failure in SchemaDeleteColumn", exception);
+                return RecordFailureInAtomicScope(SqlOperationResult.Fail("Failure in SchemaDeleteColumn", exception));
             }
         }
 
@@ -1915,8 +2166,8 @@ public class SQLiteWrapper
                     newColumnName = key.Trim();
                 }
 
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
+                using ConnectionLease lease = OpenConnection();
+                SQLiteConnection connection = lease.Connection;
                 List<string> currentColumnNames = GetSchemaColumnNamesAsList(connection, sourceTable);
                 if (currentColumnNames.Contains(currentColumnName) == false)
                 {
@@ -1940,7 +2191,7 @@ public class SQLiteWrapper
                 PragmaSetForeignKeys(connection, false);
                 try
                 {
-                    using SQLiteTransaction transaction = connection.BeginTransaction();
+                    using SQLiteTransaction transaction = BeginTransactionUnlessInAtomicScope(connection);
                     try
                     {
                         using (SQLiteCommand command = new(sql, connection))
@@ -1955,11 +2206,11 @@ public class SQLiteWrapper
                         // Rename the table
                         SchemaRenameTable(connection, destTable, sourceTable);
 
-                        transaction.Commit();
+                        transaction?.Commit();
                     }
                     catch
                     {
-                        transaction.Rollback();
+                        transaction?.Rollback();
                         throw;
                     }
                 }
@@ -1973,7 +2224,7 @@ public class SQLiteWrapper
             catch (Exception exception)
             {
                 TracePrint.PrintMessage($"Failure in SchemaAlterColumn. {exception}");
-                return SqlOperationResult.Fail("Failure in SchemaAlterColumn", exception);
+                return RecordFailureInAtomicScope(SqlOperationResult.Fail("Failure in SchemaAlterColumn", exception));
             }
         }
 
@@ -2118,15 +2369,15 @@ public class SQLiteWrapper
         {
             try
             {
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
+                using ConnectionLease lease = OpenConnection();
+                SQLiteConnection connection = lease.Connection;
                 DropTable(connection, tableName);
                 return SqlOperationResult.Ok();
             }
             catch (Exception exception)
             {
                 TracePrint.PrintMessage($"Failure in DropTable for table '{tableName}'. {exception}");
-                return SqlOperationResult.Fail($"Failure dropping table '{tableName}'", exception);
+                return RecordFailureInAtomicScope(SqlOperationResult.Fail($"Failure dropping table '{tableName}'", exception));
             }
         }
         private static void DropTable(SQLiteConnection connection, string tableName)
@@ -2153,8 +2404,8 @@ public class SQLiteWrapper
         {
             try
             {
-                using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                connection.Open();
+                using ConnectionLease lease = OpenConnection();
+                SQLiteConnection connection = lease.Connection;
                 using SQLiteCommand command = new(Sql.Vacuum, connection);
                 command.ExecuteNonQuery();
                 return SqlOperationResult.Ok();
@@ -2162,7 +2413,7 @@ public class SQLiteWrapper
             catch (Exception exception)
             {
                 TracePrint.PrintMessage($"Failure in Vacuum. {exception}");
-                return SqlOperationResult.Fail("Failure in Vacuum", exception);
+                return RecordFailureInAtomicScope(SqlOperationResult.Fail("Failure in Vacuum", exception));
             }
         }
         #endregion
@@ -2223,8 +2474,8 @@ public class SQLiteWrapper
                 {
                     using DataTable dataTable = new();
                     // Open the connection
-                    using SQLiteConnection connection = GetNewSqliteConnection(ConnectionString);
-                    connection.Open();
+                    using ConnectionLease lease = OpenConnection();
+                    SQLiteConnection connection = lease.Connection;
                     using SQLiteCommand command = new(connection);
                     command.CommandText = Sql.PragmaQuickCheck;
                     using SQLiteDataReader reader = command.ExecuteReader();

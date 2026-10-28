@@ -235,6 +235,13 @@ namespace Timelapse
                 return new(false, string.Empty);
             }
 
+            // Check: Did the user cancel after a failed template update? The data file is unchanged, and the user has already been told.
+            if (fileDatabase.TemplateUpdateCancelled)
+            {
+                fileDatabase.Dispose();
+                return new(false, string.Empty);
+            }
+
             // Check: Are we using a shortcut to an external image folder? (i.e., ShrotcutFoldersFound is not null)
             // If one shortcut, use that. If there is more than one, that can be a problem as we can't determine what folder to use
             if (fileDatabase.ShortcutFoldersFound != null)

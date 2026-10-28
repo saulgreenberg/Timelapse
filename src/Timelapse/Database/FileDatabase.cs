@@ -73,6 +73,9 @@ namespace Timelapse.Database
         // A list of potential shortcuts found to the image folder. If there is only one, then its a valid shortcut
         public List<string> ShortcutFoldersFound { get; }
 
+        // True if updating the database to match a changed template failed (leaving it unchanged) and the user chose to cancel opening it
+        public bool TemplateUpdateCancelled { get; private set; }
+
         // Whether a shortcut to the image folder is being
         public bool IsShortcutToImageFolder { get; private set; }
         // contains the markers
@@ -186,7 +189,12 @@ namespace Timelapse.Database
             else
             {
                 // if it's an existing database check if it needs updating to current structure and load data tables
-                await fileDatabase.OnExistingDatabaseOpenedAsync(templateDatabase, templateSyncResults).ConfigureAwait(true);
+                if (false == await fileDatabase.OnExistingDatabaseOpenedAsync(templateDatabase, templateSyncResults).ConfigureAwait(true))
+                {
+                    // The template update failed and the user cancelled. Abort where the caller handles it
+                    fileDatabase.TemplateUpdateCancelled = true;
+                    return fileDatabase;
+                }
             }
 
             // ensure all tables have been loaded from the database
@@ -318,26 +326,78 @@ namespace Timelapse.Database
             }
         }
 
-        protected async Task OnExistingDatabaseOpenedAsync(CommonDatabase templateDatabase, TemplateSyncResults templateSyncResults)
+        // Returns false if the user cancelled opening the database after a failed template update
+        protected async Task<bool> OnExistingDatabaseOpenedAsync(CommonDatabase templateDatabase, TemplateSyncResults templateSyncResults)
         {
-            // Check the arguments for null 
+            // Check the arguments for null
             ThrowIf.IsNullArgument(templateDatabase, nameof(templateDatabase));
             ThrowIf.IsNullArgument(templateSyncResults, nameof(templateSyncResults));
 
             // Perform TemplateTable initializations.
             await base.LoadControlsFromTemplateDBSortedByControlOrderAsync();
 
-            // PART 1. Update the various template tables as needed
-
             // Condition 1: using old ddb template?
             if (false == templateSyncResults.UseTdbTemplate)
             {
                 // Since we are using the ddb template, we don't have to do anything else here.
-                return;
+                return true;
             }
 
             // Since we are going to update things, we should try to create a backup.
             CreateBackupIfNeeded();
+
+            // Update the database to match the template all-or-nothing, so that neither Timelapse nor any other program
+            // ever sees a half-updated database, e.g., if a network glitch interrupts the update.
+            while (true)
+            {
+                SqlOperationResult updateResult = await Database.RunAtomicallyAsync(
+                    () => UpdateDatabaseToMatchTemplateAsync(templateDatabase, templateSyncResults)).ConfigureAwait(true);
+                if (updateResult.Success)
+                {
+                    break;
+                }
+
+                // The database is unchanged, but the in-memory controls may reflect part of the abandoned update, so reload them
+                AppLog.Error($"OnExistingDatabaseOpenedAsync: updating '{this.FilePath}' to match the template failed and was rolled back. {updateResult.ErrorMessage}", updateResult.Exception);
+                await base.LoadControlsFromTemplateDBSortedByControlOrderAsync();
+                await LoadMetadataControlsAndInfoFromTemplateTDBSortedByControlOrderAsync();
+
+                TemplateUpdateFailedChoiceEnum choice = Dialogs.TemplateUpdateFailedDialog(GlobalReferences.MainWindow, this.FilePath, updateResult);
+                if (choice == TemplateUpdateFailedChoiceEnum.TryAgain)
+                {
+                    // Repeat the update with the same wizard choices, which are all held in templateSyncResults
+                    continue;
+                }
+                if (choice == TemplateUpdateFailedChoiceEnum.UseOriginalTemplate)
+                {
+                    templateSyncResults.UseTdbTemplate = false;
+                    return true;
+                }
+                return false;
+            }
+
+            // Version 2.3.3.0 changed how recognition tables are managed.
+            // Update those tables to their new format if needed.
+            // This is outside the atomic update as it VACUUMs, which cannot be done inside a transaction.
+            this.UpdateOldStyleRecognitionTablesIfNeeded();
+
+            // Version 2.3
+            this.RepairClassificationCategoriesIfNeeded();
+            return true;
+        }
+
+        // Update the template, data and level tables in the database to match the template, as chosen in templateSyncResults.
+        // This must only be run inside Database.RunAtomicallyAsync: a failure returns its result rather than showing a dialog,
+        // and the atomic scope then rolls back everything done so far.
+        private async Task<SqlOperationResult> UpdateDatabaseToMatchTemplateAsync(CommonDatabase templateDatabase, TemplateSyncResults templateSyncResults)
+        {
+            SqlOperationResult Failed(string context, SqlOperationResult result)
+            {
+                AppLog.Warning($"UpdateDatabaseToMatchTemplateAsync: {context}. {result.ErrorMessage}");
+                return result;
+            }
+
+            // PART 1. Update the various template tables as needed
 
             // Condition 2: Using new template, where template and/metadata tables need updating
             // If directed to use the template / metadata templates found in the template database, replace those tables in the ddb
@@ -353,9 +413,7 @@ namespace Timelapse.Database
                 SqlOperationResult dropResult = Database.DropTable(DBTables.Template);
                 if (!dropResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (Template)", this.FilePath, dropResult);
-                    return;
+                    return Failed("DropTable failed in OnExistingDatabaseOpenedAsync (Template)", dropResult);
                 }
                 isDatabaseRecreated = true;
             }
@@ -370,9 +428,7 @@ namespace Timelapse.Database
                     [Sql.PragmaForeignKeysOn]);
                 if (!dropMetaResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                        true, "DropTable failed in OnExistingDatabaseOpenedAsync (MetadataTemplate/MetadataInfo)", this.FilePath, dropMetaResult);
-                    return;
+                    return Failed("DropTable failed in OnExistingDatabaseOpenedAsync (MetadataTemplate/MetadataInfo)", dropMetaResult);
                 }
                 isDatabaseRecreated = true;
 
@@ -394,8 +450,7 @@ namespace Timelapse.Database
                     SqlOperationResult updateResult = Database.Update(DBTables.MetadataInfo, updateQueryList);
                     if (!updateResult.Success)
                     {
-                        Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (MetadataInfo update)", this.FilePath, updateResult);
-                        return;
+                        return Failed("The problem occurred in OnExistingDatabaseOpenedAsync (MetadataInfo update)", updateResult);
                     }
                 }
             }
@@ -432,9 +487,7 @@ namespace Timelapse.Database
                         SqlOperationResult deleteColResult = Database.SchemaDeleteColumn(DBTables.FileData, dataLabel);
                         if (!deleteColResult.Success)
                         {
-                            Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                                true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath, deleteColResult);
-                            return;
+                            return Failed("SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (FileData)", deleteColResult);
                         }
 
                         // Delete the markers column associated with this data label (if it exists) from the Markers table
@@ -445,9 +498,7 @@ namespace Timelapse.Database
                             SqlOperationResult deleteMarkerColResult = Database.SchemaDeleteColumn(DBTables.Markers, dataLabel);
                             if (!deleteMarkerColResult.Success)
                             {
-                                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                                    true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath, deleteMarkerColResult);
-                                return;
+                                return Failed("SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (Markers)", deleteMarkerColResult);
                             }
                             // Delete any empty rows from the Marker Table
                             string where = string.Empty;
@@ -466,8 +517,7 @@ namespace Timelapse.Database
                             SqlOperationResult deleteRowsResult = Database.DeleteRows(DBTables.Markers, where);
                             if (!deleteRowsResult.Success)
                             {
-                                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (DeleteRows Markers)", this.FilePath, deleteRowsResult);
-                                return;
+                                return Failed("The problem occurred in OnExistingDatabaseOpenedAsync (DeleteRows Markers)", deleteRowsResult);
                             }
                         }
                     }
@@ -488,9 +538,7 @@ namespace Timelapse.Database
                             SqlOperationResult dropLevelResult = Database.DropTable(tableName);
                             if (!dropLevelResult.Success)
                             {
-                                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                                    true, "DropTable failed in OnExistingDatabaseOpenedAsync (level table)", this.FilePath, dropLevelResult);
-                                return;
+                                return Failed("DropTable failed in OnExistingDatabaseOpenedAsync (level table)", dropLevelResult);
                             }
                             countOfLevelTablesDeleted++;
                         }
@@ -502,9 +550,7 @@ namespace Timelapse.Database
                                 SqlOperationResult deleteMetaColResult = Database.SchemaDeleteColumn(tableName, dataLabel);
                                 if (!deleteMetaColResult.Success)
                                 {
-                                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                                        true, "SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath, deleteMetaColResult);
-                                    return;
+                                    return Failed("SchemaDeleteColumn failed in OnExistingDatabaseOpenedAsync (metadata level)", deleteMetaColResult);
                                 }
                             }
                         }
@@ -533,9 +579,7 @@ namespace Timelapse.Database
                         SqlOperationResult addColResult = Database.SchemaAddColumnToEndOfTable(DBTables.FileData, columnDefinition);
                         if (!addColResult.Success)
                         {
-                            Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                                true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath, addColResult);
-                            return;
+                            return Failed("SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (FileData)", addColResult);
                         }
 
                         if (control.Type == Control.Counter)
@@ -544,9 +588,7 @@ namespace Timelapse.Database
                             SqlOperationResult addMarkerColResult = Database.SchemaAddColumnToEndOfTable(DBTables.Markers, markerColumnDefinition);
                             if (!addMarkerColResult.Success)
                             {
-                                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                                    true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath, addMarkerColResult);
-                                return;
+                                return Failed("SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (Markers)", addMarkerColResult);
                             }
                         }
                     }
@@ -566,9 +608,7 @@ namespace Timelapse.Database
                             columnDefinition);
                         if (!addMetaColResult.Success)
                         {
-                            Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                                true, "SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath, addMetaColResult);
-                            return;
+                            return Failed("SchemaAddColumnToEndOfTable failed in OnExistingDatabaseOpenedAsync (metadata level)", addMetaColResult);
                         }
                     }
                 }
@@ -582,8 +622,7 @@ namespace Timelapse.Database
                 SqlOperationResult deleteAllResult = Database.DeleteAllRowsInTables([DBTables.MetadataInfo]);
                 if (!deleteAllResult.Success)
                 {
-                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (DeleteAllRowsInTables MetadataInfo)", this.FilePath, deleteAllResult);
-                    return;
+                    return Failed("The problem occurred in OnExistingDatabaseOpenedAsync (DeleteAllRowsInTables MetadataInfo)", deleteAllResult);
                 }
             }
 
@@ -602,9 +641,7 @@ namespace Timelapse.Database
                         SqlOperationResult renameResult = Database.SchemaRenameColumn(DBTables.FileData, dataLabelToRename.Key, dataLabelToRename.Value);
                         if (!renameResult.Success)
                         {
-                            Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                                true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (FileData)", this.FilePath, renameResult);
-                            return;
+                            return Failed("SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (FileData)", renameResult);
                         }
 
                         // Rename the markers column associated with this data label (if it exists) from the Markers table
@@ -615,9 +652,7 @@ namespace Timelapse.Database
                             SqlOperationResult renameMarkerResult = Database.SchemaRenameColumn(DBTables.Markers, dataLabelToRename.Key, dataLabelToRename.Value);
                             if (!renameMarkerResult.Success)
                             {
-                                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                                    true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (Markers)", this.FilePath, renameMarkerResult);
-                                return;
+                                return Failed("SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (Markers)", renameMarkerResult);
                             }
                         }
                     }
@@ -635,9 +670,7 @@ namespace Timelapse.Database
                             dataLabelToRename.Key, dataLabelToRename.Value);
                         if (!renameMetaResult.Success)
                         {
-                            Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
-                                true, "SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (metadata level)", this.FilePath, renameMetaResult);
-                            return;
+                            return Failed("SchemaRenameColumn failed in OnExistingDatabaseOpenedAsync (metadata level)", renameMetaResult);
                         }
                     }
                 }
@@ -667,8 +700,7 @@ namespace Timelapse.Database
                         SqlOperationResult searchTermsResult = this.Database.Update(Constant.DBTables.ImageSet, columnToUpdate);
                         if (!searchTermsResult.Success)
                         {
-                            Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in OnExistingDatabaseOpenedAsync (ImageSet search terms update)", this.FilePath, searchTermsResult);
-                            return;
+                            return Failed("The problem occurred in OnExistingDatabaseOpenedAsync (ImageSet search terms update)", searchTermsResult);
                         }
                     }
 
@@ -703,14 +735,8 @@ namespace Timelapse.Database
                 }
             }
 
-            // Version 2.3.3.0 changed how recognition tables are managed.
-            // Update those tables to their new format if needed
-            this.UpdateOldStyleRecognitionTablesIfNeeded();
-
-            // Version 2.3
-            this.RepairClassificationCategoriesIfNeeded();
-
-
+            // Helpers called above that return no result (e.g., SyncControlToDatabase) still fail the atomic scope on any error
+            return SqlOperationResult.Ok();
         }
 
         // In the ClassificationCategories, update rows where the label is empty with a string unknownClassification for the first empty label,
