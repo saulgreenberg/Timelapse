@@ -585,7 +585,7 @@ namespace TimelapseTemplateEditor.Standards
                 $"Mediatype of the media file. Expressed as an IANA Media Type.{Environment.NewLine}" +
                 $"Pattern: ^(image|video|audio)/.*$ Required.{Environment.NewLine}" +
                 "• e.g., \"image\"",
-                StandardsBase.CreateChoiceList(true, ["image", "video", "image/jpeg", "image/png", "image/tiff", "video/mp4", "video/mpeg", "video/x-msvideo", "video/quicktime"]), false, false), // while audio should be incuded, Timelapse doesn't have audio files
+                StandardsBase.CreateChoiceList(true, ["image", "video", "image/jpeg", "image/png", "image/tiff", "video/asf", "video/avi", "video/mov", "video/mp4", "video/mpeg", "video/x-msvideo", "video/quicktime"]), false, false), // while audio should be incuded, Timelapse doesn't have audio files
 
 
             new(Control.MultiLine, 0, "", "Exif data", CamtrapDPConstants.Media.ExifData,
