@@ -46,16 +46,24 @@ namespace Timelapse.Extensions
                 // which has previously crashed the date-entry control, since decomposing and
                 // recombining a date that close to DateTime.MaxValue can overflow). Treat anything
                 // outside a generous sane range the same way as an outright cast failure.
-                if (fieldValue.Year < 1900 || fieldValue.Year > 2100)
+                if (fieldValue.Year < 1900 || fieldValue.Year > Time.MaximumValidYear)
                 {
                     DateTime fallback = new(1900, 1, 1, 0, 0, 0);
-                    long id = row.GetID();
-                    AppLog.Warning($"GetDateTimeField: invalid DateTime ({fieldValue}) in row Id {id}, column '{column}'. Replacing with {fallback} and correcting the database.");
+                    bool isDetached = row.RowState == DataRowState.Detached;
+                    string rowDescription = isDetached ? "a new (not yet saved) row" : $"row Id {row.GetID()}";
+                    AppLog.Warning($"GetDateTimeField: invalid DateTime ({fieldValue}) in {rowDescription}, column '{column}'. Replacing with {fallback}{(isDetached ? string.Empty : " and correcting the database")}.");
 
                     // Correct the in-memory value too, so repeated reads of this row later in the
                     // session see the already-fixed value instead of re-detecting the same error.
                     row[column] = fallback;
-                    GlobalReferences.MainWindow?.DataHandler?.FileDatabase?.UpdateFile(id, column, DateTimeHandler.ToStringDatabaseDateTime(fallback));
+
+                    // A detached row (e.g., a new file still being loaded by the ImageSetLoader) isn't in the
+                    // database yet, and its ID is only a placeholder that could match a different, real file.
+                    // Its corrected in-memory value is saved when the row is inserted, so don't update the database here.
+                    if (!isDetached)
+                    {
+                        GlobalReferences.MainWindow?.DataHandler?.FileDatabase?.UpdateFile(row.GetID(), column, DateTimeHandler.ToStringDatabaseDateTime(fallback));
+                    }
 
                     return fallback;
                 }

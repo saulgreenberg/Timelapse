@@ -30,9 +30,11 @@ namespace Timelapse.Database
         /// </summary>
         public void UpdateFile(long fileID, string dataLabel, string value)
         {
-            // Get the ImageRow identified by the fileID nad set it to the new value
-            ImageRow image = this.FileTable.Find(fileID);
-            image.SetValueFromDatabaseString(dataLabel, value);
+            // Get the ImageRow identified by the fileID and set it to the new value.
+            // The row may not be in the current selection (e.g., it came from SelectAllFiles), in which case
+            // there is no in-memory row to update, but the database row still needs updating.
+            ImageRow image = this.FileTable?.Find(fileID);
+            image?.SetValueFromDatabaseString(dataLabel, value);
 
             this.CreateBackupIfNeeded();
 
@@ -72,8 +74,8 @@ namespace Timelapse.Database
             await _fileTableWriteSemaphore.WaitAsync();
             try
             {
-                ImageRow image = this.FileTable.Find(fileID);
-                image.SetValueFromDatabaseString(dataLabel, value);
+                ImageRow image = this.FileTable?.Find(fileID);
+                image?.SetValueFromDatabaseString(dataLabel, value);
 
                 this.CreateBackupIfNeeded();
 

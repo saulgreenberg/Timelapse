@@ -860,6 +860,10 @@ namespace Timelapse.Constant
             "ddd MMM dd HH:mm:ss K yyyy" // File.File Modified Date_
         ];
 
+        // The latest year treated as a valid date taken. It is set when Timelapse runs (the current year + 10),
+        // so it keeps working in the future while still catching dates far beyond the present as incorrect.
+        public static readonly int MaximumValidYear = DateTime.Now.Year + 10;
+
         public const int MonthsInYear = 12;
         public const string TimeFormat = "HH:mm:ss";
         public const string RelaxedTimeFormat = "H:mm:ss";

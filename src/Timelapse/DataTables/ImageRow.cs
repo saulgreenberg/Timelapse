@@ -253,6 +253,13 @@ namespace Timelapse.DataTables
                 ? fileInfo.CreationTime
                 : fileInfo.LastWriteTime;
             earliestTime = earliestTime.ToLocalTime();
+
+            // An unset or missing file time is reported as 1601-01-01, and some cameras write nonsense times.
+            // Use the same fallback and range as GetDateTimeField, so the new row never holds an out-of-range date.
+            if (earliestTime.Year < 1900 || earliestTime.Year > Time.MaximumValidYear)
+            {
+                earliestTime = new(1900, 1, 1, 0, 0, 0);
+            }
             SetDateTime(earliestTime);
         }
         #endregion
