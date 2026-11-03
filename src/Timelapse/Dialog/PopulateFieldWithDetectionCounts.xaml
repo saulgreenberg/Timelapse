@@ -29,7 +29,7 @@
                             Hint="The count can vary considerably depending on the chosen confidence threshold. 
                                   [li] Very low / very high confidence value tends to over / under estimate the count.
                                   [li] The estimated count can be inspected and altered if needed.
-                                  [li] Video counts are problematic, as it is the sum of counts across multiple frames"
+                                  [li] For videos, the count is taken from the single frame with the most detections at or above the confidence value."
                             ShowExplanationVisibility="False" />
             <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch" Margin="10">
                 <Rectangle Fill="#FF868686" Height="2" Margin="0,0,0,10"/>

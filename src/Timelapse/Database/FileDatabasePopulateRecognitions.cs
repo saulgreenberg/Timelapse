@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -234,15 +235,16 @@ namespace Timelapse.Database
             Dictionary<long, int> dict = [];
             foreach (ImageRow image in FileTable)
             {
-                int count = 0;
+                // Count the bounding boxes at or above the confidence value in each frame, and use the largest of those counts.
+                // For a video, this is the frame showing the most entities, rather than the sum over all its frames.
+                // An image's boxes are all in frame 0, so its count is the same as a simple count of its boxes.
                 BoundingBoxes bboxes = GlobalReferences.MainWindow.GetBoundingBoxesForCurrentFile(image.ID);
-                foreach (BoundingBox bbox in bboxes.Boxes)
-                {
-                    if (bbox.Confidence >= confidenceValue)
-                    {
-                        count++;
-                    }
-                }
+                int count = bboxes.Boxes
+                    .Where(bbox => bbox.Confidence >= confidenceValue)
+                    .GroupBy(bbox => bbox.FrameNumber)
+                    .Select(frame => frame.Count())
+                    .DefaultIfEmpty(0)
+                    .Max();
                 dict.Add(image.ID, count);
                 image.SetValueFromDatabaseString(counterDataLabel, count.ToString());
             }
