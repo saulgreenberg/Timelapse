@@ -1633,6 +1633,7 @@ namespace Timelapse.Dialog
                          $"as Timelapse configures each one to conform to the CamtrapDP standard.",
                 Hint = $"CamptrapDP requires filled in values for various fields. " +
                        $"Timelapse will warn you if some are missing.[br 14]" +
+                       $"CamtrapDP csv files, if opened in Excel, may display accented characters oddly.[br 14]" +
                        $"See CamtrapDP web site for:" +
                        $"[li] [link:{ExternalLinks.CamtrapWebSite}|CamtrapDP specifications] detailing the CamtrapDP standard" +
                        $"[li] [link:{ExternalLinks.CamtrapWebSiteValidation}|CamtrapDP validation page] for testing and validating your files before uploading.",

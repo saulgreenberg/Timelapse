@@ -21,6 +21,11 @@ namespace Timelapse.Standards
 {
     public class CamtrapDPExportFiles
     {
+        // UTF-8 without a byte order mark (BOM) for all CamtrapDP files (Encoding.UTF8 would write a BOM).
+        // Strict JSON parsers reject a BOM, and in the csv files it breaks GBIF's IPT automapping (see tdwg/camtrap-dp issue #370).
+        // The cost is that Excel may display accented characters oddly in these csv files, as the export dialog notes.
+        private static readonly UTF8Encoding CamtrapDPUTF8Encoding = new(false);
+
         // Check to see if the camtrapDP Datapackage level exists in the database
         public static bool CamtrapDPDataPackageExists(FileDatabase database)
         {
@@ -305,7 +310,7 @@ namespace Timelapse.Standards
                     }
 
                     // Write the datapackage file
-                    using (StreamWriter fileWriter = new(dataPackageFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8))
+                    using (StreamWriter fileWriter = new(dataPackageFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : CamtrapDPUTF8Encoding))
                     {
                         StringBuilder dataPackageAsJson = new();
                         settings.Converters.Add(new JsonConverters.WhiteSpaceToNullConverter());
@@ -465,7 +470,7 @@ namespace Timelapse.Standards
                     // in a certain order (yup, brain-dead).
                     Dictionary<string, string> dataLabelsAndTypes = database.MetadataGetDataLabels(level);
 
-                    using StreamWriter fileWriter = new(deploymentFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8);
+                    using StreamWriter fileWriter = new(deploymentFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : CamtrapDPUTF8Encoding);
                     // Write the header as defined by the data labels in the template file.
                     // If the data label is an empty string, we use the label instead.
                     // The append sequence results in a trailing comma which is retained when writing the line.
@@ -599,8 +604,8 @@ namespace Timelapse.Standards
                     List<string> problems = [];
 
                     // We split the data fields into two files
-                    using StreamWriter mediaFileWriter = new(mediaFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8);
-                    using StreamWriter observationsFileWriter = new(observationsFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : Encoding.UTF8);
+                    using StreamWriter mediaFileWriter = new(mediaFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : CamtrapDPUTF8Encoding);
+                    using StreamWriter observationsFileWriter = new(observationsFilePath, false, csvUseASCIIEncoding ? Encoding.ASCII : CamtrapDPUTF8Encoding);
                     // Get all data labels
                     // Note that we preserve the order as the miniforge frictionless validate function expects the csv file to have columns in a specific order
                     List<string> dataLabels = [.. database.GetDataLabelsFromControlsByIDCreationOrder()];

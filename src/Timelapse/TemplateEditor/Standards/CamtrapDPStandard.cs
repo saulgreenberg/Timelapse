@@ -52,9 +52,9 @@ namespace TimelapseTemplateEditor.Standards
 
             // Resource - Deployment schema *
             new(
-                Control.Note, 1, "https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/deployments-table-schema.json", "Deployment schema*", CamtrapDPConstants.DataPackage.Resources.Deployment_schema,
+                Control.Note, 1, "https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0.2/deployments-table-schema.json", "Deployment schema*", CamtrapDPConstants.DataPackage.Resources.Deployment_schema,
                 $"Schema of the Deployment resource{Environment.NewLine}" +
-                "• e.g., \"https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/deployments-table-schema.json\"",
+                "• e.g., \"https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0.2/deployments-table-schema.json\"",
                 null, false, false),
 
 
@@ -74,9 +74,9 @@ namespace TimelapseTemplateEditor.Standards
 
             // Resource - Media schema *
             new(
-                Control.Note, 1, "https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/media-table-schema.json", "Media schema*", CamtrapDPConstants.DataPackage.Resources.Media_schema,
+                Control.Note, 1, "https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0.2/media-table-schema.json", "Media schema*", CamtrapDPConstants.DataPackage.Resources.Media_schema,
                 $"Schema of the Media resource{Environment.NewLine}" +
-                "• e.g., \"https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/media-table-schema.json\"",
+                "• e.g., \"https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0.2/media-table-schema.json\"",
                 null, false, false),
 
             // Resource Observations name * 
@@ -96,9 +96,9 @@ namespace TimelapseTemplateEditor.Standards
             
             // Resource - Observations schema *
             new(
-                Control.Note, 1, "https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/observations-table-schema.json", "Observations schema*", CamtrapDPConstants.DataPackage.Resources.Observations_schema,
+                Control.Note, 1, "https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0.2/observations-table-schema.json", "Observations schema*", CamtrapDPConstants.DataPackage.Resources.Observations_schema,
                 $"Schema of the Observations resource{Environment.NewLine}" +
-                "• e.g., \"https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/observations-table-schema.json\"",
+                "• e.g., \"https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0.2/observations-table-schema.json\"",
                 null, false, false),
 
             //  Resources - Common profile
@@ -112,9 +112,9 @@ namespace TimelapseTemplateEditor.Standards
 
             // Profile
             new(
-                Control.Note, 1, "https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/camtrap-dp-profile.json", "CamtrapDP profile*", CamtrapDPConstants.DataPackage.Profile,
+                Control.Note, 1, "https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0.2/camtrap-dp-profile.json", "CamtrapDP profile*", CamtrapDPConstants.DataPackage.Profile,
                 $"The URL of the used Camtrap DP Profile version.{Environment.NewLine}" +
-                "• e.g., \"https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0/camtrap-dp-profile.json\"",
+                "• e.g., \"https://raw.githubusercontent.com/tdwg/camtrap-dp/1.0.2/camtrap-dp-profile.json\"",
                 null, false, false),
 
             #region Package
@@ -585,7 +585,7 @@ namespace TimelapseTemplateEditor.Standards
                 $"Mediatype of the media file. Expressed as an IANA Media Type.{Environment.NewLine}" +
                 $"Pattern: ^(image|video|audio)/.*$ Required.{Environment.NewLine}" +
                 "• e.g., \"image\"",
-                StandardsBase.CreateChoiceList(true, ["image", "video"]), false, false), // while audio should be incuded, Timelapse doesn't have audio files
+                StandardsBase.CreateChoiceList(true, ["image", "video", "image/jpeg", "image/png", "image/tiff", "video/mp4", "video/mpeg", "video/x-msvideo", "video/quicktime"]), false, false), // while audio should be incuded, Timelapse doesn't have audio files
 
 
             new(Control.MultiLine, 0, "", "Exif data", CamtrapDPConstants.Media.ExifData,
