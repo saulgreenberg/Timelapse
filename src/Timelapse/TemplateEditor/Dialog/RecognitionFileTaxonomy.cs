@@ -82,6 +82,30 @@ namespace TimelapseTemplateEditor.Dialog
             return string.Equals(Path.GetExtension(filePath), ConstantFile.FileDatabaseFileExtension, StringComparison.OrdinalIgnoreCase);
         }
 
+        // The definitions in a species list file, or null if the file isn't a species list, i.e., a json array of
+        // definitions that each have a scientific or common name. It stops at the first token if the file is something else.
+        public static List<taxonomic> ReadSpeciesList(string filePath)
+        {
+            try
+            {
+                using StreamReader streamReader = new(filePath);
+                using JsonTextReader reader = new(streamReader);
+                if (false == reader.Read() || reader.TokenType != JsonToken.StartArray)
+                {
+                    return null;
+                }
+                List<taxonomic> definitions = JsonSerializer.CreateDefault().Deserialize<List<taxonomic>>(reader);
+                return definitions is { Count: > 0 } && definitions.TrueForAll(definition =>
+                    definition != null && (false == string.IsNullOrWhiteSpace(definition.scientificName) || false == string.IsNullOrWhiteSpace(CommonName(definition))))
+                    ? definitions
+                    : null;
+            }
+            catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+            {
+                return null;
+            }
+        }
+
         // The file's taxonomic information, which is empty if the file doesn't have any.
         // Throws SQLiteException, JsonException or an IOException / UnauthorizedAccessException if the file can't be read,
         // or an OperationCanceledException if cancelled.

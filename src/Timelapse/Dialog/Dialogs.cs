@@ -4106,6 +4106,37 @@ namespace Timelapse.Dialog
             return dialog.BuildAndShowDialog();
         }
 
+        public static void EditorNotASpeciesListDialog(Window owner, string filePath)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Not a species list",
+                Problem = $"This file isn't in the species list format, so nothing was changed.[br 2]" +
+                          $"[li] #DarkSlateGray[[e]{filePath}[/e]]",
+                Reason = "A species list is a json file containing a list of taxonomic definitions, each with a scientific or common name.",
+                Solution = "Select a species list created by [e]Save to file[/e] in [e]File > Edit a species list[/e].",
+                Icon = DialogIconType.Information
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+
+        public static bool? EditorClearChoiceListFirstDialog(Window owner)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.YesNo)
+            {
+                Owner = owner,
+                DialogTitle = "Clear the choice menu first?",
+                What = "The choice menu already has items.",
+                Solution = "[li] Select [e]Yes[/e] to clear those items, so it only has the species list's names.[br 2]" +
+                           "[li] Select [e]No[/e] to keep those items, and add the species list's names after them.",
+                Icon = DialogIconType.Question
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            return dialog.BuildAndShowDialog();
+        }
+
         public static void EditorSpeciesListCouldNotSaveDialog(Window owner, string filePath, string reason)
         {
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)

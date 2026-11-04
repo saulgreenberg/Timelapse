@@ -1,12 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using Timelapse.Constant;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
+using Timelapse.Standards;
 
 namespace TimelapseTemplateEditor.Dialog
 {
@@ -140,6 +144,49 @@ namespace TimelapseTemplateEditor.Dialog
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
+        }
+
+        // Fill in the choice menu with the names in a species list chosen by the user
+        private void PopulateFromSpeciesListButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (Dialogs.TryGetFileFromUserUsingOpenFileDialog(
+                    "Select a species list (json)",
+                    string.Empty,
+                    "Json files (*.json)|*.json",
+                    File.JsonFileExtension,
+                    out string filePath,
+                    this))
+            {
+                PopulateFromSpeciesListFile(filePath);
+            }
+        }
+
+        private void PopulateFromSpeciesListFile(string filePath)
+        {
+            List<taxonomic> definitions = RecognitionFileTaxonomy.ReadSpeciesList(filePath);
+            if (definitions == null)
+            {
+                Dialogs.EditorNotASpeciesListDialog(this, filePath);
+                return;
+            }
+
+            SelectSpeciesListFormat selectFormat = new(this, definitions);
+            if (true != selectFormat.ShowDialog())
+            {
+                return;
+            }
+
+            bool clearFirst = string.IsNullOrWhiteSpace(TextBoxChoiceList.Text) || true == Dialogs.EditorClearChoiceListFirstDialog(this);
+            TextBoxChoiceList.Text = TextWithItems(clearFirst ? string.Empty : TextBoxChoiceList.Text, SelectSpeciesListFormat.ChoiceItems(definitions, selectFormat.Format));
+        }
+
+        // The text followed by the items, each on its own line, leaving out those already in the text
+        public static string TextWithItems(string text, List<string> items)
+        {
+            string[] lines = text.Split(Environment.NewLine, StringSplitOptions.None);
+            IEnumerable<string> newItems = items.Where(item => false == lines.Any(line => line.Trim() == item));
+            string existingText = text.TrimEnd();
+            return string.Join(Environment.NewLine, existingText.Length == 0 ? newItems : newItems.Prepend(existingText));
         }
 
         // As multichoice uses a comma separated list, and as we do allow conversions between fixed choice to multichoice, don't allow commas 
