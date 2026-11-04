@@ -4090,6 +4090,88 @@ namespace Timelapse.Dialog
         }
         #endregion 
 
+        #region Template Editor Dialogs: Species list
+        public static void EditorSpeciesListCouldNotImportDialog(Window owner, string filePath, string reason)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Could not import the species list",
+                Problem = $"The species list could not be imported from this file, so your current list is unchanged.[br 2]" +
+                          $"[li] #DarkSlateGray[[e]{filePath}[/e]]",
+                Reason = reason,
+                Solution = "Select a json file containing an array of taxonomic definitions, such as one created by [e]Export list[/e].",
+                Icon = DialogIconType.Error
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+
+        public static void EditorSpeciesListCouldNotExportDialog(Window owner, string filePath, string reason)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Could not export the species list",
+                Problem = $"The species list could not be saved to this file.[br 2]" +
+                          $"[li] #DarkSlateGray[[e]{filePath}[/e]]",
+                Reason = reason,
+                Solution = "Check that the file isn't open in another program, or export to a different file.",
+                Icon = DialogIconType.Error
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+        #endregion
+
+        #region Template Editor Dialogs: Species list GBIF lookup
+        public static void EditorSpeciesListGbifNotAvailableDialog(Window owner, string reason)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Could not look up the species in GBIF",
+                Problem = "Timelapse could not get an answer from GBIF, so nothing was changed.",
+                Reason = reason,
+                Solution = "Check your internet connection and try again, or enter the information yourself.",
+                Icon = DialogIconType.Error
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+
+        public static void EditorSpeciesListGbifNoMatchDialog(Window owner, string scientificName)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "No match found in GBIF",
+                Problem = $"GBIF has no match for [e]{scientificName}[/e], so nothing was changed.",
+                Solution = "Check the spelling and try again, or enter the information yourself.",
+                Icon = DialogIconType.Information
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+
+        public static bool? EditorSpeciesListGbifUseClosestMatchDialog(Window owner, string scientificName, string matchName, string matchRank, bool isSynonym)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            {
+                Owner = owner,
+                DialogTitle = "Use GBIF's match?",
+                What = isSynonym
+                    ? $"GBIF lists [e]{scientificName}[/e] as a synonym. Its accepted name is [e]{matchName}[/e] ({matchRank})."
+                    : $"GBIF has no exact match for [e]{scientificName}[/e]. Its closest match is [e]{matchName}[/e] ({matchRank}).",
+                Solution = $"[li] Select [e]Ok[/e] to replace this definition's fields with those of [e]{matchName}[/e].[br 2]" +
+                           "[li] Select [e]Cancel[/e] to leave them unchanged.",
+                Icon = DialogIconType.Question
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            return dialog.BuildAndShowDialog();
+        }
+        #endregion
+
         #region Template Editor Dialogs: Data types, labels, resevered words etc issues
         public static bool? TypeChangeInformationDialog(Window owner, string from, string to)
         {

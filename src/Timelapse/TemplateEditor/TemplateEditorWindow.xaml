@@ -109,6 +109,11 @@
 
                 <Separator />
 
+                <!-- Species list -->
+                <MenuItem Name="MenuFileEditSpeciesList" Header="_Edit a species list&#x2026;" Click="MenuFileEditSpeciesList_Click" ToolTip="Create or edit a list of taxonomic definitions of species, which you can import from and export to a json file"/>
+
+                <Separator />
+
                 <!-- Switch to Timelapse -->
                 <MenuItem Name="MenuSwitchToTimelapse" Header="Switch to Timelapse"
                           ToolTip="Switch to Timelapse to load and tag image sets.">

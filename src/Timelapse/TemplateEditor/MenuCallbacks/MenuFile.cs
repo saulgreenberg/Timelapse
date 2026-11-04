@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Util;
+using TimelapseTemplateEditor.Dialog;
 using TimelapseTemplateEditor.EditorCode;
 using TimelapseTemplateEditor.Standards;
 using File = Timelapse.Constant.File;
@@ -295,6 +296,14 @@ namespace TimelapseTemplateEditor
                 return;
             }
             await TemplateDoOpen(recentTemplatePath);
+        }
+        #endregion
+
+        #region MenuFileEditSpeciesList
+        private void MenuFileEditSpeciesList_Click(object sender, RoutedEventArgs e)
+        {
+            EditSpeciesList editSpeciesList = new(this, string.Empty);
+            editSpeciesList.ShowDialog();
         }
         #endregion
 
