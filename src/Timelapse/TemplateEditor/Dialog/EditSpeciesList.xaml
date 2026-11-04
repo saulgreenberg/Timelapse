@@ -1,11 +1,12 @@
-﻿<Window x:Class="TimelapseTemplateEditor.Dialog.EditSpeciesList"
-        x:Name ="Window1"
+﻿<controls:BusyableDialogWindow x:Class="TimelapseTemplateEditor.Dialog.EditSpeciesList"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:local="clr-namespace:TimelapseTemplateEditor.Dialog"
         mc:Ignorable="d"
-        Title="Edit a species list" Height="750" Width="800" Loaded="EditSpeciesList_OnLoaded">
+        Title="Edit a species list" Height="915" Width="1000" Loaded="EditSpeciesList_OnLoaded">
     <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -19,7 +20,7 @@
 
         <TextBlock Grid.Row="0" Margin="10,10,5,5">
             <Run Text="Species list" FontWeight ="Bold" FontStyle="Italic"/> 
-            is a list of taxonomic species definitions, which you can import from or export to a json file.<LineBreak/>
+            is a list of taxonomic species definitions, which you can import from a file or save to a json file.<LineBreak/>
             Use it to conveniently populate a template's <Run Text="Choice"  FontWeight ="Medium" FontStyle="Italic"/> menu (e.g., a <Run Text="Species"  FontStyle="Italic"/> menu).
             <LineBreak/><LineBreak/>
             <Run Text="Scientific name*" FontWeight ="Bold" FontStyle="Italic"/> and/or <Run Text="Common name*" FontWeight ="Bold" FontStyle="Italic"/> is required for each taxonomic definition you create. 
@@ -36,7 +37,8 @@
                   DataContext="{Binding Source=TaxonomicList}" 
                   AutoGenerateColumns="False" 
                   IsReadOnly ="True"
-                  CanUserSortColumns="false"
+                  CanUserSortColumns="True"
+                  Sorting="DataGrid_OnSorting"
                   CanUserReorderColumns="false"
                   SelectionMode="Extended"  
                   SelectionUnit="FullRow" 
@@ -48,6 +50,7 @@
                 </Style>
             </DataGrid.ColumnHeaderStyle>
             <DataGrid.Resources>
+                <local:SpeciesNameConverter x:Key="SpeciesNameConverter"/>
                 <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
                                  Color="LightBlue"/>
                 <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
@@ -58,7 +61,6 @@
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Common name*" Binding="{Binding vernacularNames[eng]}"/>
                 <DataGridTextColumn Header="Scientific name*" Binding="{Binding scientificName }"/>
-                <DataGridTextColumn Header="Taxon id" Binding="{Binding taxonID}"/>
                 <DataGridTextColumn Header="Taxon rank" Binding="{Binding taxonRank}"/>
                 <DataGridTextColumn Header="Kingdom" Binding="{Binding kingdom}"/>
                 <DataGridTextColumn Header="Phylum" Binding="{Binding phylum}"/>
@@ -66,22 +68,25 @@
                 <DataGridTextColumn Header="Order" Binding="{Binding order}"/>
                 <DataGridTextColumn Header="Family" Binding="{Binding family}"/>
                 <DataGridTextColumn Header="Genus" Binding="{Binding genus}"/>
+                <DataGridTextColumn Header="Species" Binding="{Binding Mode=OneWay, Converter={StaticResource SpeciesNameConverter}}" SortMemberPath="Species"/>
+                <DataGridTextColumn Header="Taxon id" Binding="{Binding taxonID}" Width="*" MinWidth="90"/>
             </DataGrid.Columns>
         </DataGrid>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Left">
-            <Button Name="ImportList"
+            <Button Name="ImportFromFile"
                     VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
                     Padding="10" Margin="10,10,0,0"
-                    Content="Import list"
-                    ToolTip="Replace the current list with the species list in a json file"
-                    Click="ImportList_OnClick"/>
-            <Button Name="ExportList"
+                    Content="Import from file"
+                    ToolTip="Add taxonomic information to the list from a recognition file, a Timelapse database, or a previously saved species list."
+                    Click="ImportFromFile_OnClick"/>
+            <Button Name="SaveToFile"
+                    IsEnabled="False"
                     VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
                     Padding="10" Margin="10,10,0,0"
-                    Content="Export list"
+                    Content="Save to file"
                     ToolTip="Save the current list to a json file"
-                    Click="ExportList_OnClick"/>
+                    Click="SaveToFile_OnClick"/>
         </StackPanel>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -132,89 +137,98 @@
                        Name ="TBCommonName"
                        HorizontalAlignment="Right" Margin="5,5,0,5"
                        FontWeight="Bold"
-                       Text = "{Binding ElementName=Window1, Path=CommonNameField.Label}"
-                       ToolTip ="{Binding ElementName=Window1, Path=CommonNameField.Tooltip}"
+                       Text = "{Binding Path=CommonNameField.Label}"
+                       ToolTip ="{Binding Path=CommonNameField.Tooltip}"
                        />
 
             <TextBlock Grid.Row="1" Grid.Column="0" 
                        Name ="TBScientificName" 
                        HorizontalAlignment="Right" Margin="5,5,0,5"
                        FontWeight="Bold"
-                       Text = "{Binding ElementName=Window1, Path=ScientificNameField.Label}"
-                       ToolTip ="{Binding ElementName=Window1, Path=ScientificNameField.Tooltip}"
+                       Text = "{Binding Path=ScientificNameField.Label}"
+                       ToolTip ="{Binding Path=ScientificNameField.Tooltip}"
                        />
 
             <TextBlock Grid.Row="2" Grid.Column="0" 
                        Name ="TBTaxonRank" 
                        HorizontalAlignment="Right" Margin="5,5,0,5"
                        FontWeight="Bold"
-                       Text = "{Binding ElementName=Window1, Path=TaxonRankField.Label}"
-                       ToolTip ="{Binding ElementName=Window1, Path=TaxonRankField.Tooltip}"
+                       Text = "{Binding Path=TaxonRankField.Label}"
+                       ToolTip ="{Binding Path=TaxonRankField.Tooltip}"
             />
 
             <TextBlock Grid.Row="3" Grid.Column="0" 
                        Name ="TBKingdom" 
                        HorizontalAlignment="Right" Margin="5,5,0,5"
                        FontWeight="Bold"
-                       Text = "{Binding ElementName=Window1, Path=KingdomField.Label}"
-                       ToolTip ="{Binding ElementName=Window1, Path=KingdomField.Tooltip}"
+                       Text = "{Binding Path=KingdomField.Label}"
+                       ToolTip ="{Binding Path=KingdomField.Tooltip}"
                        />
 
             <TextBlock Grid.Row="4" Grid.Column="0" 
                        Name ="TBPhylum" 
                        HorizontalAlignment="Right" Margin="5,5,0,5"
                        FontWeight="Bold"
-                       Text = "{Binding ElementName=Window1, Path=PhylumField.Label}"
-                       ToolTip ="{Binding ElementName=Window1, Path=PhylumField.Tooltip}"
+                       Text = "{Binding Path=PhylumField.Label}"
+                       ToolTip ="{Binding Path=PhylumField.Tooltip}"
             />
 
             <TextBlock Grid.Row="5" Grid.Column="0" 
                        Name ="TBClass" 
                        HorizontalAlignment="Right" Margin="5,5,0,5"
                        FontWeight="Bold"
-                       Text = "{Binding ElementName=Window1, Path=ClassField.Label}"
-                       ToolTip ="{Binding ElementName=Window1, Path=ClassField.Tooltip}"
+                       Text = "{Binding Path=ClassField.Label}"
+                       ToolTip ="{Binding Path=ClassField.Tooltip}"
             />
 
             <TextBlock Grid.Row="6" Grid.Column="0" 
                        Name ="TBOrder" 
                        HorizontalAlignment="Right" Margin="5,5,0,5"
                        FontWeight="Bold"
-                       Text = "{Binding ElementName=Window1, Path=OrderField.Label}"
-                       ToolTip ="{Binding ElementName=Window1, Path=OrderField.Tooltip}"
+                       Text = "{Binding Path=OrderField.Label}"
+                       ToolTip ="{Binding Path=OrderField.Tooltip}"
             />
 
             <TextBlock Grid.Row="7" Grid.Column="0" 
                        Name ="TBFamily" 
                        HorizontalAlignment="Right" Margin="5,5,0,5"
                        FontWeight="Bold"
-                       Text = "{Binding ElementName=Window1, Path=FamilyField.Label}"
-                       ToolTip ="{Binding ElementName=Window1, Path=FamilyField.Tooltip}"
+                       Text = "{Binding Path=FamilyField.Label}"
+                       ToolTip ="{Binding Path=FamilyField.Tooltip}"
             />
 
             <TextBlock Grid.Row="8" Grid.Column="0" 
                        Name ="TBGenus" 
                        HorizontalAlignment="Right" Margin="5,5,0,5"
                        FontWeight="Bold"
-                       Text = "{Binding ElementName=Window1, Path=GenusField.Label}"
-                       ToolTip ="{Binding ElementName=Window1, Path=GenusField.Tooltip}"
+                       Text = "{Binding Path=GenusField.Label}"
+                       ToolTip ="{Binding Path=GenusField.Tooltip}"
             />
 
             <TextBlock Grid.Row="9" Grid.Column="0" 
                        Name ="TBTaxonID" 
                        HorizontalAlignment="Right"  Margin="5,5,0,5"
                        FontWeight="Bold"
-                       Text = "{Binding ElementName=Window1, Path=TaxonIDField.Label}"
-                       ToolTip ="{Binding ElementName=Window1, Path=TaxonIDField.Tooltip}"
+                       Text = "{Binding Path=TaxonIDField.Label}"
+                       ToolTip ="{Binding Path=TaxonIDField.Tooltip}"
                        />
 
-            <TextBox Grid.Row="0" Grid.Column="1"
-                       Name ="DataFieldCommonName"
-                       Margin="5,5,5,5"
-                       Text=""
-                       ToolTip ="{Binding ElementName=Window1, Path=CommonNameField.Tooltip}"
-                       TextChanged = "DataField_OnTextChanged"
-                       />
+            <DockPanel Grid.Row="0" Grid.Column="1">
+                <Button DockPanel.Dock="Right"
+                        Name="GbifCommonNameLookup"
+                        IsEnabled="False"
+                        Margin="0,5,5,5"
+                        Padding="10,0"
+                        Content="Look up in GBIF"
+                        ToolTip="Use the common name, in English, to fill in this definition's other fields from GBIF (gbif.org). If several taxa have that name, you can choose one. This needs an internet connection."
+                        Click="GbifCommonNameLookup_OnClick"/>
+                <TextBox Name ="DataFieldCommonName"
+                         Margin="5,5,5,5"
+                         Text=""
+                         ToolTip ="{Binding Path=CommonNameField.Tooltip}"
+                         TextChanged = "DataField_OnTextChanged"
+                         />
+            </DockPanel>
             <DockPanel Grid.Row="1" Grid.Column="1">
                 <Button DockPanel.Dock="Right"
                         Name="GbifLookup"
@@ -227,7 +241,7 @@
                 <TextBox Name ="DataFieldScientificName"
                          Margin="5,5,5,5"
                          Text=""
-                         ToolTip ="{Binding ElementName=Window1, Path=ScientificNameField.Tooltip}"
+                         ToolTip ="{Binding Path=ScientificNameField.Tooltip}"
                          TextChanged = "DataField_OnTextChanged"
                          />
             </DockPanel>
@@ -238,7 +252,7 @@
                       Width ="200"
                       Text =""
                       SelectedValue =""
-                      ToolTip ="{Binding ElementName=Window1, Path=TaxonRankField.Tooltip}"
+                      ToolTip ="{Binding Path=TaxonRankField.Tooltip}"
                       SelectionChanged="DataFieldTaxonRank_OnSelectionChanged"
             >
                 <ComboBoxItem>kingdom</ComboBoxItem>
@@ -264,7 +278,7 @@
                 <TextBox Name ="DataFieldKingdom"
                          Margin="5,5,5,5"
                          Text=""
-                         ToolTip ="{Binding ElementName=Window1, Path=KingdomField.Tooltip}"
+                         ToolTip ="{Binding Path=KingdomField.Tooltip}"
                          TextChanged = "DataField_OnTextChanged"
                          />
             </DockPanel>
@@ -281,7 +295,7 @@
                 <TextBox Name ="DataFieldPhylum"
                          Margin="5,5,5,5"
                          Text=""
-                         ToolTip ="{Binding ElementName=Window1, Path=PhylumField.Tooltip}"
+                         ToolTip ="{Binding Path=PhylumField.Tooltip}"
                          TextChanged = "DataField_OnTextChanged"
                          />
             </DockPanel>
@@ -297,7 +311,7 @@
                 <TextBox Name ="DataFieldClass"
                          Margin="5,5,5,5"
                          Text=""
-                         ToolTip ="{Binding ElementName=Window1, Path=ClassField.Tooltip}"
+                         ToolTip ="{Binding Path=ClassField.Tooltip}"
                          TextChanged = "DataField_OnTextChanged"
                          />
             </DockPanel>
@@ -313,7 +327,7 @@
                 <TextBox Name ="DataFieldOrder"
                          Margin="5,5,5,5"
                          Text=""
-                         ToolTip ="{Binding ElementName=Window1, Path=OrderField.Tooltip}"
+                         ToolTip ="{Binding Path=OrderField.Tooltip}"
                          TextChanged = "DataField_OnTextChanged"
                          />
             </DockPanel>
@@ -329,7 +343,7 @@
                 <TextBox Name ="DataFieldFamily"
                          Margin="5,5,5,5"
                          Text=""
-                         ToolTip ="{Binding ElementName=Window1, Path=FamilyField.Tooltip}"
+                         ToolTip ="{Binding Path=FamilyField.Tooltip}"
                          TextChanged = "DataField_OnTextChanged"
                          />
             </DockPanel>
@@ -345,7 +359,7 @@
                 <TextBox Name ="DataFieldGenus"
                          Margin="5,5,5,5"
                          Text=""
-                         ToolTip ="{Binding ElementName=Window1, Path=GenusField.Tooltip}"
+                         ToolTip ="{Binding Path=GenusField.Tooltip}"
                          TextChanged = "DataField_OnTextChanged"
                          />
             </DockPanel>
@@ -353,7 +367,7 @@
                        Name ="DataFieldTaxonID" 
                        Margin="5,5,5,5"
                        Text=""
-                       ToolTip ="{Binding ElementName=Window1, Path=TaxonIDField.Tooltip}"
+                       ToolTip ="{Binding Path=TaxonIDField.Tooltip}"
                        TextChanged = "DataField_OnTextChanged" 
                        />
             <CheckBox Grid.Row="10" Grid.Column="1"
@@ -375,5 +389,6 @@
                     Content ="Cancel"
                     Click="Cancel_OnClick"/>
         </StackPanel>
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" Grid.RowSpan="7" CancelClick="CancelAsyncOperationButton_Click"/>
     </Grid>
-</Window>
+</controls:BusyableDialogWindow>

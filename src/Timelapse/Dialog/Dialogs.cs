@@ -4091,32 +4091,31 @@ namespace Timelapse.Dialog
         #endregion 
 
         #region Template Editor Dialogs: Species list
-        public static void EditorSpeciesListCouldNotImportDialog(Window owner, string filePath, string reason)
+        public static bool? EditorSpeciesListUnsavedChangesDialog(Window owner)
         {
-            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
             {
                 Owner = owner,
-                DialogTitle = "Could not import the species list",
-                Problem = $"The species list could not be imported from this file, so your current list is unchanged.[br 2]" +
-                          $"[li] #DarkSlateGray[[e]{filePath}[/e]]",
-                Reason = reason,
-                Solution = "Select a json file containing an array of taxonomic definitions, such as one created by [e]Export list[/e].",
-                Icon = DialogIconType.Error
+                DialogTitle = "Exit anyway?",
+                What = "You haven't saved the changes to your species list.",
+                Solution = "[li] Select [e]Ok[/e] to exit anyway, which loses those changes.[br 2]" +
+                           "[li] Select [e]Cancel[/e] to go back, where you can use [e]Save to file[/e].",
+                Icon = DialogIconType.Warning
             };
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
-            dialog.BuildAndShowDialog();
+            return dialog.BuildAndShowDialog();
         }
 
-        public static void EditorSpeciesListCouldNotExportDialog(Window owner, string filePath, string reason)
+        public static void EditorSpeciesListCouldNotSaveDialog(Window owner, string filePath, string reason)
         {
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
             {
                 Owner = owner,
-                DialogTitle = "Could not export the species list",
+                DialogTitle = "Could not save the species list",
                 Problem = $"The species list could not be saved to this file.[br 2]" +
                           $"[li] #DarkSlateGray[[e]{filePath}[/e]]",
                 Reason = reason,
-                Solution = "Check that the file isn't open in another program, or export to a different file.",
+                Solution = "Check that the file isn't open in another program, or save to a different file.",
                 Icon = DialogIconType.Error
             };
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
@@ -4125,6 +4124,69 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Template Editor Dialogs: Species list GBIF lookup
+        public static void EditorSpeciesListGbifIncompleteDialog(Window owner, string reason)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Some definitions are incomplete",
+                Problem = "Timelapse could not get an answer from GBIF, so the taxon id, rank, kingdom and phylum may be missing from some of the imported definitions.",
+                Reason = reason,
+                Solution = "Check your internet connection and import the file again, or use a definition's [e]Look up in GBIF[/e] buttons.",
+                Icon = DialogIconType.Warning
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+
+        public static void EditorSpeciesListNoTaxonomicInformationDialog(Window owner, string filePath)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "No taxonomic information found",
+                Problem = $"No taxonomic information was found in this file, so your list is unchanged.[br 2]" +
+                          $"[li] #DarkSlateGray[[e]{filePath}[/e]]",
+                Reason = "The file doesn't contain classification_categories, classification_category_descriptions, or a list of taxonomic definitions. If it should have them, the file may be incomplete.",
+                Solution = "Select a recognition file that includes classifications, or a species list created by [e]Save to file[/e].",
+                Icon = DialogIconType.Information
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+
+        public static void EditorSpeciesListNoClassificationCategoriesDialog(Window owner, string filePath)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "No classification categories found",
+                Problem = $"No classification categories are recorded in this database, so your list is unchanged.[br 2]" +
+                          $"[li] #DarkSlateGray[[e]{filePath}[/e]]",
+                Reason = "The database doesn't have a ClassificationCategories table, or that table has no values.",
+                Solution = "Select a database or a recognition file that includes classifications.",
+                Icon = DialogIconType.Information
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+
+        public static void EditorSpeciesListCouldNotReadRecognitionFileDialog(Window owner, string filePath, string reason)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Could not read the file",
+                Problem = $"This file could not be read, so your list is unchanged.[br 2]" +
+                          $"[li] #DarkSlateGray[[e]{filePath}[/e]]",
+                Reason = $"The file may be damaged, incomplete, or not a valid json or Timelapse database file.[br 2]{reason}",
+                Solution = "Select a different file, or check the file at the location mentioned above.",
+                Icon = DialogIconType.Error
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+
         public static void EditorSpeciesListGbifNotAvailableDialog(Window owner, string reason)
         {
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)

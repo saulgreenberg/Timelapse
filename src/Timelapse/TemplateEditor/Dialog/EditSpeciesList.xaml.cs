@@ -2,8 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -19,7 +22,7 @@ using TextBox = System.Windows.Controls.TextBox;
 namespace TimelapseTemplateEditor.Dialog
 {
     /// <summary>
-    /// Edit a species list (a list of taxonomic definitions), which can be imported from and exported to a json file.
+    /// Edit a species list (a list of taxonomic definitions), which can be imported from and saved to a json file.
     /// </summary>
     public partial class EditSpeciesList
     {
@@ -100,23 +103,31 @@ namespace TimelapseTemplateEditor.Dialog
         // Common names are stored as vernacular names under this ISO 639-3 language code
         private const string CommonNameLanguageCode = "eng";
         private const string JsonFileFilter = "Json files (*.json)|*.json";
+        private DataGridColumn sortColumn;
+        private ListSortDirection sortDirection = ListSortDirection.Ascending;
         private bool DontUpdate;
         private bool SetFocus = true;
         private int dataGridSelectedRow = -1;
+
+        // The list's contents when it was opened or last saved, for detecting unsaved changes
+        private string savedContents;
+
+        // The file last saved to since Timelapse started, which is what the next save initially suggests
+        private const string DefaultFileName = "species_list.json";
+        private static string lastSavedFilePath;
         #endregion 
 
         #region Constructor / Loaded
-        public EditSpeciesList(Window owner, string jsonTaxonomicList)
+        public EditSpeciesList(Window owner, string jsonTaxonomicList) : base(owner)
         {
             InitializeComponent();
             DataContext = this;
-            Owner = owner;
             JsonTaxonomicList = jsonTaxonomicList;
         }
 
         private void EditSpeciesList_OnLoaded(object sender, RoutedEventArgs e)
         {
-            Dialogs.TryPositionAndFitDialogIntoWindow(this);
+            InitalizeProgressHandler(BusyCancelIndicator);
             DataContext = this;
             if (string.IsNullOrWhiteSpace(JsonTaxonomicList))
             {
@@ -133,6 +144,9 @@ namespace TimelapseTemplateEditor.Dialog
                 // Maybe show an error dialog?
                 DialogResult = false;
             }
+            savedContents = ListContents();
+            sortColumn = dataGrid.Columns[0];
+            SortTaxonomicList();
             DataGrid_Refresh();
             if (dataGrid.Items.Count == 0)
             {
@@ -153,9 +167,77 @@ namespace TimelapseTemplateEditor.Dialog
             DontUpdate = true;
             dataGrid.ItemsSource = null;
             dataGrid.ItemsSource = TaxonomicList;
+            if (sortColumn != null)
+            {
+                // Setting the ItemsSource clears the column header's sort arrow
+                sortColumn.SortDirection = sortDirection;
+            }
             DontUpdate = false;
             dataGrid.SelectedIndex = dataGridSelectedRow < dataGrid.Items.Count ? dataGridSelectedRow : -1;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+            UpdateSaveToFileButton();
+        }
+
+        // Sort by the clicked column, or reverse the order if it is already the sorted column.
+        // This sorts the list itself rather than the grid's view of it, as the code relies on the grid's rows matching the list's order.
+        private void DataGrid_OnSorting(object sender, DataGridSortingEventArgs e)
+        {
+            e.Handled = true;
+            sortDirection = e.Column == sortColumn && sortDirection == ListSortDirection.Ascending
+                ? ListSortDirection.Descending
+                : ListSortDirection.Ascending;
+            if (sortColumn != null)
+            {
+                sortColumn.SortDirection = null;
+            }
+            sortColumn = e.Column;
+
+            taxonomic selectedItem = dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < TaxonomicList.Count ? TaxonomicList[dataGrid.SelectedIndex] : null;
+            SortTaxonomicList();
+            dataGridSelectedRow = TaxonomicList.IndexOf(selectedItem);
+            SetFocus = false;
+            DataGrid_Refresh();
+            SetFocus = true;
+        }
+
+        // Sort the list by the sort column. Empty values are always last.
+        private void SortTaxonomicList()
+        {
+            IOrderedEnumerable<taxonomic> emptyValuesLast = TaxonomicList.OrderBy(item => string.IsNullOrWhiteSpace(SortValue(item)) ? 1 : 0);
+            TaxonomicList = new(sortDirection == ListSortDirection.Ascending
+                ? emptyValuesLast.ThenBy(SortValue, StringComparer.CurrentCultureIgnoreCase)
+                : emptyValuesLast.ThenByDescending(SortValue, StringComparer.CurrentCultureIgnoreCase));
+        }
+
+        private string SortValue(taxonomic item)
+        {
+            return sortColumn?.SortMemberPath switch
+            {
+                nameof(taxonomic.scientificName) => item.scientificName,
+                nameof(taxonomic.taxonID) => item.taxonID,
+                nameof(taxonomic.taxonRank) => item.taxonRank,
+                nameof(taxonomic.kingdom) => item.kingdom,
+                nameof(taxonomic.phylum) => item.phylum,
+                nameof(taxonomic.class_) => item.class_,
+                nameof(taxonomic.order) => item.order,
+                nameof(taxonomic.family) => item.family,
+                nameof(taxonomic.genus) => item.genus,
+                "Species" => SpeciesNameConverter.SpeciesName(item),
+                _ => GetCommonName(item)
+            };
+        }
+
+        // Show these definitions in place of the current list, in the current sort order
+        private void ReplaceTaxonomicList(List<taxonomic> definitions)
+        {
+            TaxonomicList = new(definitions);
+            SortTaxonomicList();
+            dataGridSelectedRow = TaxonomicList.Count > 0 ? 0 : -1;
+            DataGrid_Refresh();
+            if (TaxonomicList.Count == 0)
+            {
+                NewRow_OnClick(null, null);
+            }
         }
 
         // When a data grid row is selected, populate the data fields with that row's contents
@@ -213,6 +295,7 @@ namespace TimelapseTemplateEditor.Dialog
             dataGrid.SelectedIndex = dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+            UpdateSaveToFileButton();
             DataFieldCommonName.Focus();
         }
 
@@ -233,57 +316,26 @@ namespace TimelapseTemplateEditor.Dialog
                     DataGrid_OnSelectionChanged(null, null);
                     SetFocus = true;
                 }
+                UpdateSaveToFileButton();
             }
         }
 
-        // Replace the current list with the species list in a json file chosen by the user
-        private void ImportList_OnClick(object sender, RoutedEventArgs e)
+        // Add to or replace the current list with the taxonomic information in a file chosen by the user
+        private void ImportFromFile_OnClick(object sender, RoutedEventArgs e)
         {
-            if (false == Dialogs.TryGetFileFromUserUsingOpenFileDialog(
-                    "Select a json file containing a species list",
-                    string.Empty,
-                    JsonFileFilter,
-                    ConstantFile.JsonFileExtension,
-                    out string filePath,
-                    this))
+            ImportFromFileWizard wizard = new(this, [.. TaxonomicList.Where(RecognitionFileTaxonomy.HasContent)], true == AppendQualifiers.IsChecked);
+            if (true == wizard.ShowDialog())
             {
-                return;
-            }
-
-            List<taxonomic> importedList;
-            try
-            {
-                importedList = JsonConvert.DeserializeObject<List<taxonomic>>(File.ReadAllText(filePath));
-            }
-            catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
-            {
-                Dialogs.EditorSpeciesListCouldNotImportDialog(this, filePath, ex.Message);
-                return;
-            }
-
-            // Valid json may still not be a species list, e.g., an array of unrelated objects would deserialize as empty rows
-            importedList?.RemoveAll(item => item == null);
-            if (importedList == null || (importedList.Count > 0 && importedList.TrueForAll(item => string.IsNullOrWhiteSpace(item.scientificName) && (item.vernacularNames == null || item.vernacularNames.Count == 0))))
-            {
-                Dialogs.EditorSpeciesListCouldNotImportDialog(this, filePath, "It does not contain a list of definitions with scientific or common names.");
-                return;
-            }
-
-            TaxonomicList = new(importedList);
-            dataGridSelectedRow = TaxonomicList.Count > 0 ? 0 : -1;
-            DataGrid_Refresh();
-            if (TaxonomicList.Count == 0)
-            {
-                NewRow_OnClick(null, null);
+                ReplaceTaxonomicList(wizard.ResultingList());
             }
         }
 
         // Save the current list to a json file chosen or created by the user.
-        private void ExportList_OnClick(object sender, RoutedEventArgs e)
+        private void SaveToFile_OnClick(object sender, RoutedEventArgs e)
         {
             if (false == Dialogs.TryGetFileFromUserUsingSaveFileDialog(
-                    "Export the species list to a json file",
-                    string.Empty,
+                    "Save the species list to a json file",
+                    lastSavedFilePath ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), DefaultFileName),
                     JsonFileFilter,
                     ConstantFile.JsonFileExtension,
                     out string filePath,
@@ -296,10 +348,34 @@ namespace TimelapseTemplateEditor.Dialog
             {
                 // WriteAllText writes UTF-8 without a BOM
                 File.WriteAllText(filePath, SerializeTaxonomicList(Formatting.Indented));
+                lastSavedFilePath = filePath;
+                savedContents = ListContents();
+                UpdateSaveToFileButton();
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                Dialogs.EditorSpeciesListCouldNotExportDialog(this, filePath, ex.Message);
+                Dialogs.EditorSpeciesListCouldNotSaveDialog(this, filePath, ex.Message);
+            }
+        }
+
+        // There is something to save if the list has definitions, or if all of them were removed since it was last saved
+        private void UpdateSaveToFileButton()
+        {
+            SaveToFile.IsEnabled = HasUnsavedChanges() || TaxonomicListForSaving().Count > 0;
+        }
+
+        private bool HasUnsavedChanges()
+        {
+            return savedContents != null && savedContents != ListContents();
+        }
+
+        // Warn about unsaved changes however the user exits, unless the window can't close at the moment anyway
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+            if (false == e.Cancel && HasUnsavedChanges() && true != Dialogs.EditorSpeciesListUnsavedChangesDialog(this))
+            {
+                e.Cancel = true;
             }
         }
 
@@ -313,13 +389,32 @@ namespace TimelapseTemplateEditor.Dialog
             taxonomic item = TaxonomicList[dataGrid.SelectedIndex];
             string scientificName = GbifSpeciesLookup.WithoutQualifier(DataFieldScientificName.Text.Trim());
 
-            GbifSpeciesMatch match = await ResolveGbifMatchAsync(scientificName, () => GbifSpeciesLookup.LookupAsync(scientificName));
+            GbifSpeciesMatch match = await ResolveGbifMatchAsync(scientificName, token => GbifSpeciesLookup.LookupAsync(scientificName, token));
             if (match == null)
             {
                 return;
             }
 
             ReplaceFieldsWithGbifMatch(item, match, match.CommonName);
+        }
+
+        // Fill in the selected definition's fields from GBIF, using its common name, which is kept as entered
+        private async void GbifCommonNameLookup_OnClick(object sender, RoutedEventArgs e)
+        {
+            if (dataGrid.SelectedIndex < 0 || dataGrid.SelectedIndex >= TaxonomicList.Count)
+            {
+                return;
+            }
+            taxonomic item = TaxonomicList[dataGrid.SelectedIndex];
+            string commonName = DataFieldCommonName.Text.Trim();
+
+            GbifSpeciesMatch match = await ResolveGbifMatchAsync(commonName, token => GbifSpeciesLookup.LookupByCommonNameAsync(commonName, token));
+            if (match == null)
+            {
+                return;
+            }
+
+            ReplaceFieldsWithGbifMatch(item, match, commonName);
         }
 
         // Fill in the selected definition's fields from GBIF, using its genus
@@ -366,7 +461,7 @@ namespace TimelapseTemplateEditor.Dialog
             }
             taxonomic item = TaxonomicList[dataGrid.SelectedIndex];
 
-            GbifSpeciesMatch match = await ResolveGbifMatchAsync(name, () => GbifSpeciesLookup.LookupAtRankAsync(name, rank));
+            GbifSpeciesMatch match = await ResolveGbifMatchAsync(name, token => GbifSpeciesLookup.LookupAtRankAsync(name, rank, token));
             if (match == null)
             {
                 return;
@@ -404,9 +499,9 @@ namespace TimelapseTemplateEditor.Dialog
 
         // Do the lookup, asking the user to choose or confirm if GBIF doesn't return a clear match.
         // Returns null if there is no match to use, after telling the user why if needed.
-        private async Task<GbifSpeciesMatch> ResolveGbifMatchAsync(string name, Func<Task<GbifLookupResult>> lookup)
+        private async Task<GbifSpeciesMatch> ResolveGbifMatchAsync(string name, Func<CancellationToken, Task<GbifLookupResult>> lookup)
         {
-            GbifLookupResult result = await TryGbifRequestAsync(lookup);
+            GbifLookupResult result = await TryGbifRequestAsync(name, lookup);
             if (result == null)
             {
                 return null;
@@ -417,7 +512,7 @@ namespace TimelapseTemplateEditor.Dialog
                 // There is no clear single match, so let the user choose
                 SelectGbifCandidate selectCandidate = new(this, name, result.Candidates);
                 return true == selectCandidate.ShowDialog()
-                    ? await TryGbifRequestAsync(() => GbifSpeciesLookup.GetMatchAsync(selectCandidate.SelectedCandidate.Key))
+                    ? await TryGbifRequestAsync(selectCandidate.SelectedCandidate.Name, token => GbifSpeciesLookup.GetMatchAsync(selectCandidate.SelectedCandidate.Key, token))
                     : null;
             }
 
@@ -433,28 +528,30 @@ namespace TimelapseTemplateEditor.Dialog
                 : null;
         }
 
-        // Disable the dialog during the request. Returns null if the request failed (after telling the user)
-        // or if the user closed the dialog while waiting.
-        private async Task<T> TryGbifRequestAsync<T>(Func<Task<T>> request) where T : class
+        // Show a busy indicator with a cancel button during the request, as it can be slow.
+        // Returns null if the user cancelled, or if the request failed (after telling the user).
+        private async Task<T> TryGbifRequestAsync<T>(string name, Func<CancellationToken, Task<T>> request) where T : class
         {
-            IsEnabled = false;
-            Cursor = Cursors.Wait;
+            TokenReset();
+            Progress.Report(new(0, $"Looking up {name} in GBIF...", true, true));
+            BusyCancelIndicator.IsBusy = true;
+            WindowCloseButtonIsEnabled(false);
             string failureReason = null;
             T result = null;
             try
             {
-                result = await request();
+                result = await request(Token);
+            }
+            catch (OperationCanceledException) when (Token.IsCancellationRequested)
+            {
+                // The user cancelled the lookup, so nothing changes
             }
             catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
             {
                 failureReason = ex.Message;
             }
-            if (false == IsLoaded)
-            {
-                return null;
-            }
-            IsEnabled = true;
-            Cursor = null;
+            WindowCloseButtonIsEnabled(true);
+            BusyCancelIndicator.IsBusy = false;
             if (failureReason != null)
             {
                 Dialogs.EditorSpeciesListGbifNotAvailableDialog(this, failureReason);
@@ -480,6 +577,7 @@ namespace TimelapseTemplateEditor.Dialog
         // and refresh the datagrid to reflect those changes
         private void DataField_OnTextChanged(object sender, TextChangedEventArgs e)
         {
+            GbifCommonNameLookup.IsEnabled = false == string.IsNullOrWhiteSpace(DataFieldCommonName.Text);
             GbifLookup.IsEnabled = false == string.IsNullOrWhiteSpace(DataFieldScientificName.Text);
             GbifGenusLookup.IsEnabled = false == string.IsNullOrWhiteSpace(DataFieldGenus.Text);
             GbifFamilyLookup.IsEnabled = false == string.IsNullOrWhiteSpace(DataFieldFamily.Text);
@@ -547,9 +645,23 @@ namespace TimelapseTemplateEditor.Dialog
         #region Json Serializer
         private string SerializeTaxonomicList(Formatting formatting)
         {
+            return JsonConvert.SerializeObject(TaxonomicListForSaving(), NewSerializerSettings(formatting));
+        }
+
+        // The definitions regardless of their order, as sorting the list isn't a change to its contents
+        private string ListContents()
+        {
+            JsonSerializerSettings settings = NewSerializerSettings(Formatting.None);
+            return string.Join(Environment.NewLine, TaxonomicListForSaving()
+                .Select(definition => JsonConvert.SerializeObject(definition, settings))
+                .OrderBy(definition => definition, StringComparer.Ordinal));
+        }
+
+        private List<taxonomic> TaxonomicListForSaving()
+        {
             // Empty strings and empty vernacular lists are set to null (to make for a cleaner json)
             // If a taxonomic object is all empty, skip it
-            List<taxonomic> taxonomicListForExport = [];
+            List<taxonomic> taxonomicListForSaving = [];
             foreach (taxonomic item in TaxonomicList)
             {
                 taxonomic newTaxonomic = new()
@@ -570,17 +682,21 @@ namespace TimelapseTemplateEditor.Dialog
                     || newTaxonomic.order != null || newTaxonomic.family != null || newTaxonomic.genus != null
                     || newTaxonomic.vernacularNames != null)
                 {
-                    taxonomicListForExport.Add(newTaxonomic);
+                    taxonomicListForSaving.Add(newTaxonomic);
                 }
             }
+            return taxonomicListForSaving;
+        }
 
+        private static JsonSerializerSettings NewSerializerSettings(Formatting formatting)
+        {
             JsonSerializerSettings settings = new()
             {
                 NullValueHandling = NullValueHandling.Ignore,
                 Formatting = formatting
             };
             settings.Converters.Add(new JsonConverters.WhiteSpaceToNullConverter());
-            return JsonConvert.SerializeObject(taxonomicListForExport, settings);
+            return settings;
         }
 
         private static string NullIfWhiteSpace(string value)

@@ -129,7 +129,14 @@ namespace Timelapse.Standards
         public string taxonRank { get; set; } 
         public string kingdom { get; set; } 
         public string phylum { get; set; } 
+        // As class is a C# keyword, we do it as class_ and convert it to class in the json.
+        [JsonProperty("class")]
         public string class_ { get; set; } 
+
+        // Taxonomic lists saved by earlier versions used class_ in the json, so still read it. It is never written.
+        [JsonProperty("class_")]
+        private string LegacyClass { set => class_ = value; }
+
         public string order { get; set; } 
         public string family { get; set; } 
         public string genus { get; set; } 
