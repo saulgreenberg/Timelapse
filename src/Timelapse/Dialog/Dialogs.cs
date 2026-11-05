@@ -4157,6 +4157,40 @@ namespace Timelapse.Dialog
         }
         #endregion
 
+        #region CamtrapDP Dialogs: Species list
+        public static void CamtrapDPSpeciesListProblemDialog(Window owner, string filePath, string problem)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Could not use this species list file",
+                Problem = $"{problem}[br 2]" +
+                          $"[li] #DarkSlateGray[[e]{filePath}[/e]]",
+                Result = "Nothing was changed.",
+                Solution = "Select a species list file created by [e]Save to file[/e] in the Template Editor's [e]File > Edit a species list[/e].",
+                Icon = DialogIconType.Warning
+            };
+            dialog.OkButton.Content = "Okay";
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+
+        public static void CamtrapDPSpeciesListNotesDialog(Window owner, int addedCount, List<string> notes)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Some of the species list couldn't be used",
+                What = $"{addedCount} definition(s) were added from the species list file.",
+                Problem = string.Join("[br 2]", notes.ConvertAll(note => $"[li] {note}")),
+                Icon = DialogIconType.Information
+            };
+            dialog.OkButton.Content = "Okay";
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            dialog.BuildAndShowDialog();
+        }
+        #endregion
+
         #region Template Editor Dialogs: Species list GBIF lookup
         public static void EditorSpeciesListGbifIncompleteDialog(Window owner, string reason)
         {

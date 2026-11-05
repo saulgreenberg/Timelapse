@@ -1,0 +1,39 @@
+﻿<Window x:Class="Timelapse.Standards.CamtrapDPPopulateFromSpeciesList"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Populate from a Species List file"
+        Width="620" SizeToContent="Height" ResizeMode="NoResize"
+        ShowInTaskbar="False" WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="10">
+        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+            A <Run Text="species list file" FontWeight="Bold" FontStyle="Italic"/> is a json file containing a list of taxonomic definitions.
+            Its fields match those in this dialog: scientific name, taxon id, taxonomic rank, kingdom, phylum, class, order, family, genus and vernacular names.
+        </TextBlock>
+        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+            <Run Text="To create one" FontWeight="Bold"/>
+            <LineBreak/>
+            1. Open the Template Editor and select <Run Text="File > Edit a species list" FontStyle="Italic"/>.
+            <LineBreak/>
+            2. Add definitions by entering them, by looking them up in GBIF, or with <Run Text="Import from file" FontStyle="Italic"/>.
+            <LineBreak/>
+            3. Select <Run Text="Save to file" FontStyle="Italic"/> to create the species list file.
+        </TextBlock>
+        <TextBlock TextWrapping="Wrap" Margin="0,0,0,10">
+            <Run Text="When you select the file" FontWeight="Bold"/>
+            <LineBreak/>
+            Each of its definitions becomes a row in the taxonomic definition list, with its fields filled in.
+            Common names become English vernacular names, and qualifiers such as sp. and indet. are removed from scientific names.
+        </TextBlock>
+        <StackPanel Name="ExistingDefinitionsPanel" Visibility="Collapsed" Margin="0,0,0,10">
+            <TextBlock Name="ExistingDefinitionsMessage" TextWrapping="Wrap" FontWeight="Bold" Margin="0,0,0,5"/>
+            <RadioButton Name="AddToDefinitions" GroupName="Existing" IsChecked="True" Margin="0,0,0,5"
+                         Content="Add the file's definitions, leaving out any whose scientific name is already in the list"/>
+            <RadioButton Name="ReplaceDefinitions" GroupName="Existing"
+                         Content="Replace the current definitions with the file's definitions"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5,0,0">
+            <Button Content="_Cancel" IsCancel="True" Padding="10" Margin="5,0,5,0" MinWidth="60"/>
+            <Button Name="SelectFile" Content="_Select a species list file" IsDefault="True" Padding="10" Margin="5,0,0,0" Click="SelectFile_OnClick"/>
+        </StackPanel>
+    </StackPanel>
+</Window>

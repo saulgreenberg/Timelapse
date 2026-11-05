@@ -5,8 +5,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -126,7 +124,7 @@ namespace TimelapseTemplateEditor.Dialog
 
         private void EditSpeciesList_OnLoaded(object sender, RoutedEventArgs e)
         {
-            InitalizeProgressHandler(BusyCancelIndicator);
+            InitializeGbifLookups(BusyCancelIndicator);
             DataContext = this;
             if (string.IsNullOrWhiteSpace(JsonTaxonomicList))
             {
@@ -506,68 +504,6 @@ namespace TimelapseTemplateEditor.Dialog
         private string QualifiedIfRequested(string name, string rank)
         {
             return true == AppendQualifiers.IsChecked ? GbifSpeciesLookup.QualifiedName(name, rank) : name;
-        }
-
-        // Do the lookup, asking the user to choose or confirm if GBIF doesn't return a clear match.
-        // Returns null if there is no match to use, after telling the user why if needed.
-        private async Task<GbifSpeciesMatch> ResolveGbifMatchAsync(string name, Func<CancellationToken, Task<GbifLookupResult>> lookup)
-        {
-            GbifLookupResult result = await TryGbifRequestAsync(name, lookup);
-            if (result == null)
-            {
-                return null;
-            }
-
-            if (result.Candidates.Count > 0)
-            {
-                // There is no clear single match, so let the user choose
-                SelectGbifCandidate selectCandidate = new(this, name, result.Candidates);
-                return true == selectCandidate.ShowDialog()
-                    ? await TryGbifRequestAsync(selectCandidate.SelectedCandidate.Name, token => GbifSpeciesLookup.GetMatchAsync(selectCandidate.SelectedCandidate.Key, token))
-                    : null;
-            }
-
-            GbifSpeciesMatch match = result.Match;
-            if (match == null)
-            {
-                Dialogs.EditorSpeciesListGbifNoMatchDialog(this, name);
-                return null;
-            }
-
-            return match.IsExactMatch || true == Dialogs.EditorSpeciesListGbifUseClosestMatchDialog(this, name, match.ScientificName, match.TaxonRank, match.IsSynonym)
-                ? match
-                : null;
-        }
-
-        // Show a busy indicator with a cancel button during the request, as it can be slow.
-        // Returns null if the user cancelled, or if the request failed (after telling the user).
-        private async Task<T> TryGbifRequestAsync<T>(string name, Func<CancellationToken, Task<T>> request) where T : class
-        {
-            TokenReset();
-            Progress.Report(new(0, $"Looking up {name} in GBIF...", true, true));
-            BusyCancelIndicator.IsBusy = true;
-            WindowCloseButtonIsEnabled(false);
-            string failureReason = null;
-            T result = null;
-            try
-            {
-                result = await request(Token);
-            }
-            catch (OperationCanceledException) when (Token.IsCancellationRequested)
-            {
-                // The user cancelled the lookup, so nothing changes
-            }
-            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
-            {
-                failureReason = ex.Message;
-            }
-            WindowCloseButtonIsEnabled(true);
-            BusyCancelIndicator.IsBusy = false;
-            if (failureReason != null)
-            {
-                Dialogs.EditorSpeciesListGbifNotAvailableDialog(this, failureReason);
-            }
-            return result;
         }
 
         // If there are changes to lose, closing the window shows the warning, which lets the user change their mind

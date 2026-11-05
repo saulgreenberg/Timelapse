@@ -2,11 +2,15 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Dialog;
 using Timelapse.Util;
+using TimelapseTemplateEditor.Dialog;
 using TextBox = System.Windows.Controls.TextBox;
 #pragma warning disable IDE1006
 
@@ -93,23 +97,24 @@ namespace Timelapse.Standards
         #endregion
 
         #region Private variables
+        private DataGridColumn sortColumn;
+        private ListSortDirection sortDirection = ListSortDirection.Ascending;
         private bool DontUpdate;
         private bool SetFocus = true;
         private int dataGridSelectedRow = -1;
         #endregion 
 
         #region Constructor / Loaded
-        public CamtrapDPTaxonomic(Window owner, string jsonTaxonomicList)
+        public CamtrapDPTaxonomic(Window owner, string jsonTaxonomicList) : base(owner)
         {
             InitializeComponent();
             DataContext = this;
-            Owner = owner;
             JsonTaxonomicList = jsonTaxonomicList;
         }
 
         private void CamptrapDP_OnLoaded(object sender, RoutedEventArgs e)
         {
-            Dialogs.TryPositionAndFitDialogIntoWindow(this);
+            InitializeGbifLookups(BusyCancelIndicator);
             DataContext = this;
             if (string.IsNullOrWhiteSpace(JsonTaxonomicList))
             {
@@ -125,7 +130,10 @@ namespace Timelapse.Standards
             {
                 // Maybe show an error dialog?
                 DialogResult = false;
+                return;
             }
+            sortColumn = ScientificNameColumn;
+            SortTaxonomicList();
             DataGrid_Refresh();
             if (dataGrid.Items.Count == 0)
             {
@@ -147,9 +155,87 @@ namespace Timelapse.Standards
             dataGrid.ItemsSource = null;
             dataGrid.Items.Clear();
             dataGrid.ItemsSource = TaxonomicList;
+            if (sortColumn != null)
+            {
+                // Setting the ItemsSource clears the column header's sort arrow
+                sortColumn.SortDirection = sortDirection;
+            }
             DontUpdate = false;
             dataGrid.SelectedIndex = dataGridSelectedRow < dataGrid.Items.Count ? dataGridSelectedRow : -1;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
+            UpdateScientificNameHeader();
+        }
+
+        // Highlight the header if any definition is missing its required scientific name, as that row may be scrolled out of view
+        private void UpdateScientificNameHeader()
+        {
+            ScientificNameColumn.HeaderStyle = TaxonomicList?.Any(IsMissingScientificName) == true
+                ? (Style)dataGrid.Resources["MissingScientificNameHeaderStyle"]
+                : dataGrid.ColumnHeaderStyle;
+        }
+
+        private static bool IsMissingScientificName(taxonomic item)
+        {
+            return string.IsNullOrWhiteSpace(item.scientificName) && RecognitionFileTaxonomy.HasContent(item);
+        }
+
+        // Sort by the clicked column, or reverse the order if it is already the sorted column.
+        // This sorts the list itself rather than the grid's view of it, as the code relies on the grid's rows matching the list's order.
+        private void DataGrid_OnSorting(object sender, DataGridSortingEventArgs e)
+        {
+            e.Handled = true;
+            sortDirection = e.Column == sortColumn && sortDirection == ListSortDirection.Ascending
+                ? ListSortDirection.Descending
+                : ListSortDirection.Ascending;
+            if (sortColumn != null)
+            {
+                sortColumn.SortDirection = null;
+            }
+            sortColumn = e.Column;
+
+            taxonomic selectedItem = dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < TaxonomicList.Count ? TaxonomicList[dataGrid.SelectedIndex] : null;
+            SortTaxonomicList();
+            dataGridSelectedRow = TaxonomicList.IndexOf(selectedItem);
+            SetFocus = false;
+            DataGrid_Refresh();
+            SetFocus = true;
+        }
+
+        // Sort the list by the sort column
+        private void SortTaxonomicList()
+        {
+            IOrderedEnumerable<taxonomic> groupedRows = TaxonomicList.OrderBy(SortGroup);
+            TaxonomicList = new(sortDirection == ListSortDirection.Ascending
+                ? groupedRows.ThenBy(SortValue, StringComparer.CurrentCultureIgnoreCase)
+                : groupedRows.ThenByDescending(SortValue, StringComparer.CurrentCultureIgnoreCase));
+        }
+
+        // Empty values are last, except that an A to Z sort by scientific name puts missing ones first to make them evident.
+        // A row with nothing filled in isn't missing anything, as it won't be saved.
+        private int SortGroup(taxonomic item)
+        {
+            if (false == string.IsNullOrWhiteSpace(SortValue(item)))
+            {
+                return 1;
+            }
+            return sortColumn == ScientificNameColumn && sortDirection == ListSortDirection.Ascending && IsMissingScientificName(item) ? 0 : 2;
+        }
+
+        private string SortValue(taxonomic item)
+        {
+            return sortColumn.SortMemberPath switch
+            {
+                nameof(taxonomic.taxonID) => item.taxonID,
+                nameof(taxonomic.taxonRank) => item.taxonRank,
+                nameof(taxonomic.kingdom) => item.kingdom,
+                nameof(taxonomic.phylum) => item.phylum,
+                nameof(taxonomic.class_) => item.class_,
+                nameof(taxonomic.order) => item.order,
+                nameof(taxonomic.family) => item.family,
+                nameof(taxonomic.genus) => item.genus,
+                nameof(taxonomic.vernacularNames) => VernacularNamesConverter.Text(item.vernacularNames),
+                _ => item.scientificName
+            };
         }
 
         // When a data grid row is selected, populate the data fields with that row's contents
@@ -176,6 +262,7 @@ namespace Timelapse.Standards
                 DataFieldOrder.Text = taxonomic.order;
                 DataFieldFamily.Text = taxonomic.family;
                 DataFieldGenus.Text = taxonomic.genus;
+                DataFieldFirstVernacularName.Text = FirstVernacularName(taxonomic);
             }
             else
             {
@@ -189,6 +276,7 @@ namespace Timelapse.Standards
                 DataFieldOrder.Text = string.Empty;
                 DataFieldFamily.Text = string.Empty;
                 DataFieldGenus.Text = string.Empty;
+                DataFieldFirstVernacularName.Text = string.Empty;
             }
             DontUpdate = false;
             if (SetFocus)
@@ -225,6 +313,37 @@ namespace Timelapse.Standards
                     DataGrid_OnSelectionChanged(null, null);
                     SetFocus = true;
                 }
+                UpdateScientificNameHeader();
+            }
+        }
+
+        // Fill in the list with the definitions in a species list file located by the user
+        private void PopulateFromSpeciesList_OnClick(object sender, RoutedEventArgs e)
+        {
+            List<taxonomic> definitions = [.. TaxonomicList.Where(RecognitionFileTaxonomy.HasContent)];
+            CamtrapDPPopulateFromSpeciesList populateDialog = new(this, definitions.Count);
+            if (true != populateDialog.ShowDialog())
+            {
+                return;
+            }
+
+            List<taxonomic> definitionsToKeep = populateDialog.ReplaceExistingDefinitions ? [] : definitions;
+            List<taxonomic> merged = CamtrapDPSpeciesList.Merged(definitionsToKeep, populateDialog.SpeciesList.Definitions, out int skippedCount);
+            TaxonomicList = new(merged);
+            SortTaxonomicList();
+            dataGridSelectedRow = 0;
+            SetFocus = false;
+            DataGrid_Refresh();
+            SetFocus = true;
+
+            List<string> notes = populateDialog.SpeciesList.Notes;
+            if (skippedCount > 0)
+            {
+                notes.Add($"{skippedCount} definition(s) were left out, as their name was already in the list.");
+            }
+            if (notes.Count > 0)
+            {
+                Dialogs.CamtrapDPSpeciesListNotesDialog(this, merged.Count - definitionsToKeep.Count, notes);
             }
         }
 
@@ -241,11 +360,98 @@ namespace Timelapse.Standards
         }
         #endregion
 
+        #region Callbacks: GBIF lookups
+        // Fill in the selected definition's fields from GBIF, using its scientific name
+        private async void GbifLookup_OnClick(object sender, RoutedEventArgs e)
+        {
+            string scientificName = GbifSpeciesLookup.WithoutQualifier(DataFieldScientificName.Text.Trim());
+            await FillFieldsFromGbifAsync(scientificName, token => GbifSpeciesLookup.LookupAsync(scientificName, token));
+        }
+
+        private async void GbifKingdomLookup_OnClick(object sender, RoutedEventArgs e)
+        {
+            await FillFieldsFromGbifAtRankAsync(DataFieldKingdom.Text.Trim(), GbifSpeciesLookup.KingdomRank);
+        }
+
+        private async void GbifPhylumLookup_OnClick(object sender, RoutedEventArgs e)
+        {
+            await FillFieldsFromGbifAtRankAsync(DataFieldPhylum.Text.Trim(), GbifSpeciesLookup.PhylumRank);
+        }
+
+        private async void GbifClassLookup_OnClick(object sender, RoutedEventArgs e)
+        {
+            await FillFieldsFromGbifAtRankAsync(DataFieldClass.Text.Trim(), GbifSpeciesLookup.ClassRank);
+        }
+
+        private async void GbifOrderLookup_OnClick(object sender, RoutedEventArgs e)
+        {
+            await FillFieldsFromGbifAtRankAsync(DataFieldOrder.Text.Trim(), GbifSpeciesLookup.OrderRank);
+        }
+
+        private async void GbifFamilyLookup_OnClick(object sender, RoutedEventArgs e)
+        {
+            await FillFieldsFromGbifAtRankAsync(DataFieldFamily.Text.Trim(), GbifSpeciesLookup.FamilyRank);
+        }
+
+        private async void GbifGenusLookup_OnClick(object sender, RoutedEventArgs e)
+        {
+            await FillFieldsFromGbifAtRankAsync(DataFieldGenus.Text.Trim(), GbifSpeciesLookup.GenusRank);
+        }
+
+        private Task FillFieldsFromGbifAtRankAsync(string name, string rank)
+        {
+            return FillFieldsFromGbifAsync(name, token => GbifSpeciesLookup.LookupAtRankAsync(name, rank, token));
+        }
+
+        private async Task FillFieldsFromGbifAsync(string name, Func<System.Threading.CancellationToken, Task<GbifLookupResult>> lookup)
+        {
+            if (dataGrid.SelectedIndex < 0 || dataGrid.SelectedIndex >= TaxonomicList.Count)
+            {
+                return;
+            }
+            taxonomic item = TaxonomicList[dataGrid.SelectedIndex];
+
+            GbifSpeciesMatch match = await ResolveGbifMatchAsync(name, lookup);
+            if (match == null)
+            {
+                return;
+            }
+
+            // The definition is now for the matched taxon, so fields GBIF doesn't return end up empty, e.g., a family has no genus.
+            // The exception is vernacular names: GBIF only provides the English one, so names in other languages are kept.
+            item.scientificName = match.ScientificName;
+            item.taxonID = match.TaxonID;
+            item.taxonRank = match.TaxonRank;
+            item.kingdom = match.Kingdom;
+            item.phylum = match.Phylum;
+            item.class_ = match.Class;
+            item.order = match.Order;
+            item.family = match.Family;
+            item.genus = match.Genus;
+            if (false == string.IsNullOrWhiteSpace(match.CommonName))
+            {
+                item.vernacularNames ??= [];
+                item.vernacularNames[GbifSpeciesLookup.CommonNameLanguageCode] = match.CommonName;
+            }
+
+            SetFocus = false;
+            DataGrid_Refresh();
+            SetFocus = true;
+        }
+        #endregion
+
         #region Callbacks: DataField edits
         // When a data field is edited, update the taxonomic list to reflect that change
         // and refresh the datagrid to reflect those changes
         private void DataField_OnTextChanged(object sender, TextChangedEventArgs e)
         {
+            GbifLookup.IsEnabled = false == string.IsNullOrWhiteSpace(DataFieldScientificName.Text);
+            GbifKingdomLookup.IsEnabled = false == string.IsNullOrWhiteSpace(DataFieldKingdom.Text);
+            GbifPhylumLookup.IsEnabled = false == string.IsNullOrWhiteSpace(DataFieldPhylum.Text);
+            GbifClassLookup.IsEnabled = false == string.IsNullOrWhiteSpace(DataFieldClass.Text);
+            GbifOrderLookup.IsEnabled = false == string.IsNullOrWhiteSpace(DataFieldOrder.Text);
+            GbifFamilyLookup.IsEnabled = false == string.IsNullOrWhiteSpace(DataFieldFamily.Text);
+            GbifGenusLookup.IsEnabled = false == string.IsNullOrWhiteSpace(DataFieldGenus.Text);
             if (DontUpdate)
             {
                 return;
@@ -383,6 +589,16 @@ namespace Timelapse.Standards
         #endregion
 
         #region VernacularItems Helpers
+        private static string FirstVernacularName(taxonomic taxonomic)
+        {
+            if (taxonomic.vernacularNames == null || taxonomic.vernacularNames.Count == 0)
+            {
+                return string.Empty;
+            }
+            KeyValuePair<string, string> first = taxonomic.vernacularNames.First();
+            return $"{first.Key}: {first.Value}";
+        }
+
         private void SetVernacularItemsListFromStringList(List<string> stringList)
         {
 
