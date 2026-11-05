@@ -80,13 +80,6 @@
                     Content="Import from file"
                     ToolTip="Add taxonomic information to the list from a recognition file, a Timelapse database, or a previously saved species list."
                     Click="ImportFromFile_OnClick"/>
-            <Button Name="SaveToFile"
-                    IsEnabled="False"
-                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
-                    Padding="10" Margin="10,10,0,0"
-                    Content="Save to file"
-                    ToolTip="Save the current list to a json file"
-                    Click="SaveToFile_OnClick"/>
         </StackPanel>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -378,16 +371,18 @@
         </Grid>
 
         <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10,10,5,10" >
-            <Button Name="DoneButton"  
-                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
+            <Button Name="SaveToFile"
+                    IsEnabled="False"
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
                     Padding="10" Margin="10,10,10,0"
-                    Content="Done" 
-                    Click="Done_OnClick"/>
-            <Button Name="Cancel"  
-                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch" 
-                    Padding="10" Margin="10,10,10,0" 
-                    Content ="Cancel"
-                    Click="Cancel_OnClick"/>
+                    Content="Save to file"
+                    ToolTip="Save the current list to a json file"
+                    Click="SaveToFile_OnClick"/>
+            <Button Name="ExitButton"
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                    Padding="10" Margin="10,10,10,0"
+                    Content="Exit"
+                    Click="Exit_OnClick"/>
         </StackPanel>
         <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" Grid.RowSpan="7" CancelClick="CancelAsyncOperationButton_Click"/>
     </Grid>

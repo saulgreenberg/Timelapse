@@ -4096,12 +4096,15 @@ namespace Timelapse.Dialog
             var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
             {
                 Owner = owner,
-                DialogTitle = "Exit anyway?",
+                DialogTitle = "You haven't saved your changes!",
                 What = "You haven't saved the changes to your species list.",
-                Solution = "[li] Select [e]Ok[/e] to exit anyway, which loses those changes.[br 2]" +
+                Solution = "[li] Select [e]Exit without saving changes[/e] to exit anyway, which loses those changes.[br 2]" +
                            "[li] Select [e]Cancel[/e] to go back, where you can use [e]Save to file[/e].",
                 Icon = DialogIconType.Warning
             };
+            dialog.OkButton.Content = "Exit without saving changes";
+            dialog.OkButton.Width = double.NaN;
+            dialog.OkButton.Padding = new Thickness(10, 0, 10, 0);
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
             return dialog.BuildAndShowDialog();
         }

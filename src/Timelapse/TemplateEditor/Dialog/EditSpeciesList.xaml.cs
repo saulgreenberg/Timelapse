@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using Timelapse.Dialog;
 using Timelapse.Standards;
 using Timelapse.Util;
@@ -175,7 +174,7 @@ namespace TimelapseTemplateEditor.Dialog
             DontUpdate = false;
             dataGrid.SelectedIndex = dataGridSelectedRow < dataGrid.Items.Count ? dataGridSelectedRow : -1;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
-            UpdateSaveToFileButton();
+            UpdateBottomButtons();
         }
 
         // Sort by the clicked column, or reverse the order if it is already the sorted column.
@@ -295,7 +294,7 @@ namespace TimelapseTemplateEditor.Dialog
             dataGrid.SelectedIndex = dataGrid.Items.Count - 1;
             dataGridSelectedRow = dataGrid.SelectedIndex;
             EditGrid.IsEnabled = dataGrid.Items.Count > 0;
-            UpdateSaveToFileButton();
+            UpdateBottomButtons();
             DataFieldCommonName.Focus();
         }
 
@@ -316,7 +315,7 @@ namespace TimelapseTemplateEditor.Dialog
                     DataGrid_OnSelectionChanged(null, null);
                     SetFocus = true;
                 }
-                UpdateSaveToFileButton();
+                UpdateBottomButtons();
             }
         }
 
@@ -350,7 +349,7 @@ namespace TimelapseTemplateEditor.Dialog
                 File.WriteAllText(filePath, SerializeTaxonomicList(Formatting.Indented));
                 lastSavedFilePath = filePath;
                 savedContents = ListContents();
-                UpdateSaveToFileButton();
+                UpdateBottomButtons();
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -358,10 +357,16 @@ namespace TimelapseTemplateEditor.Dialog
             }
         }
 
-        // There is something to save if the list has definitions, or if all of them were removed since it was last saved
-        private void UpdateSaveToFileButton()
+        // There is something to save if the list has definitions, or if all of them were removed since it was last saved.
+        // The exit button's label says what exiting means for the user's changes.
+        private void UpdateBottomButtons()
         {
             SaveToFile.IsEnabled = HasUnsavedChanges() || TaxonomicListForSaving().Count > 0;
+            ExitButton.Content = HasChangesToLose()
+                ? "Exit without saving changes"
+                : TaxonomicListForSaving().Count > 0
+                    ? "Exit (all changes saved)"
+                    : "Exit";
         }
 
         private bool HasUnsavedChanges()
@@ -369,11 +374,17 @@ namespace TimelapseTemplateEditor.Dialog
             return savedContents != null && savedContents != ListContents();
         }
 
-        // Warn about unsaved changes however the user exits, unless the window can't close at the moment anyway
+        // An empty list has nothing worth warning about, even if it was emptied since it was last saved
+        private bool HasChangesToLose()
+        {
+            return HasUnsavedChanges() && TaxonomicListForSaving().Count > 0;
+        }
+
+        // Warn about changes that would be lost however the user exits, unless the window can't close at the moment anyway
         protected override void OnClosing(CancelEventArgs e)
         {
             base.OnClosing(e);
-            if (false == e.Cancel && HasUnsavedChanges() && true != Dialogs.EditorSpeciesListUnsavedChangesDialog(this))
+            if (false == e.Cancel && HasChangesToLose() && true != Dialogs.EditorSpeciesListUnsavedChangesDialog(this))
             {
                 e.Cancel = true;
             }
@@ -559,14 +570,14 @@ namespace TimelapseTemplateEditor.Dialog
             return result;
         }
 
-        private void Cancel_OnClick(object sender, RoutedEventArgs e)
+        // If there are changes to lose, closing the window shows the warning, which lets the user change their mind
+        private void Exit_OnClick(object sender, RoutedEventArgs e)
         {
-            DialogResult = false;
-        }
-
-        private void Done_OnClick(object sender, RoutedEventArgs e)
-        {
-
+            if (HasChangesToLose())
+            {
+                DialogResult = false;
+                return;
+            }
             JsonTaxonomicList = SerializeTaxonomicList(Formatting.None);
             DialogResult = true;
         }
