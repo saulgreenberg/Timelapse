@@ -463,14 +463,16 @@ namespace Timelapse
                 // special case for empty string
                 return DataLabelOperatorValue(dataLabel, mathOperator, "*", Control.MultiLine);
             }
+            // An Includes only has to match the term in one position, while an Excludes has to fail in every position.
+            string positionOperator = mathOperator.Trim() == "NOT GLOB" ? Sql.And : Sql.Or;
             string[] terms = value.Split(',');
             string where = string.Empty;
             for (int i = 0; i < terms.Length; i++)
             {
                 where += Sql.OpenParenthesis;
-                where += $"{dataLabel} {mathOperator} {Sql.Quote(terms[i])} {Sql.Or}";          // aa:   matches a single term
-                where += $"{dataLabel} {mathOperator} {Sql.Quote(terms[i] + ",*")} {Sql.Or}";   // aa,*  matches term at beginning 
-                where += $"{dataLabel} {mathOperator} {Sql.Quote("*," + terms[i])} {Sql.Or}";   // *,aa  matches term at end  
+                where += $"{dataLabel} {mathOperator} {Sql.Quote(terms[i])} {positionOperator}";          // aa:   matches a single term
+                where += $"{dataLabel} {mathOperator} {Sql.Quote(terms[i] + ",*")} {positionOperator}";   // aa,*  matches term at beginning 
+                where += $"{dataLabel} {mathOperator} {Sql.Quote("*," + terms[i])} {positionOperator}";   // *,aa  matches term at end  
                 where += $"{dataLabel} {mathOperator} {Sql.Quote("*," + terms[i] + ",*")}";     // *,aa,*  matchesin middle
                 where += Sql.CloseParenthesis;
                 if (i < terms.Length - 1)
