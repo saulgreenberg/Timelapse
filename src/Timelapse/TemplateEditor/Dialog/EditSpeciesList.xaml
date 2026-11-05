@@ -235,6 +235,7 @@
                          Margin="5,5,5,5"
                          Text=""
                          ToolTip ="{Binding Path=ScientificNameField.Tooltip}"
+                         LostKeyboardFocus="DataFieldScientificName_OnLostKeyboardFocus"
                          TextChanged = "DataField_OnTextChanged"
                          />
             </DockPanel>
@@ -366,8 +367,9 @@
             <CheckBox Grid.Row="10" Grid.Column="1"
                       Name="AppendQualifiers"
                       Margin="5,5,5,5"
-                      Content="Append qualifiers (e.g., sp., indet.) to GBIF scientific names at the genus rank or higher."
-                      ToolTip="Adds 'sp.' when the rank is genus, and 'indet.' when it is above genus, e.g., Ursus sp. or Ursidae indet. A common name only gets one if GBIF doesn't list a common name, so the taxon's name is used instead."/>
+                      Content="Append qualifiers (e.g., sp., indet.) to scientific names at the genus rank or higher."
+                      ToolTip="Adds 'sp.' to scientific names when the rank is genus, and 'indet.' when it is above genus, e.g., Ursus sp. or Ursidae indet. Otherwise, these qualifiers are removed. A common name only gets one during a GBIF lookup if GBIF doesn't list a common name, so the taxon's name is used instead."
+                      Click="AppendQualifiers_OnClick"/>
         </Grid>
 
         <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="10,10,5,10" >

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Timelapse.Dialog;
 using Timelapse.Standards;
 using Timelapse.Util;
@@ -228,6 +229,7 @@ namespace TimelapseTemplateEditor.Dialog
         private void ReplaceTaxonomicList(List<taxonomic> definitions)
         {
             TaxonomicList = new(definitions);
+            UpdateQualifiers();
             SortTaxonomicList();
             dataGridSelectedRow = TaxonomicList.Count > 0 ? 0 : -1;
             DataGrid_Refresh();
@@ -506,6 +508,46 @@ namespace TimelapseTemplateEditor.Dialog
             return true == AppendQualifiers.IsChecked ? GbifSpeciesLookup.QualifiedName(name, rank) : name;
         }
 
+        // Add or remove the qualifier in every scientific name, as the checkbox and each definition's rank require.
+        // Returns whether any name changed.
+        private bool UpdateQualifiers()
+        {
+            bool isChanged = false;
+            foreach (taxonomic item in TaxonomicList.Where(item => false == string.IsNullOrWhiteSpace(item.scientificName)))
+            {
+                string name = QualifiedIfRequested(GbifSpeciesLookup.WithoutQualifier(item.scientificName.Trim()), item.taxonRank?.Trim().ToLowerInvariant());
+                if (name != item.scientificName)
+                {
+                    item.scientificName = name;
+                    isChanged = true;
+                }
+            }
+            return isChanged;
+        }
+
+        private void AppendQualifiers_OnClick(object sender, RoutedEventArgs e)
+        {
+            UpdateQualifiers();
+            SetFocus = false;
+            DataGrid_Refresh();
+            SetFocus = true;
+        }
+
+        // The name is only finished once the user leaves the field, as a qualifier can't be added while they are typing.
+        // Refreshing the grid has to wait, as this may be in the middle of a click on one of the grid's rows.
+        private void DataFieldScientificName_OnLostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e)
+        {
+            if (UpdateQualifiers())
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    SetFocus = false;
+                    DataGrid_Refresh();
+                    SetFocus = true;
+                });
+            }
+        }
+
         // If there are changes to lose, closing the window shows the warning, which lets the user change their mind
         private void Exit_OnClick(object sender, RoutedEventArgs e)
         {
@@ -584,6 +626,7 @@ namespace TimelapseTemplateEditor.Dialog
             if (sender is ComboBox cb && dataGrid.SelectedIndex >= 0 && dataGrid.SelectedIndex < TaxonomicList.Count && cb.SelectedValue != null)
             {
                 TaxonomicList[dataGrid.SelectedIndex].taxonRank = (string)((ComboBoxItem)cb.SelectedValue).Content;
+                UpdateQualifiers();
             }
             DataGrid_Refresh();
         }
