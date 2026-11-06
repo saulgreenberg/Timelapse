@@ -35,6 +35,10 @@ namespace Timelapse.SearchingAndSorting
         public bool EpisodeShowAllIfAnyMatch { get; set; } = false;
         public string EpisodeNoteField { get; set; } = string.Empty;
 
+        // The folder metadata search terms. As they are saved in their own database entry, they aren't part of the json saved for the other search terms.
+        [Newtonsoft.Json.JsonIgnore]
+        public FolderMetadataSelection FolderMetadata { get; set; }
+
         #endregion
 
         #region Constructor
@@ -315,6 +319,7 @@ namespace Timelapse.SearchingAndSorting
             {
                 RecognitionSelections.ClearAllDetectionsUses();
             }
+            FolderMetadata?.ClearUses();
             ShowMissingDetections = false;
         }
         #endregion

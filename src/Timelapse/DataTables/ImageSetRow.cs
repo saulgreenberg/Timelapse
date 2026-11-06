@@ -63,6 +63,14 @@ namespace Timelapse.DataTables
             set => Row.SetField(DatabaseColumn.SearchTerms, value);
         }
 
+        // JSON description of the folder metadata search terms.
+        // These are kept apart from the SearchTerms, as earlier versions of Timelapse wouldn't understand them.
+        public string FolderSearchTermsAsJSON
+        {
+            get => Row.GetStringField(DatabaseColumn.FolderSearchTerms);
+            set => Row.SetField(DatabaseColumn.FolderSearchTerms, value);
+        }
+
         // The standard contains the name of the standard used to create the template,otherwise empty
         public string Standard
         {
@@ -107,6 +115,7 @@ namespace Timelapse.DataTables
                 new(DatabaseColumn.BackwardsCompatibility, BackwardsCompatability),
                 new(DatabaseColumn.SortTerms, SortTermsAsJsonString),
                 new(DatabaseColumn.SearchTerms, SearchTermsAsJSON),
+                new(DatabaseColumn.FolderSearchTerms, FolderSearchTermsAsJSON),
                 new(DatabaseColumn.QuickPasteTerms, QuickPasteAsJSON),
                 new(DatabaseColumn.Standard, Standard)
             ];

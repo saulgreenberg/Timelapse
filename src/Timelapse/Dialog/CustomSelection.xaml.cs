@@ -80,6 +80,7 @@ namespace Timelapse.Dialog
         private readonly DispatcherTimer CountTimer = new();
 
         private RecognitionSelector RecognitionSelector;
+        private FolderMetadataSelector FolderMetadataSelector;
         private RecognitionSelections RecognitionSelections { get; }
         #endregion
 
@@ -213,6 +214,7 @@ namespace Timelapse.Dialog
             }
             dontInvoke = false;
             dontCount = false;
+            InitializeFolderMetadataArea();
             if (GlobalReferences.DetectionsExists)
             {
                 SetDetectionCriteria();
@@ -991,6 +993,114 @@ namespace Timelapse.Dialog
         }
         #endregion
 
+        #region Scrolling
+        // The recognition lists have their own scrollbars, which would otherwise consume the mouse wheel even when they have nothing more to show.
+        private void SelectionScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            DataGrid list = (e.OriginalSource as Visual)?.FindParentOfType<DataGrid>();
+            ScrollViewer listScrollViewer = list == null ? null : VisualChildren.GetVisualChild<ScrollViewer>(list);
+            if (listScrollViewer == null)
+            {
+                return;
+            }
+            bool listCanScroll = e.Delta > 0 ? listScrollViewer.VerticalOffset > 0 : listScrollViewer.VerticalOffset < listScrollViewer.ScrollableHeight;
+            if (false == listCanScroll)
+            {
+                if (e.Delta > 0)
+                {
+                    SelectionScrollViewer.LineUp();
+                }
+                else
+                {
+                    SelectionScrollViewer.LineDown();
+                }
+                e.Handled = true;
+            }
+        }
+        #endregion
+
+        #region Folder metadata
+        // The folder metadata area only appears if there is folder metadata,
+        // and can only be used if metadata has been created for at least one folder below the top level.
+        private void InitializeFolderMetadataArea()
+        {
+            FolderMetadataSelection folderMetadata = Database.CustomSelection.FolderMetadata ??= Database.CreateFolderMetadataSelection();
+            Database.FolderMetadataSelectionUpdateLevelsWithMetadata(folderMetadata);
+            if (false == folderMetadata.HasFields())
+            {
+                return;
+            }
+            FolderMetadataArea.Visibility = Visibility.Visible;
+            if (folderMetadata.CanBeUsed())
+            {
+                EnableFolderMetadataCheckbox.IsChecked = folderMetadata.UseFolderMetadata;
+            }
+            else
+            {
+                const string reason = "This is available once folder metadata has been created for at least one folder below the top level.";
+                EnableFolderMetadataCheckbox.IsEnabled = false;
+                EnableFolderMetadataCheckbox.ToolTip = reason;
+                ToolTipService.SetShowOnDisabled(EnableFolderMetadataCheckbox, true);
+                FolderMetadataGroupBoxHeaderText.ToolTip = reason;
+                FolderMetadataGroupBoxHeaderText.Foreground = Brushes.Gray;
+            }
+        }
+
+        // Expand or collapse the folder metadata terms. Like the recognitions, the terms are kept when it is collapsed, but aren't used.
+        private void EnableFolderMetadata_CheckedChanged(object sender, RoutedEventArgs e)
+        {
+            FolderMetadataSelection folderMetadata = Database.CustomSelection.FolderMetadata;
+            if (folderMetadata == null)
+            {
+                return;
+            }
+            folderMetadata.UseFolderMetadata = true == EnableFolderMetadataCheckbox.IsChecked;
+            if (folderMetadata.UseFolderMetadata)
+            {
+                FolderMetadataSelector = new(folderMetadata, DataEntryControls)
+                {
+                    Margin = new(0, 5, 10, 5)
+                };
+                FolderMetadataSelector.SelectionChanged += FolderMetadataSelector_SelectionChanged;
+                FolderMetadataGroupBox.BorderThickness = new(2);
+                FolderMetadataGroupBox.Background = Brushes.Cornsilk;
+                FolderMetadataGroupBoxHeaderText.FontWeight = FontWeights.DemiBold;
+                FolderMetadataGroupBox.Content = FolderMetadataSelector;
+            }
+            else
+            {
+                if (FolderMetadataSelector != null)
+                {
+                    FolderMetadataSelector.SelectionChanged -= FolderMetadataSelector_SelectionChanged;
+                }
+                FolderMetadataSelector = null;
+                FolderMetadataGroupBox.BorderThickness = new(0);
+                FolderMetadataGroupBox.Background = Brushes.White;
+                FolderMetadataGroupBoxHeaderText.FontWeight = FontWeights.Normal;
+                FolderMetadataGroupBox.Content = null;
+            }
+            UpdateSearchDialogFeedback();
+        }
+
+        private void FolderMetadataSelector_SelectionChanged(object sender, EventArgs e)
+        {
+            UpdateSearchDialogFeedback();
+        }
+
+        // Summarize the terms in use beside the heading, as with the recognitions
+        private void UpdateFolderMetadataFeedback()
+        {
+            FolderMetadataSelection folderMetadata = Database.CustomSelection.FolderMetadata;
+            string feedback = true == folderMetadata?.IsInUse() ? FolderMetadataSelector.DescribeTermsInUse(folderMetadata) : string.Empty;
+            double checkboxWidth = EnableFolderMetadataCheckbox.ActualWidth + EnableFolderMetadataCheckbox.Margin.Left + EnableFolderMetadataCheckbox.Margin.Right;
+            double groupBoxIndent = 16; // default WPF GroupBox header chrome indent
+            double availableWidth = Math.Max(0, FolderMetadataGroupBox.ActualWidth - groupBoxIndent - checkboxWidth - FolderMetadataGroupBoxHeaderText.ActualWidth - FolderMetadataGroupBoxFeedback.Margin.Left);
+            string truncated = TruncateTextToFit(feedback, FolderMetadataGroupBoxFeedback, availableWidth);
+            FolderMetadataGroupBoxFeedback.Text = truncated;
+            FolderMetadataGroupBoxFeedback.ToolTip = truncated != feedback ? feedback.Replace("; ", Environment.NewLine) : null;
+        }
+        #endregion
+
         #region CheckBoxUseTime Callbacks
         // Toggle whether we are using dates or times
         private void CheckBoxUseTime_CheckChanged(object sender, RoutedEventArgs e)
@@ -1069,7 +1179,7 @@ namespace Timelapse.Dialog
 
             TextBlock tbOr = new()
             {
-                Text = "to match at least one selected conditions",
+                Text = "to match at least one selected condition",
                 VerticalAlignment = VerticalAlignment.Center,
                 FontWeight = FontWeights.Normal,
             };
@@ -1607,6 +1717,8 @@ namespace Timelapse.Dialog
                 select.IsChecked = false;
             }
             this.EnableRecognitionsCheckbox.IsChecked = false;
+            Database.CustomSelection.FolderMetadata?.ClearUses();
+            this.EnableFolderMetadataCheckbox.IsChecked = false;
             ResetToAllImagesButton.IsEnabled = false;
         }
 
@@ -1616,6 +1728,11 @@ namespace Timelapse.Dialog
             {
                 // We have at least one non-relativePath checkmark, so don't change anything
                 // i.e., this leave it as a custom selection
+                return FileSelectionEnum.Custom;
+            }
+
+            if (true == Database.CustomSelection.FolderMetadata?.IsInUse())
+            {
                 return FileSelectionEnum.Custom;
             }
 
@@ -1699,7 +1816,8 @@ namespace Timelapse.Dialog
             InitiateShowCountsOfMatchingFiles();
 
             // Enable  the reset button if at least one search term (including detections) is enabled
-            ResetToAllImagesButton.IsEnabled = atLeastOneSearchTermIsSelected || this.EnableRecognitionsCheckbox.IsChecked == true;
+            ResetToAllImagesButton.IsEnabled = atLeastOneSearchTermIsSelected || this.EnableRecognitionsCheckbox.IsChecked == true || this.EnableFolderMetadataCheckbox.IsChecked == true;
+            UpdateFolderMetadataFeedback();
 
             // Enable the and/or radio buttons if more than one non-standard selection was made
             RadioButtonTermCombiningAnd.IsEnabled = multipleNonStandardSelectionsMade > 1;

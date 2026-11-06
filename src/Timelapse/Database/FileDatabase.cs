@@ -13,6 +13,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Timelapse.Constant;
 using Timelapse.Controls;
+using Timelapse.ControlsMetadata;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
@@ -268,6 +269,7 @@ namespace Timelapse.Database
             schemaColumnDefinitions.Add(new(DatabaseColumn.QuickPasteTerms, Sql.Text));        // A comma-separated list of 4 sort terms
             schemaColumnDefinitions.Add(new(DatabaseColumn.BoundingBoxDisplayThreshold, Sql.Real, RecognizerValues.BoundingBoxDisplayThresholdDefault));        // A comma-separated list of 4 sort terms
             schemaColumnDefinitions.Add(new(DatabaseColumn.Standard, Sql.Text, string.Empty));        // The standard used to create the template, if any
+            schemaColumnDefinitions.Add(new(DatabaseColumn.FolderSearchTerms, Sql.Text, string.Empty));        // A JSON description of the folder metadata search terms
             SqlOperationResult createImageSetResult = Database.CreateTable(DBTables.ImageSet, schemaColumnDefinitions);
             if (!createImageSetResult.Success)
             {
@@ -971,6 +973,7 @@ namespace Timelapse.Database
                     AddStandardToTemplateInfoColumnIfNeeded(templateDatabase.Database);
                 }
                 AddStandardToImageSetColumnIfNeeded(Database);
+                AddFolderSearchTermsToImageSetColumnIfNeeded(Database);
 
                 // If the BackwardsCompatibility column isn't in the ImageSet table or in the template's TemplateInfo table, add it
                 // Note:  BackwardsCompatibility should have been added previously to the template table in DoCreateOrOpenAsync
@@ -3482,8 +3485,72 @@ namespace Timelapse.Database
         #endregion
 
         #region CustomSelection: Restoring from JSon
-        // Restore the custom selection from the Json stored in the image set table
+        // Restore the custom selection from the two Json entries stored in the image set table
         public FileSelectionEnum GetCustomSelectionFromJSON()
+        {
+            FileSelectionEnum selection = GetCustomSelectionFromSearchTermsJSON();
+            CustomSelection.FolderMetadata = GetFolderMetadataSelectionFromJSON();
+            return CustomSelection.FolderMetadata.IsInUse() ? FileSelectionEnum.Custom : selection;
+        }
+
+        // The folder metadata terms for the current folder template, with no terms in use
+        public FolderMetadataSelection CreateFolderMetadataSelection()
+        {
+            FolderMetadataSelection selection = new();
+            if (MetadataInfo == null || MetadataControlsByLevel == null)
+            {
+                return selection;
+            }
+            foreach (MetadataInfoRow info in MetadataInfo.OrderBy(row => row.Level))
+            {
+                // A level without any controls has nothing to search
+                if (false == MetadataControlsByLevel.TryGetValue(info.Level, out DataTableBackedList<MetadataControlRow> controls) || controls.RowCount == 0)
+                {
+                    continue;
+                }
+
+                // The top level's values apply to all files, so searching on them would have no effect
+                if (info.Level == 1)
+                {
+                    selection.TopLevelName = MetadataUI.CreateTemporaryAliasIfNeeded(info.Level, info.Alias);
+                }
+                else
+                {
+                    selection.AddLevel(info.Level, info.Alias, controls, Database.TableExistsAndNotEmpty(MetadataComposeTableNameFromLevel(info.Level)));
+                }
+            }
+            return selection;
+        }
+
+        // Metadata can be created for a folder at any time, so this has to be checked again before showing the terms
+        public void FolderMetadataSelectionUpdateLevelsWithMetadata(FolderMetadataSelection selection)
+        {
+            foreach (FolderLevelSearchTerms level in selection.Levels)
+            {
+                level.HasMetadata = Database.TableExistsAndNotEmpty(MetadataComposeTableNameFromLevel(level.Level));
+            }
+            selection.ClearUsesWithoutMetadata();
+        }
+
+        // A problem with the saved folder metadata terms should only affect those terms, not the rest of the selection
+        private FolderMetadataSelection GetFolderMetadataSelectionFromJSON()
+        {
+            FolderMetadataSelection selection = CreateFolderMetadataSelection();
+            try
+            {
+                if (false == string.IsNullOrWhiteSpace(ImageSet.FolderSearchTermsAsJSON))
+                {
+                    selection.KeepSettingsFrom(JsonConvert.DeserializeObject<FolderMetadataSelection>(ImageSet.FolderSearchTermsAsJSON));
+                }
+            }
+            catch (JsonException ex)
+            {
+                AppLog.Error("CustomSelectionRestore: Failed to deserialize folder metadata terms; they were not restored.", ex);
+            }
+            return selection;
+        }
+
+        private FileSelectionEnum GetCustomSelectionFromSearchTermsJSON()
         {
             this.ResetAfterPossibleRelativePathChanges();
             // We put this in a try/catch. If anything fails, we just revert to the default custom selection (All)

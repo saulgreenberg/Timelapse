@@ -342,6 +342,7 @@ namespace Timelapse.Constant
         public const string SortTerms = "SortTerms";                     // a comma-separated list that indicates the Primary 1st and 2nd sort terms and their attribute
         public const string QuickPasteTerms = "QuickPasteTerms";              // a JSON description that specifies the user's quickpaste entries and values.
         public const string SearchTerms = "SearchTerms";              // a JSON description storing the current search terms
+        public const string FolderSearchTerms = "FolderSearchTerms";  // a JSON description storing the current folder metadata search terms
         public const string BoundingBoxDisplayThreshold = "BBDisplayThreshold";
         public const string Standard = "Standard";
 

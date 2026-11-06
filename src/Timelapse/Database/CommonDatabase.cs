@@ -2104,6 +2104,23 @@ namespace Timelapse.Database
             }
         }
 
+        protected static void AddFolderSearchTermsToImageSetColumnIfNeeded(SQLiteWrapper database)
+        {
+            // Backwards compatability: If the FolderSearchTerms column isn't in the image set info, it means we are opening up
+            // a database last used by an earlier version of Timelapse. Update the table by adding a new column filled with an empty value
+            if (false == database.SchemaIsColumnInTable(DBTables.ImageSet, DatabaseColumn.FolderSearchTerms))
+            {
+                SchemaColumnDefinition scd = new(DatabaseColumn.FolderSearchTerms, Sql.Text, string.Empty);
+                SqlOperationResult addFolderSearchTermsResult = database.SchemaAddColumnToEndOfTable(DBTables.ImageSet, scd);
+                if (!addFolderSearchTermsResult.Success)
+                {
+                    Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow,
+                        database.FilePath?.EndsWith(".ddb", StringComparison.OrdinalIgnoreCase),
+                        "SchemaAddColumnToEndOfTable failed in AddFolderSearchTermsToImageSetColumnIfNeeded", database.FilePath, addFolderSearchTermsResult);
+                }
+            }
+        }
+
         protected static void AddStandardToImageSetColumnIfNeeded(SQLiteWrapper database)
         {
             // Backwards compatability: If the Standards column isn't in the image set info, it means we are opening up 

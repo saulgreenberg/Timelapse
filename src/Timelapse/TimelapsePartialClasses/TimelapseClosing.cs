@@ -113,6 +113,9 @@ namespace Timelapse
                 }
 
                 DataHandler.FileDatabase.ImageSet.SearchTermsAsJSON = JsonConvert.SerializeObject(DataHandler.FileDatabase.CustomSelection, Formatting.Indented);
+                DataHandler.FileDatabase.ImageSet.FolderSearchTermsAsJSON = DataHandler.FileDatabase.CustomSelection.FolderMetadata == null
+                    ? string.Empty
+                    : JsonConvert.SerializeObject(DataHandler.FileDatabase.CustomSelection.FolderMetadata, Formatting.Indented);
                 DataHandler.FileDatabase.UpdateSyncImageSetToDatabase();
 
                 // ensure custom filter operator is synchronized in state for writing to user's registry

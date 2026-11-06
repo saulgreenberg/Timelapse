@@ -71,6 +71,9 @@ namespace Timelapse.SearchingAndSorting
             }
 
 
+            // Add any folder metadata terms
+            where = CombineWithFolderMetadataTerms(where, whereString);
+
             // If no detections, or if the detections are of RecognitionType none, or if we want to ignore recognition terms, we are done.
             // Return the current where clause
             if (false == ignoreRecognitions)

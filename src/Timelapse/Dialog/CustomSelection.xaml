@@ -34,6 +34,10 @@
                                       [ni][b]Select recognitions[/b] is enabled only if your image set includes recognition data. You can:
                                         [li 2]search for particular detections and classifications within a confidence range;
                                         [li 2]include data fields in your search, as mentioned above in point 1.
+                                     [ni][b]Select folder metadata[/b] appears only if your image set includes folder metadata, and is enabled once metadata has been created for at least one folder below the top level. You can:
+                                        [li 2]search for files by the metadata of the folders that contain them;
+                                        [li 2]choose whether those terms are combined with each other by [b]And[/b] or by [b]Or[/b]. Files must also match your other search terms;
+                                        [li 2]search for empty values, where an empty flag counts as false. A folder without metadata is never selected by a term at its level.
                                      [ni][b]Glob Expressions[/b] are case sensitive and allow wildcards as follows:
                                        [li 2][b]*[/b] matches any number of characters;  
                                        [li 2][b]?[/b] matches any single character&#10;
@@ -54,43 +58,57 @@
                 </StackPanel>
             </DockPanel>
 
-            <!--Recognitions Area-->
-            <Grid DockPanel.Dock="Top" Margin="10,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="0" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" MinHeight="25"/>
-                </Grid.RowDefinitions>
+            <!--The select areas share a single scrollbar, so all their terms can be reached no matter how many are open-->
+            <ScrollViewer Name="SelectionScrollViewer" PreviewMouseWheel="SelectionScrollViewer_PreviewMouseWheel">
+                <StackPanel>
+                    <!--Recognitions Area-->
+                    <Grid Margin="10,0,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="0" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" MinHeight="25"/>
+                        </Grid.RowDefinitions>
 
-                <!--Recognitions Groupbox-->
-                <GroupBox Name="RecognitionsGroupBox" Grid.Row="0" Grid.Column="0" Margin="3,0,10,0" BorderThickness="0" >
-                    <GroupBox.Header >
-                        <StackPanel Orientation="Horizontal" >
-                            <CheckBox Name="EnableRecognitionsCheckbox" TabIndex="0" Margin="10,0,5,0"  VerticalAlignment="Center" IsChecked="False" Checked="EnableRecognitions_CheckedChanged" Unchecked="EnableRecognitions_CheckedChanged"/>
-                            <TextBlock Name="RecognitonsGroupBoxHeaderText" Text="Select recognitions" VerticalAlignment="Center" HorizontalAlignment="Left"  />
-                            <TextBlock Name="RecognitonsGroupBoxFeedback" Text="" VerticalAlignment="Center" HorizontalAlignment="Left"  />
-                        </StackPanel>
-                    </GroupBox.Header>
-                </GroupBox>
-            </Grid>
+                        <!--Recognitions Groupbox-->
+                        <GroupBox Name="RecognitionsGroupBox" Grid.Row="0" Grid.Column="0" Margin="3,0,10,0" BorderThickness="0" >
+                            <GroupBox.Header >
+                                <StackPanel Orientation="Horizontal" >
+                                    <CheckBox Name="EnableRecognitionsCheckbox" TabIndex="0" Margin="10,0,5,0"  VerticalAlignment="Center" IsChecked="False" Checked="EnableRecognitions_CheckedChanged" Unchecked="EnableRecognitions_CheckedChanged"/>
+                                    <TextBlock Name="RecognitonsGroupBoxHeaderText" Text="Select recognitions" VerticalAlignment="Center" HorizontalAlignment="Left"  />
+                                    <TextBlock Name="RecognitonsGroupBoxFeedback" Text="" VerticalAlignment="Center" HorizontalAlignment="Left"  />
+                                </StackPanel>
+                            </GroupBox.Header>
+                        </GroupBox>
+                    </Grid>
 
 
-            <!--Row 4 Option to show episode info -->
-            <StackPanel Name="ShowEpisodeOptionsPanel" Orientation="Horizontal" Margin="32,0,0,0"  DockPanel.Dock="Top" >
-                <CheckBox Name="CheckboxShowAllEpisodeImages" TabIndex="1"
-                      VerticalContentAlignment="Center" FontWeight="DemiBold"
-                      Content="Include all files in an episode when at least one file matches" IsChecked="False"
-                      Checked="CheckboxShowAllEpisodeImages_CheckedChanged" Unchecked="CheckboxShowAllEpisodeImages_CheckedChanged"
-                      ToolTip="Show all files in an episode where at least one file in that episode matches the search criteria"/>
-            </StackPanel>
+                    <!--Folder Metadata Area, which only appears if there is folder metadata-->
+                    <Grid Name="FolderMetadataArea" Margin="10,0,0,0" Visibility="Collapsed">
+                        <GroupBox Name="FolderMetadataGroupBox" Margin="3,0,10,0" BorderThickness="0" TabIndex="1" KeyboardNavigation.TabNavigation="Local">
+                            <GroupBox.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox Name="EnableFolderMetadataCheckbox" Margin="10,0,5,0" VerticalAlignment="Center" IsChecked="False" Checked="EnableFolderMetadata_CheckedChanged" Unchecked="EnableFolderMetadata_CheckedChanged"/>
+                                    <TextBlock Name="FolderMetadataGroupBoxHeaderText" Text="Select folder metadata…" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                    <TextBlock Name="FolderMetadataGroupBoxFeedback" Text="" Margin="5,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                                </StackPanel>
+                            </GroupBox.Header>
+                        </GroupBox>
+                    </Grid>
 
-            <!--Selection Panel-->
-            <GroupBox Name="SelectionGroupBox" Header="Select images and videos that match these terms " FontWeight="Bold" FontStyle="Italic" Height="Auto" DockPanel.Dock="Bottom" Margin="10,15,5,0" Padding="0,10,0,00">
-                <DockPanel>
-                    <ScrollViewer FontStyle="Normal">
-                        <Grid Name="SearchTerms" Width="Auto" Height="Auto" DockPanel.Dock="Bottom">
+                    <!--Row 4 Option to show episode info -->
+                    <StackPanel Name="ShowEpisodeOptionsPanel" Orientation="Horizontal" Margin="32,0,0,0">
+                        <CheckBox Name="CheckboxShowAllEpisodeImages" TabIndex="1"
+                              VerticalContentAlignment="Center" FontWeight="DemiBold"
+                              Content="Include all files in an episode when at least one file matches" IsChecked="False"
+                              Checked="CheckboxShowAllEpisodeImages_CheckedChanged" Unchecked="CheckboxShowAllEpisodeImages_CheckedChanged"
+                              ToolTip="Show all files in an episode where at least one file in that episode matches the search criteria"/>
+                    </StackPanel>
+
+                    <!--Selection Panel-->
+                    <GroupBox Name="SelectionGroupBox" Header="Select images and videos that match these terms " FontWeight="Bold" FontStyle="Italic" Height="Auto" Margin="10,15,5,5" Padding="0,10,0,00">
+                        <Grid Name="SearchTerms" Width="Auto" Height="Auto" TextElement.FontStyle="Normal">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
@@ -108,9 +126,9 @@
                             <TextBlock Padding ="5,0,5,0" FontWeight="Bold" Text="Value" Grid.Row="0" Grid.Column="3"/>
                             <TextBlock Padding ="5,0,5,0" FontWeight="Bold" Text="How multiple terms are combined" Grid.Row="0" Grid.Column="4"/>
                         </Grid>
-                    </ScrollViewer>
-                </DockPanel>
-            </GroupBox>
+                    </GroupBox>
+                </StackPanel>
+            </ScrollViewer>
 
             <!-- Busy Indicator: when true, it shows the progress bar, text message, plus a cancel button -->
 
