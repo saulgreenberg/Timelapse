@@ -16,7 +16,6 @@ using Timelapse.Enums;
 using Timelapse.SearchingAndSorting;
 using Timelapse.Util;
 using TimelapseWpf.Toolkit;
-using TimelapseWpf.Toolkit.Primitives;
 using Control = Timelapse.Constant.Control;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 
@@ -94,7 +93,7 @@ namespace Timelapse.Controls
                 ProcessExecution.TryProcessStart(e.Uri);
                 e.Handled = true;
             };
-            note.Inlines.Add("Note: Selecting folder data is here for beta testing. Email ");
+            note.Inlines.Add("Note: This is a beta preview for testing. Email ");
             note.Inlines.Add(email);
             note.Inlines.Add(" with your experiences.");
             return note;

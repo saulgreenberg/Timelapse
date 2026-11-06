@@ -31,9 +31,12 @@ namespace TimelapseTemplateEditor.Dialog
             Owner = owner;
             Message.Text = $"The species list has {definitions.Count} definition(s). How should each one appear in the choice menu?";
 
-            // The best example has both names, so that the formats differ
-            taxonomic example = definitions.Find(definition => false == string.IsNullOrWhiteSpace(definition.scientificName)
-                && false == string.IsNullOrWhiteSpace(RecognitionFileTaxonomy.CommonName(definition))) ?? definitions[0];
+            // The best example has both names, so that the formats differ, and is preferably a species
+            List<taxonomic> withBothNames = definitions.FindAll(definition => false == string.IsNullOrWhiteSpace(definition.scientificName)
+                && false == string.IsNullOrWhiteSpace(RecognitionFileTaxonomy.CommonName(definition)));
+            taxonomic example = withBothNames.Find(definition => string.Equals(definition.taxonRank?.Trim(), "species", StringComparison.OrdinalIgnoreCase))
+                ?? withBothNames.FirstOrDefault()
+                ?? definitions[0];
             SetContent(ScientificName, "Scientific name", SpeciesListFormat.ScientificName, example);
             SetContent(CommonName, "Common name", SpeciesListFormat.CommonName, example);
             SetContent(ScientificThenCommonName, "Scientific name (common name)", SpeciesListFormat.ScientificThenCommonName, example);

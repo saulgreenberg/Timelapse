@@ -180,13 +180,13 @@ namespace TimelapseTemplateEditor.Dialog
             TextBoxChoiceList.Text = TextWithItems(clearFirst ? string.Empty : TextBoxChoiceList.Text, SelectSpeciesListFormat.ChoiceItems(definitions, selectFormat.Format));
         }
 
-        // The text followed by the items, each on its own line, leaving out those already in the text
+        // The text's lines and the items in alphabetic order, each on its own line and only once
         public static string TextWithItems(string text, List<string> items)
         {
-            string[] lines = text.Split(Environment.NewLine, StringSplitOptions.None);
-            IEnumerable<string> newItems = items.Where(item => false == lines.Any(line => line.Trim() == item));
-            string existingText = text.TrimEnd();
-            return string.Join(Environment.NewLine, existingText.Length == 0 ? newItems : newItems.Prepend(existingText));
+            IEnumerable<string> lines = text.Split(Environment.NewLine, StringSplitOptions.None)
+                .Select(line => line.Trim())
+                .Where(line => line.Length > 0);
+            return string.Join(Environment.NewLine, lines.Concat(items).Distinct().OrderBy(item => item, StringComparer.CurrentCultureIgnoreCase));
         }
 
         // As multichoice uses a comma separated list, and as we do allow conversions between fixed choice to multichoice, don't allow commas 
