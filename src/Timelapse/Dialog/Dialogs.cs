@@ -4210,6 +4210,68 @@ namespace Timelapse.Dialog
             dialog.BuildAndShowDialog();
         }
 
+        // Older CamtrapDP templates made the scientific name a Note rather than a Choice
+        public static bool? CamtrapDPUpdateScientificNameToChoiceDialog(Window owner, bool hasDataFile, int enteredNamesCount)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            // With no names to put in the menu, the hint says how to fill it in
+            bool menuWillBeFilled = hasDataFile && enteredNamesCount > 0;
+            string result = "[li]The Scientific Name data field will be updated to a Choice field.";
+            if (menuWillBeFilled)
+            {
+                result += $"[li]Timelapse will also populate its Choice menu with the {enteredNamesCount} scientific name(s) you have already entered, in alphabetical order."
+                          + "[li]We highly recommend that you check the Choice list entries afterwards to ensure that they are all correct scientific names. "
+                          + "For example, misspellings or the use of common names typically occur in entered data.";
+            }
+            var dialog = new FormattedDialog(MessageBoxButtonType.YesNo)
+            {
+                Owner = owner,
+                DialogTitle = "Update your template?",
+                Icon = DialogIconType.Question,
+                What = "The Scientific Name data field has been changed from a Note field to a Choice field, but your template still uses the old Note format.",
+                Reason = "Choice menus make selecting a species name much easier than typing one in.",
+                Result = result,
+                Hint = "[li]If you select [b]No[/b], Timelapse will keep the Note field as is. You will be asked again the next time this template is opened."
+                       + (menuWillBeFilled ? string.Empty : "[li]If you select [b]Yes[/b], use the Template Editor to add the scientific names you expect to see in its Choice menu list, as that list is currently empty.")
+                       + (hasDataFile ? "[li]Backups of your template and data file are made before they are updated." : "[li]A backup of your template is made before it is updated.")
+            };
+            return dialog.BuildAndShowDialog();
+        }
+
+        public static bool? CamtrapDPScientificNamesNotMatchedDialog(Window owner, List<string> names)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            {
+                Owner = owner,
+                DialogTitle = "Some names may not be scientific names",
+                Icon = DialogIconType.Warning,
+                Problem = $"GBIF has no taxon with {(names.Count == 1 ? "this name" : $"these {names.Count} names")}, so they may be misspelled or common names:"
+                          + string.Concat(names.ConvertAll(name => $"[li]{name}")),
+                Result = "[li]Select [b]Okay[/b] to update anyway. You can then correct these names in the Template Editor's Choice menu list."
+                         + "[li]Select [b]Cancel[/b] to cancel the update, leaving your template and data file unchanged.",
+                Hint = "Correcting a name in the menu doesn't change the data you have already entered with that name. "
+                       + "However, data entries that don't match one of the menu's items will not be displayed, although they are still there."
+            };
+            return dialog.BuildAndShowDialog();
+        }
+
+        public static bool? CamtrapDPScientificNamesNotCheckedDialog(Window owner, string reason)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            {
+                Owner = owner,
+                DialogTitle = "The scientific names couldn't be checked",
+                Icon = DialogIconType.Warning,
+                Problem = "Timelapse couldn't reach GBIF to check that the names for the menu are scientific names.",
+                Reason = reason,
+                Result = "[li]Select [b]Okay[/b] to update anyway. You can check the names later in the Template Editor's Choice menu list."
+                         + "[li]Select [b]Cancel[/b] to cancel the update, leaving your template and data file unchanged."
+            };
+            return dialog.BuildAndShowDialog();
+        }
+
         public static void CamtrapDPGbifImportResultDialog(Window owner, int addedCount, int alreadyThereCount, List<string> notFound)
         {
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)

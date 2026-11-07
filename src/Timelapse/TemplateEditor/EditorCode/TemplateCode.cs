@@ -15,6 +15,7 @@ using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
 using Timelapse.Extensions;
+using Timelapse.Standards;
 using Timelapse.Util;
 using TimelapseTemplateEditor.EditorCode;
 using Control = Timelapse.Constant.Control;
@@ -67,6 +68,9 @@ namespace TimelapseTemplateEditor
             }
 
             AppLog.Initialize(Path.GetDirectoryName(templateFilePath));
+
+            // Older CamtrapDP templates have the scientific name as a Note rather than a Choice
+            await CamtrapDPScientificNameUpgrade.TryUpgradeAsync(this, templateFilePath, null);
 
             // Initialize the data grid from the template
             if (false == await TemplateInitializeFromDBFileAsync(templateFilePath).ConfigureAwait(true))

@@ -17,6 +17,7 @@ using Timelapse.Enums;
 using Timelapse.ImageSetLoadingPipeline;
 using Timelapse.QuickPaste;
 using Timelapse.SearchingAndSorting;
+using Timelapse.Standards;
 using Timelapse.Util;
 using File = Timelapse.Constant.File;
 
@@ -166,6 +167,13 @@ namespace Timelapse
             // Before fully loading an existing image database, 
             // - upgrade the template tables if needed for backwards compatability (done automatically)
             // - compare the controls in the .tdb and .ddb template tables to see if there are any added or missing controls 
+            // Older CamtrapDP templates and data files have the scientific name as a Note rather than a Choice.
+            // Updating both files first keeps them matching, so the comparison below doesn't report a difference.
+            if (false == State.IsViewOnly && await CamtrapDPScientificNameUpgrade.TryUpgradeAsync(this, tdbDatabasePath, fileDatabaseFilePath))
+            {
+                templateDatabase.LoadControlsFromTemplateDBSortedByControlOrder();
+            }
+
             TemplateSyncResults templateSyncResults = new();
             bool backUpJustMade = false;
             using (FileDatabase fileDB = await FileDatabase.UpgradeDatabasesAndCompareTemplates(fileDatabaseFilePath, templateDatabase, templateSyncResults)
