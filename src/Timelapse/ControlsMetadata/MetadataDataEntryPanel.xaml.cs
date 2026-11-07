@@ -743,6 +743,18 @@ namespace Timelapse.ControlsMetadata
             }
         }
 
+        // Create this folder's metadata, as clicking the button to edit it does, if it hasn't been created yet.
+        // Returns true if it was created.
+        public bool TryCreateMetadata()
+        {
+            if (SubPath == null || false == FileDatabase.MetadataTablesIsLevelPresent(Level) || FileDatabase.MetadataTablesGetRow(Level, SubPath) != null)
+            {
+                return false;
+            }
+            AddMetadata_OnClick(null, null);
+            return FileDatabase.MetadataTablesGetRow(Level, SubPath) != null;
+        }
+
         public bool TrySyncControlRowFromMetadata()
         {
 
@@ -1204,6 +1216,16 @@ namespace Timelapse.ControlsMetadata
             }
         }
 
+        // Show the metadata table's current value for this control, e.g., after it was changed elsewhere
+        public void RefreshContent(string dataLabel)
+        {
+            MetadataRow row = SubPath == null ? null : FileDatabase.MetadataTablesGetRow(Level, SubPath);
+            if (row != null && LookupControlByItsDataLabel.TryGetValue(dataLabel, out MetadataDataEntryControl control))
+            {
+                control.SetContentAndTooltip(row[dataLabel]);
+            }
+        }
+
         public void Taxonomic_Click(object sender, RoutedEventArgs eventArgs)
         {
             if (Level == 1) // It should always be the DataPackage level 1
@@ -1297,10 +1319,24 @@ namespace Timelapse.ControlsMetadata
                         GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(idControl);
                     }
 
-                    // Set the package created date
+                    // Set the package created date. A date control's value is what gets saved, so it has to be set rather than just its text.
                     if (LookupControlByItsDataLabel.TryGetValue(CamtrapDPConstants.DataPackage.Created, out var createdControl))
                     {
-                        createdControl.SetContentAndTooltip(DateTimeHandler.ToStringDatabaseDateTime(DateTime.Now));
+                        DateTime now = DateTime.Now;
+                        if (createdControl is MetadataDataEntryDateTimeCustom createdDateTime)
+                        {
+                            createdDateTime.ContentControl.Value = now;
+                            createdDateTime.SetContentAndTooltip(now);
+                        }
+                        else if (createdControl is MetadataDataEntryDate createdDate)
+                        {
+                            createdDate.ContentControl.Value = now;
+                            createdDate.SetContentAndTooltip(now);
+                        }
+                        else
+                        {
+                            createdControl.SetContentAndTooltip(DateTimeHandler.ToStringDatabaseDateTime(now));
+                        }
                         GlobalReferences.MainWindow.MetadataDataHandler.UpdateMetadataTableAndMetadataDatabase(createdControl);
                     }
                 }

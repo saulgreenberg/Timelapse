@@ -19,7 +19,7 @@ namespace Timelapse.Standards
             Owner = owner;
             if (existingDefinitionsCount > 0)
             {
-                ExistingDefinitionsMessage.Text = $"The list already has {existingDefinitionsCount} definition(s):";
+                ExistingDefinitionsMessage.Text = $"The datapackage taxonomic information list already has {existingDefinitionsCount} definition(s):";
                 ExistingDefinitionsPanel.Visibility = Visibility.Visible;
             }
         }

@@ -40,7 +40,11 @@ namespace Timelapse
         {
             FileDatabase fileDatabase = GlobalReferences.MainWindow.DataHandler.FileDatabase;
             PopulateCamtrapDataFields dialog = new(this, fileDatabase);
-            if (ShowDialogAndCheckIfChangesWereMade(dialog))
+            bool changesWereMade = ShowDialogAndCheckIfChangesWereMade(dialog);
+
+            // The dialog may have changed the data package's taxonomic list, which its panel would otherwise show stale and could save back
+            MetadataUI.RefreshContent(1, CamtrapDPConstants.DataPackage.Taxonomic);
+            if (changesWereMade)
             {
                 await FilesSelectAndShowAsync().ConfigureAwait(true);
             }

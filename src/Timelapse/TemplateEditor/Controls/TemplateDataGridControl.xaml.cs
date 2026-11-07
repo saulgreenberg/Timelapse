@@ -530,8 +530,14 @@ namespace TimelapseTemplateEditor.Controls
             }
 
             // If we are using a standard, raise a warning if the user is trying to modify the list.
+            // The exception is CamtrapDP's scientific name, whose list the user is expected to fill in, but with scientific names.
             bool keepGoing = true;
-            if (EditorConstant.templateEditorWindow.standardType != string.Empty)
+            if (EditorConstant.templateEditorWindow.standardType == Timelapse.Constant.Standards.CamtrapDPStandard
+                && choiceControl.DataLabel == CamtrapDPConstants.Observations.ScientificName)
+            {
+                Dialogs.CamtrapDPScientificNameMenuInformation(EditorConstant.templateEditorWindow);
+            }
+            else if (EditorConstant.templateEditorWindow.standardType != string.Empty)
             {
                 keepGoing = true == Dialogs.ChangesToStandardWarning(EditorConstant.templateEditorWindow, "Changing the Choice List", EditorConstant.templateEditorWindow.standardType);
             }

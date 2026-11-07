@@ -98,8 +98,15 @@
                     VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
                     Padding="10" Margin="10,10,0,0"
                     Content="Populate from a Species List file"
-                    ToolTip="Fill in the list with the taxonomic definitions in a species list file created in the Template Editor."
+                    ToolTip="{x:Static local:CamtrapDPGbifImport.SpeciesListDescription}"
                     Click="PopulateFromSpeciesList_OnClick"/>
+            <Button Name="PopulateFromScientificNameMenu"
+                    VerticalAlignment="Bottom" HorizontalAlignment="Stretch"
+                    Padding="10" Margin="10,10,0,0"
+                    Content="Populate from the Scientific Name menu"
+                    ToolTip="{x:Static local:CamtrapDPGbifImport.ScientificNameMenuDescription}"
+                    ToolTipService.ShowOnDisabled="True"
+                    Click="PopulateFromScientificNameMenu_OnClick"/>
         </StackPanel>
 
         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">

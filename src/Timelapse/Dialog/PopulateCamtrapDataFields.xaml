@@ -4,11 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:standards="clr-namespace:Timelapse.Standards"
         xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
         mc:Ignorable="d"
         Title="PopulateCamtrap data fields information" 
         MinHeight="750" MinWidth="760"
-        Height="750" Width="760"
+        Height="900" Width="760"
         ResizeMode="CanResizeWithGrip"
 		ShowInTaskbar="False"
 		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded" Closing="Window_Closing">
@@ -37,54 +38,86 @@
                                      [br 10]Exporting to a CSV file is done via [e]File|Export or import data to a CSV file | Export all data as CamtrapDP files[/e]."
                                               
                             ShowExplanationVisibility="True" />
-            <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch" Margin="10">
-                <Rectangle Fill="#FF868686" Height="2" Margin="0,0,0,10"/>
-                <TextBlock Name="PrimaryPanel1a" VerticalAlignment="Center" Margin="10,5,15,10">
-                    <Run Text="Events are defined by media files whose Date/Time is separated by at most" />
-                    <Run FontWeight="Bold" Name="RunCurrentSettings"/>
-                    <Run Name="RunCurrentSettingsLabel" Text=""/>.
-                </TextBlock>
-                <GroupBox Name="PrimaryPanel1b">
-                    <GroupBox.Header>
-                        <Span FontWeight="Bold">How fields are populated partially depends upon how you tag your images.</Span>
-                    </GroupBox.Header>
-                    <StackPanel  Orientation="Vertical">
-                        <TextBlock Margin="0,5,0,0" Text="When images are in an episode (i.e., an event comprising a series of images), my strategy is:"/>
-                        <RadioButton GroupName="EventManagement" Name="RBTagEveryImage" Margin="10,5,0,0" IsChecked="True">
-                            <TextBlock>
-                                 <Run FontWeight="DemiBold" Text="Fill in observations for every single image"/>
-                                 <Run Text="even if they are the same."/>
-                                 <LineBreak/>
-                                 <Run Text="e.g., If every image in an event contains the same Deer, I fill in 'Deer' for every image."/>
-                            </TextBlock>
-                        </RadioButton>
-                        <RadioButton GroupName="EventManagement" Name="RBTagOnyRepresentativeImage" Margin="10,10,0,0">
-                            <TextBlock>
-                                <Run FontWeight="DemiBold" Text="Fill in observations for only images whose contents differ"/>
-                                <Run Text=" in a meaningful way."/>
-                                <LineBreak/>
-                                <Run Text="e.g., If every image in an event contains the same Deer, I fill in 'Deer' for only one of those images."/>
-                                <LineBreak/>
-                                <Run Text="       If another image differs significantly (e.g., a 2nd deer appears), I fill in a second image to indicate"/>
-                                <LineBreak/>
-                                <Run Text="       observing two deer in this event."/>
-                        </TextBlock>
-                        </RadioButton>
-
-                    </StackPanel>
-                </GroupBox>
-                <StackPanel Name="FeedbackPanel" Orientation="Vertical" Visibility="Collapsed">
-                    <TextBlock Name="TextBlockFeedbackLine1" Text="Done." VerticalAlignment="Center" Margin="0,5,15,5" FontWeight="Bold" />
-                    <TextBlock Name="TextBlockFeedbackLine2" Text="Done." VerticalAlignment="Center" Margin="0,5,0,5" FontWeight="Bold" />
-                </StackPanel>
+            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                <Button x:Name="StartDoneButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10"  IsEnabled="True" Click="Start_Click">_Populate</Button>
             </StackPanel>
+            <!--The options scroll if the window is made too short for them, while the buttons stay in view-->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Vertical" VerticalAlignment="Top" Margin="10">
+                    <Rectangle Fill="#FF868686" Height="2" Margin="0,0,0,10"/>
+                    <TextBlock Name="PrimaryPanel1a" VerticalAlignment="Center" Margin="10,5,15,10">
+                        <Run Text="Events are defined by media files whose Date/Time is separated by at most" />
+                        <Run FontWeight="Bold" Name="RunCurrentSettings"/>
+                        <Run Name="RunCurrentSettingsLabel" Text=""/>.
+                    </TextBlock>
+                    <GroupBox Name="PrimaryPanel1b">
+                        <GroupBox.Header>
+                            <Span FontWeight="Bold">How fields are populated partially depends upon how you tag your images.</Span>
+                        </GroupBox.Header>
+                        <StackPanel  Orientation="Vertical">
+                            <TextBlock Margin="0,5,0,0" Text="When images are in an episode (i.e., an event comprising a series of images), my strategy is:"/>
+                            <RadioButton GroupName="EventManagement" Name="RBTagEveryImage" Margin="10,5,0,0" IsChecked="True">
+                                <TextBlock>
+                                     <Run FontWeight="DemiBold" Text="Fill in observations for every single image"/>
+                                     <Run Text="even if they are the same."/>
+                                     <LineBreak/>
+                                     <Run Text="e.g., If every image in an event contains the same Deer, I fill in 'Deer' for every image."/>
+                                </TextBlock>
+                            </RadioButton>
+                            <RadioButton GroupName="EventManagement" Name="RBTagOnyRepresentativeImage" Margin="10,10,0,0">
+                                <TextBlock>
+                                    <Run FontWeight="DemiBold" Text="Fill in observations for only images whose contents differ"/>
+                                    <Run Text=" in a meaningful way."/>
+                                    <LineBreak/>
+                                    <Run Text="e.g., If every image in an event contains the same Deer, I fill in 'Deer' for only one of those images."/>
+                                    <LineBreak/>
+                                    <Run Text="       If another image differs significantly (e.g., a 2nd deer appears), I fill in a second image to indicate"/>
+                                    <LineBreak/>
+                                    <Run Text="       observing two deer in this event."/>
+                            </TextBlock>
+                            </RadioButton>
 
-            <DockPanel LastChildFill="True" >
-                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button x:Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
-                    <Button x:Name="StartDoneButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10"  IsEnabled="True" Click="Start_Click">_Populate</Button>
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Name="PrimaryPanel1c" Margin="0,10,0,0">
+                        <GroupBox.Header>
+                            <Span FontWeight="Bold">Populate Taxonomic Data in the <Italic>data package</Italic></Span>
+                        </GroupBox.Header>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Margin="0,5,0,0" TextWrapping="Wrap">
+                                <Run Text="The CamtrapDP standard requires you to specify"/>
+                                <Run FontStyle="Italic" Text="Taxonomic information"/>
+                                <Run Text="in its data package, i.e., biological classification data (species, genus, and family names, etc.). These are species you have recorded, or expect to record in your"/>
+                                <Run FontStyle="Italic" Text="Scientific Name"/>
+                                <Run Text="data field when tagging image observations. You can do this now by one of the following."/>
+                            </TextBlock>
+                            <RadioButton GroupName="Taxonomic" Name="RBTaxonomicDoNothing" Margin="10,5,0,0" IsChecked="True">
+                                <TextBlock TextWrapping="Wrap" Text="Do nothing. I will fill it in later."/>
+                            </RadioButton>
+                            <RadioButton GroupName="Taxonomic" Name="RBTaxonomicFromSpeciesList" Margin="10,5,0,0" ToolTip="{x:Static standards:CamtrapDPGbifImport.SpeciesListDescription}">
+                                <TextBlock TextWrapping="Wrap">
+                                    <Run Text="Import the taxonomic information from a Species List json file previously created using Template editor's"/>
+                                    <Run FontStyle="Italic" Text="File | Edit a species list"/>
+                                    <Run Text="menu. This option produces the most reliable list."/>
+                                </TextBlock>
+                            </RadioButton>
+                            <RadioButton GroupName="Taxonomic" Name="RBTaxonomicFromScientificNames" Margin="10,5,0,0" ToolTip="{x:Static standards:CamtrapDPGbifImport.ScientificNameMenuDescription}">
+                                <TextBlock TextWrapping="Wrap">
+                                    <Run Text="Import the taxonomic information from the"/>
+                                    <Run FontStyle="Italic" Text="Scientific Name"/>
+                                    <Run Text="data field's menu. Timelapse will try to retrieve the full taxon of that species from GBIF (internet required). You will be asked to resolve ambiguities, if any."/>
+                                </TextBlock>
+                            </RadioButton>
+                            <TextBlock Name="TaxonomicUnavailableText" Margin="10,8,0,0" TextWrapping="Wrap" FontStyle="Italic" Foreground="DarkRed" Visibility="Collapsed"/>
+                        </StackPanel>
+                    </GroupBox>
+                    <StackPanel Name="FeedbackPanel" Orientation="Vertical" Visibility="Collapsed">
+                        <TextBlock Name="TextBlockFeedbackLine1" Text="Done." VerticalAlignment="Center" Margin="0,5,15,5" FontWeight="Bold" />
+                        <TextBlock Name="TextBlockFeedbackLine2" Text="Done." VerticalAlignment="Center" Margin="0,5,0,5" FontWeight="Bold" TextWrapping="Wrap" />
+                    </StackPanel>
                 </StackPanel>
-            </DockPanel>
+            </ScrollViewer>
         </DockPanel>
         <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" CancelClick="CancelAsyncOperationButton_Click"/>
     </Grid>

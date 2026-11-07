@@ -115,6 +115,30 @@ namespace Timelapse.ControlsMetadata
         }
         #endregion
 
+        // CamtrapDP needs a data package, which is the top level's metadata, so create it if it hasn't been
+        public void CreateDataPackageIfNeeded()
+        {
+            foreach (TabItem tabItem in TabControl.Items)
+            {
+                if (tabItem.Content is MetadataDataEntryPanel { Level: 1 } panel)
+                {
+                    panel.TryCreateMetadata();
+                }
+            }
+        }
+
+        // Show the metadata table's current value for this control in the panel at this level
+        public void RefreshContent(int level, string dataLabel)
+        {
+            foreach (TabItem tabItem in TabControl.Items)
+            {
+                if (tabItem.Content is MetadataDataEntryPanel panel && panel.Level == level)
+                {
+                    panel.RefreshContent(dataLabel);
+                }
+            }
+        }
+
         public void ResetNavigationButtonsForMetadataTabs()
         {
             foreach (TabItem tabItem in TabControl.Items)

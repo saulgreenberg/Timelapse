@@ -4210,6 +4210,34 @@ namespace Timelapse.Dialog
             dialog.BuildAndShowDialog();
         }
 
+        public static void CamtrapDPGbifImportResultDialog(Window owner, int addedCount, int alreadyThereCount, List<string> notFound)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Taxonomic definitions from the Scientific Name menu",
+                Icon = DialogIconType.Information,
+                Result = $"[li]{addedCount} definition(s) from GBIF were added to the list."
+                         + (alreadyThereCount > 0 ? $"[li]{alreadyThereCount} name(s) were already in the list." : string.Empty)
+                         + (notFound.Count > 0 ? $"[li]Not added, as there was no match or none was chosen: {string.Join(", ", notFound)}." : string.Empty),
+                Hint = "The list is saved when you click [b]Done[/b]."
+            };
+            dialog.BuildAndShowDialog();
+        }
+
+        public static void CamtrapDPTaxonomicListUnreadableDialog(Window owner)
+        {
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "The data package's taxonomic information can't be read",
+                Icon = DialogIconType.Error,
+                Problem = "The taxonomic information already in the data package isn't in a form Timelapse can read, so new definitions can't be added to it.",
+                Hint = "Open the DataPackage tab in the folder metadata and use its Taxonomic button to check the definitions."
+            };
+            dialog.BuildAndShowDialog();
+        }
+
         public static void CamtrapDPSpeciesListNotesDialog(Window owner, int addedCount, List<string> notes)
         {
             var dialog = new FormattedDialog(MessageBoxButtonType.OK)
@@ -4619,6 +4647,21 @@ namespace Timelapse.Dialog
 
         // Confirm closing this template and creating a new one
         private static bool dontShowChangesToStandardWarningDialog;
+        public static void CamtrapDPScientificNameMenuInformation(Window owner)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "Make sure you fill in this menu with Scientific names",
+                Icon = DialogIconType.Information,
+                What = "The CamtrapDP standard specifies that this field should have valid scientific names, rather than common names.",
+                Hint = "The best way to do that is to create a species list using the Template Editor's [i]File | Edit a species list[/i] menu, save it as a file, "
+                       + "and then add that file to the menu using the [b]Populate using a species list[/b] button."
+            };
+            dialog.BuildAndShowDialog();
+        }
+
         public static bool? ChangesToStandardWarning(Window owner, string changeType, string standardType)
         {
             if (dontShowChangesToStandardWarningDialog)

@@ -2,14 +2,18 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Windows;
+using Newtonsoft.Json;
 using Timelapse.Constant;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Standards;
 using Timelapse.Util;
+using TimelapseTemplateEditor.Dialog;
 
 namespace Timelapse.Dialog
 {
@@ -25,6 +29,13 @@ namespace Timelapse.Dialog
 
         // Tracks whether any changes to the data or database are made
         private bool IsAnyDataUpdated;
+
+        // The data package's taxonomic list to save once the fields are populated, or null to leave it as it is
+        private List<taxonomic> taxonomicListToSave;
+        private string taxonomicFeedback = string.Empty;
+
+        // The data package is the folder metadata at this level
+        private const int DataPackageLevel = 1;
 
         #endregion
 
@@ -55,6 +66,7 @@ namespace Timelapse.Dialog
                 RunCurrentSettings.Text = string.Format(Episodes.Episodes.TimeThreshold.ToString("ss"));
                 RunCurrentSettingsLabel.Text = "seconds";
             }
+            InitializeTaxonomicOptions();
         }
 
         #region Closing and Disposing
@@ -82,6 +94,12 @@ namespace Timelapse.Dialog
 
         private async Task Start_ClickAsync()
         {
+            // The taxonomic information may need the user's input, so it is gathered before anything is changed.
+            // If that is cancelled or fails, the dialog stays as it was.
+            if (false == await PrepareTaxonomicListAsync())
+            {
+                return;
+            }
 
             // Update the UI before starting the operation,
             CancelButton.IsEnabled = false;
@@ -95,6 +113,10 @@ namespace Timelapse.Dialog
 
             // This call does all the actual populating...
             bool isCompleted = await PopulateAsync().ConfigureAwait(true);
+            if (isCompleted && taxonomicListToSave != null)
+            {
+                SaveTaxonomicList();
+            }
 
             // Update the UI to its final state
             StartDoneButton.IsEnabled = true;
@@ -105,10 +127,11 @@ namespace Timelapse.Dialog
                 ? $"Done. {TotalImages} files were populated with basic CamtrapDP data."
                 : "Operation cancelled.";
             TextBlockFeedbackLine2.Text = isCompleted
-                ? $""
+                ? taxonomicFeedback
                 : "No changes were made";
             PrimaryPanel1a.Visibility = Visibility.Collapsed;
             PrimaryPanel1b.Visibility = Visibility.Collapsed;
+            PrimaryPanel1c.Visibility = Visibility.Collapsed;
             FeedbackPanel.Visibility = Visibility.Visible;
         }
 
@@ -296,6 +319,160 @@ namespace Timelapse.Dialog
             DialogResult = Token.IsCancellationRequested || IsAnyDataUpdated;
         }
 
+        #endregion
+
+        #region Taxonomic information in the data package
+        // The import options need the data package, and the GBIF option also needs names in the Scientific Name field's menu
+        private void InitializeTaxonomicOptions()
+        {
+            List<string> reasons = [];
+            if (DataPackageRow() == null)
+            {
+                RBTaxonomicFromScientificNames.IsEnabled = false;
+                RBTaxonomicFromSpeciesList.IsEnabled = false;
+                reasons.Add("The data package hasn't been created yet, so taxonomic information can't be imported into it. Open the DataPackage tab in the folder metadata to create it, then return here.");
+            }
+            else if (ScientificNamesInMenu().Count == 0)
+            {
+                RBTaxonomicFromScientificNames.IsEnabled = false;
+                reasons.Add("The Scientific Name data field has no menu items to import.");
+            }
+            TaxonomicUnavailableText.Text = string.Join(" ", reasons);
+            TaxonomicUnavailableText.Visibility = reasons.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private MetadataRow DataPackageRow()
+        {
+            return fileDatabase.MetadataTablesByLevel != null
+                   && fileDatabase.MetadataTablesByLevel.TryGetValue(DataPackageLevel, out DataTableBackedList<MetadataRow> rows)
+                   && rows.RowCount == 1
+                ? rows[0]
+                : null;
+        }
+
+        // The names in the Scientific Name field's menu, without the qualifier some have, e.g., Ursus sp.
+        private List<string> ScientificNamesInMenu()
+        {
+            return [.. CamtrapDPGbifImport.ScientificNameMenuItems(fileDatabase).Select(GbifSpeciesLookup.WithoutQualifier)];
+        }
+
+        // The definitions already in the data package, or null if they can't be read
+        private List<taxonomic> ExistingTaxonomicList()
+        {
+            string json = DataPackageRow()?[CamtrapDPConstants.DataPackage.Taxonomic];
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return [];
+            }
+            try
+            {
+                return [.. (JsonConvert.DeserializeObject<List<taxonomic>>(json) ?? []).Where(RecognitionFileTaxonomy.HasContent)];
+            }
+            catch (JsonException)
+            {
+                return null;
+            }
+        }
+
+        // Work out the taxonomic list to save, according to the option chosen. Returns false if the user cancelled, or it couldn't be done.
+        // The new definitions are added to those already in the data package, leaving out any whose name is already there.
+        private async Task<bool> PrepareTaxonomicListAsync()
+        {
+            taxonomicListToSave = null;
+            taxonomicFeedback = string.Empty;
+            if (RBTaxonomicDoNothing.IsChecked == true)
+            {
+                return true;
+            }
+
+            List<taxonomic> existing = ExistingTaxonomicList();
+            if (existing == null)
+            {
+                Dialogs.CamtrapDPTaxonomicListUnreadableDialog(this);
+                return false;
+            }
+            return RBTaxonomicFromSpeciesList.IsChecked == true
+                ? ImportFromSpeciesList(existing)
+                : await ImportFromGbifAsync(existing);
+        }
+
+        // The species list dialog asks for the file and checks it, and offers to replace the existing definitions
+        private bool ImportFromSpeciesList(List<taxonomic> existing)
+        {
+            CamtrapDPPopulateFromSpeciesList populateDialog = new(this, existing.Count);
+            if (true != populateDialog.ShowDialog())
+            {
+                return false;
+            }
+
+            List<taxonomic> kept = populateDialog.ReplaceExistingDefinitions ? [] : existing;
+            taxonomicListToSave = CamtrapDPSpeciesList.Merged(kept, populateDialog.SpeciesList.Definitions, out int skippedCount);
+            int addedCount = taxonomicListToSave.Count - kept.Count;
+            List<string> notes = populateDialog.SpeciesList.Notes;
+            if (skippedCount > 0)
+            {
+                notes.Add($"{skippedCount} definition(s) were left out, as their name was already in the list.");
+            }
+            if (notes.Count > 0)
+            {
+                Dialogs.CamtrapDPSpeciesListNotesDialog(this, addedCount, notes);
+            }
+            taxonomicFeedback = $"{addedCount} taxonomic definition(s) from the species list were added to the data package.";
+            return true;
+        }
+
+        // Look up each name in the Scientific Name field's menu that isn't already in the data package
+        private async Task<bool> ImportFromGbifAsync(List<taxonomic> existing)
+        {
+            List<string> menuItems = CamtrapDPGbifImport.ItemsNotInList(CamtrapDPGbifImport.ScientificNameMenuItems(fileDatabase), existing);
+            List<taxonomic> found;
+            List<string> notFound;
+            TokenReset();
+            BusyCancelIndicator.IsBusy = true;
+            StartDoneButton.IsEnabled = false;
+            CancelButton.IsEnabled = false;
+            WindowCloseButtonIsEnabled(false);
+            try
+            {
+                (found, notFound) = await CamtrapDPGbifImport.LookupAsync(this, menuItems, Token, Progress, isBusy => BusyCancelIndicator.IsBusy = isBusy);
+            }
+            catch (OperationCanceledException) when (Token.IsCancellationRequested)
+            {
+                return false;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+            {
+                BusyCancelIndicator.IsBusy = false;
+                Dialogs.EditorSpeciesListGbifNotAvailableDialog(this, ex.Message);
+                return false;
+            }
+            finally
+            {
+                BusyCancelIndicator.IsBusy = false;
+                StartDoneButton.IsEnabled = true;
+                CancelButton.IsEnabled = true;
+                WindowCloseButtonIsEnabled(true);
+            }
+
+            // A name GBIF matched to a taxon already in the list, e.g., a synonym, is also already there
+            taxonomicListToSave = CamtrapDPSpeciesList.Merged(existing, found, out int matchedExistingCount);
+            int addedCount = taxonomicListToSave.Count - existing.Count;
+            int alreadyThereCount = ScientificNamesInMenu().Count - menuItems.Count + matchedExistingCount;
+            taxonomicFeedback = $"{addedCount} taxonomic definition(s) from GBIF were added to the data package."
+                                + (alreadyThereCount > 0 ? $" {alreadyThereCount} name(s) were already there." : string.Empty)
+                                + (notFound.Count > 0 ? $" Not added: {string.Join(", ", notFound)}." : string.Empty);
+            return true;
+        }
+
+        private void SaveTaxonomicList()
+        {
+            MetadataRow row = DataPackageRow();
+            if (row != null)
+            {
+                fileDatabase.MetadataTablesAndDatabaseUpdateValue(DataPackageLevel, row[DatabaseColumn.FolderDataPath], CamtrapDPConstants.DataPackage.Taxonomic,
+                    CamtrapDPTaxonomic.SerializeTaxonomicList(taxonomicListToSave));
+            }
+        }
         #endregion
 
         #region Helpers

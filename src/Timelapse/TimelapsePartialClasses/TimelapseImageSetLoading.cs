@@ -787,6 +787,13 @@ namespace Timelapse
             MetadataUI.RelativePathToCurrentImage = null;
             MetadataUI.RelativePathToCurrentImage = DataHandler?.ImageCache?.Current?.RelativePath;
 
+            // A CamtrapDP data package is always needed, so it is created rather than waiting for the user to do it.
+            // This also brings image sets created before this was done up to date.
+            if (false == State.IsViewOnly && DataHandler?.FileDatabase?.MetadataTablesIsCamtrapDPStandard() == true)
+            {
+                MetadataUI.CreateDataPackageIfNeeded();
+            }
+
             // match UX availability to file availability
             EnableOrDisableMenusAndControls();
 

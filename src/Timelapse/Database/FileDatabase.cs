@@ -2263,6 +2263,27 @@ namespace Timelapse.Database
             }
         }
 
+        // Set a value in the metadata table and the database for the folder at this level. Returns false if that folder has no metadata row.
+        public bool MetadataTablesAndDatabaseUpdateValue(int level, string relativePathPart, string dataLabel, string value)
+        {
+            MetadataRow row = MetadataTablesGetRow(level, relativePathPart);
+            if (row == null)
+            {
+                return false;
+            }
+            ColumnTuplesWithWhere columnToUpdate = new();
+            columnToUpdate.Columns.Add(new(dataLabel, value));
+            columnToUpdate.SetWhere(new ColumnTuple(DatabaseColumn.FolderDataPath, relativePathPart));
+            SqlOperationResult updateResult = Database.Update(MetadataComposeTableNameFromLevel(level), columnToUpdate);
+            if (false == updateResult.Success)
+            {
+                Dialogs.TimelapseNeedsToShutDownAsSQLErrorDialog(GlobalReferences.MainWindow, true, "The problem occurred in MetadataTablesAndDatabaseUpdateValue", FilePath, updateResult);
+                return false;
+            }
+            row[dataLabel] = value;
+            return true;
+        }
+
         public void MetadataUpdateFolderDataPath(int level, string oldpath, string newPath)
         {
             string tableName = MetadataComposeTableNameFromLevel(level);

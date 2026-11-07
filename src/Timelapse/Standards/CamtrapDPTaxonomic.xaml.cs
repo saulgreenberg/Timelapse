@@ -4,10 +4,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Timelapse.DataStructures;
+using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Util;
 using TimelapseTemplateEditor.Dialog;
@@ -132,6 +135,8 @@ namespace Timelapse.Standards
                 DialogResult = false;
                 return;
             }
+            // GBIF can only be asked about names if the Scientific Name field has a menu
+            PopulateFromScientificNameMenu.IsEnabled = CamtrapDPGbifImport.ScientificNameMenuItems(GlobalReferences.MainWindow?.DataHandler?.FileDatabase).Count > 0;
             sortColumn = ScientificNameColumn;
             SortTaxonomicList();
             DataGrid_Refresh();
@@ -347,6 +352,60 @@ namespace Timelapse.Standards
             }
         }
 
+        // Fill in the list from GBIF, looking up each name in the Scientific Name field's menu that isn't already in it
+        private async void PopulateFromScientificNameMenu_OnClick(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await PopulateFromScientificNameMenuAsync();
+            }
+            catch (Exception ex)
+            {
+                TracePrint.CatchException(ex.Message);
+            }
+        }
+
+        private async Task PopulateFromScientificNameMenuAsync()
+        {
+            List<taxonomic> existing = [.. TaxonomicList.Where(RecognitionFileTaxonomy.HasContent)];
+            List<string> allMenuItems = CamtrapDPGbifImport.ScientificNameMenuItems(GlobalReferences.MainWindow?.DataHandler?.FileDatabase);
+            List<string> menuItems = CamtrapDPGbifImport.ItemsNotInList(allMenuItems, existing);
+            List<taxonomic> found;
+            List<string> notFound;
+            TokenReset();
+            BusyCancelIndicator.IsBusy = true;
+            WindowCloseButtonIsEnabled(false);
+            try
+            {
+                (found, notFound) = await CamtrapDPGbifImport.LookupAsync(this, menuItems, Token, Progress, isBusy => BusyCancelIndicator.IsBusy = isBusy);
+            }
+            catch (OperationCanceledException) when (Token.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or Newtonsoft.Json.JsonException)
+            {
+                BusyCancelIndicator.IsBusy = false;
+                Dialogs.EditorSpeciesListGbifNotAvailableDialog(this, ex.Message);
+                return;
+            }
+            finally
+            {
+                BusyCancelIndicator.IsBusy = false;
+                WindowCloseButtonIsEnabled(true);
+            }
+
+            // A name GBIF matched to a taxon already in the list, e.g., a synonym, is also already there
+            List<taxonomic> merged = CamtrapDPSpeciesList.Merged(existing, found, out int matchedExistingCount);
+            TaxonomicList = new(merged);
+            SortTaxonomicList();
+            dataGridSelectedRow = 0;
+            SetFocus = false;
+            DataGrid_Refresh();
+            SetFocus = true;
+            Dialogs.CamtrapDPGbifImportResultDialog(this, merged.Count - existing.Count, allMenuItems.Count - menuItems.Count + matchedExistingCount, notFound);
+        }
+
         private void Cancel_OnClick(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
@@ -511,11 +570,17 @@ namespace Timelapse.Standards
         #region Json Serializer
         private void JsonSerialize()
         {
+            JsonTaxonomicList = SerializeTaxonomicList(TaxonomicList);
+        }
+
+        // The json saved in the data package's taxonomic field
+        public static string SerializeTaxonomicList(IEnumerable<taxonomic> taxonomicList)
+        {
             // If an item is an empty string, set it to null (to make for a cleaner json)
             // If a taxonomic object is all empty, skip it/
             // Note that we could put in a check for required fields here...
             List<taxonomic> taxonomicListForExport = [];
-            foreach (taxonomic taxonomic in TaxonomicList)
+            foreach (taxonomic taxonomic in taxonomicList)
             {
                 PropertyInfo[] properties = typeof(taxonomic).GetProperties();
                 bool allNull = true;
@@ -544,7 +609,7 @@ namespace Timelapse.Standards
                 NullValueHandling = NullValueHandling.Ignore,
             };
             settings.Converters.Add(new JsonConverters.WhiteSpaceToNullConverter());
-            JsonTaxonomicList = JsonConvert.SerializeObject(taxonomicListForExport, settings);
+            return JsonConvert.SerializeObject(taxonomicListForExport, settings);
         }
         #endregion
 

@@ -650,18 +650,29 @@ namespace Timelapse.ControlsMetadata
         // depending upon whether we are in the single image or  theThumbnailGrid view respectively.
         public void UpdateMetadataTableAndMetadataDatabase(MetadataDataEntryControl control)
         {
+            // Dates are stored in a format different from how they are displayed, so the table and the database get the stored format
+            string storedContent = control.Content;
+            if (control is MetadataDataEntryDateTimeCustom { ContentControl.Value: not null } storedDateTime)
+            {
+                storedContent = DateTimeHandler.ToStringDatabaseDateTime((DateTime)storedDateTime.ContentControl.Value);
+            }
+            else if (control is MetadataDataEntryDate { ContentControl.Value: not null } storedDate)
+            {
+                storedContent = DateTimeHandler.ToStringDatabaseDate((DateTime)storedDate.ContentControl.Value);
+            }
+
             // Now, update the similar entry in the MetadataTable structure
             DataTableBackedList<MetadataRow> rows = FileDatabase.MetadataTablesByLevel[control.ParentPanel.Level];
             foreach (MetadataRow row in rows)
             {
                 if (row[DatabaseColumn.FolderDataPath] == control.ParentPanel.SubPath)
                 {
-                    if (row[control.DataLabel] == control.Content)
+                    if (row[control.DataLabel] == storedContent)
                     {
                         // old and new values are the same, so abort.
                         return;
                     }
-                    row[control.DataLabel] = control.Content;
+                    row[control.DataLabel] = storedContent;
                 }
             }
 
