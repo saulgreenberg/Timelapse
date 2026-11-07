@@ -671,7 +671,7 @@ namespace TimelapseTemplateEditor.Standards
                 StandardsBase.CreateChoiceList(true, ["setup", "calibration"])),
 
 
-            new(Control.Note, 0, "", "Scientific name", CamtrapDPConstants.Observations.ScientificName,
+            new(Control.FixedChoice, 0, "", "Scientific name", CamtrapDPConstants.Observations.ScientificName,
                 $"Scientific name of the observed individual(s).{Environment.NewLine}" +
                 $"Optional.{Environment.NewLine}" +
                 "• e.g., \"Canis lupus\"",
