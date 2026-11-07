@@ -2064,7 +2064,7 @@ namespace Timelapse.Dialog
 
                 dialog.Hint = $"Duplicates come with several caveats.[br 2]"
                               + $"[li] Use [b]Sort | Relative Path + Date Time (default)[/b] to ensure that duplicates appear in sequence."
-                              + $"[li] Duplicate creation is disabled in the overview."
+                              + $"[li] In the overview, a duplicate is created for each selected record, and the records are then unselected."
                               + $"[li] Duplicates in the exported CSV file are identifiable as rows with the same relative path and file name."
                               + $"[li] [e]Deleting duplicates[/e]: Duplicate records are associated with the same single image or video file. "
                               + $"Consequently, if you delete the image or video file associated with a duplicate record, other duplicates to that image or video will no longer be able to display that file.[br 18]"
@@ -2078,6 +2078,41 @@ namespace Timelapse.Dialog
             }
 
             return result;
+        }
+
+        public static bool? MenuEditDuplicateSelectedRecordsConfirmDialog(Window owner, int count, bool useCurrentValues)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            {
+                Owner = owner,
+                DialogTitle = $"Duplicate {count:N0} records?",
+                Icon = DialogIconType.Question,
+                What = $"You have selected {count:N0} records in the overview.",
+                Result = $"[li]{count:N0} duplicate records will be created, filled in with {(useCurrentValues ? "their current" : "default")} values."
+                         + "[li]The records will then be unselected.",
+                Hint = "Duplicates can't be undone as a group. To remove them, you would have to delete each one."
+            };
+            return dialog.BuildAndShowDialog();
+        }
+
+        public static void MenuEditDuplicateSelectedRecordsProblemDialog(Window owner, bool databaseUnchanged, string reason)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                DialogTitle = "A problem occurred while duplicating the selected records",
+                Icon = DialogIconType.Error,
+                Problem = databaseUnchanged
+                    ? "Timelapse could not duplicate the selected records."
+                    : "The duplicates were created, but Timelapse could not show them as usual.",
+                Reason = reason,
+                Result = databaseUnchanged
+                    ? "No records were changed or added."
+                    : "Timelapse selected the files again from the database. Some of the duplicates may not appear, depending on your current selection and sort order."
+            };
+            dialog.BuildAndShowDialog();
         }
 
         public static void MenuEditDuplicatesPleaseWait(Window owner)

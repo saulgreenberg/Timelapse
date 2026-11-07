@@ -77,6 +77,13 @@ namespace Timelapse
             // Check the arguments for null 
             ThrowIf.IsNullArgument(currentKey, nameof(currentKey));
 
+            if (IsDuplicatingInOverview)
+            {
+                // File table positions are changing, so nothing should act on them
+                currentKey.Handled = true;
+                return;
+            }
+
             // QuickPaste shortcut key?
             // If so, translate key into a quickpaste shortcut key. 
             //        send it to the Quickpaste window and mark the event as handled.

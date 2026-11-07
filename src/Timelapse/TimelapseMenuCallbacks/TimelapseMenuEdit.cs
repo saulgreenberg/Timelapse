@@ -54,10 +54,18 @@ namespace Timelapse
                 MenuItemRestoreDefaults.ToolTip = "For all checkmarked files, revert their fields to their default values (excepting file paths and dates/times)";
             }
 
-            // Enable duplicates only if we have a single image in the main view to duplicate
-            // We don't allow duplications in the overview as the attempts to do so were somewhat buggy. It could be done, but I don't think its critical.
-            MenuItemDuplicateRecordUsingDefaultValues.IsEnabled = state;
-            MenuItemDuplicateRecordUsingCurrentValues.IsEnabled = state;
+            // Enable duplicates if we have a single image in the main view, or selected images in the overview, to duplicate
+            bool inOverview = IsDisplayingMultipleImagesInOverview();
+            MenuItemDuplicateRecordUsingDefaultValues.IsEnabled = state || (inOverview && MarkableCanvas.ThumbnailGridVirtualized.SelectedCount() > 0);
+            MenuItemDuplicateRecordUsingCurrentValues.IsEnabled = MenuItemDuplicateRecordUsingDefaultValues.IsEnabled;
+            MenuItemDuplicateRecordUsingCurrentValues.Header = inOverview ? "_Duplicate the selected records (use current values)" : "_Duplicate this record (use current values)";
+            MenuItemDuplicateRecordUsingDefaultValues.Header = inOverview ? "_Duplicate the selected records (use default values)" : "_Duplicate this record (use default values)";
+            MenuItemDuplicateRecordUsingCurrentValues.ToolTip = inOverview
+                ? "Create a duplicate of each selected record, filled in with its current values. The records are then unselected"
+                : "Create a duplicate of this record, filled in with its current values. Change or fill in fields as needed";
+            MenuItemDuplicateRecordUsingDefaultValues.ToolTip = inOverview
+                ? "Create a duplicate of each selected record, filled in with default values. The records are then unselected"
+                : "Create a duplicate of this record, filled in with default values. Change or fill in fields as needed";
 
             // Enable Frame extraction only if we  have a displayable paused single video in the main view within a media player
             MenuItemExtractVideoFrameUsingCurrentValues.IsEnabled =
@@ -374,9 +382,16 @@ namespace Timelapse
 
         private async Task MenuItemEditDuplicateRecord_ClickAsync(object sender)
         {
-            if (IsDisplayingSingleImage() == false)
+            // The menu items are hidden in view only mode, but the keyboard shortcuts also come here
+            if (State.IsViewOnly)
             {
-                // We only allow duplication if we are displaying a single image in the main view
+                return;
+            }
+
+            // We only allow duplication if we are displaying a single image in the main view or have selected images in the overview
+            bool inOverview = IsDisplayingMultipleImagesInOverview() && MarkableCanvas.ThumbnailGridVirtualized.SelectedCount() > 0;
+            if (IsDisplayingSingleImage() == false && inOverview == false)
+            {
                 return;
             }
 
@@ -408,15 +423,26 @@ namespace Timelapse
                 useCurrentValues = bool.TryParse((string)mi.Tag, out bool tmpCurrentValues) && tmpCurrentValues;
             }
 
+            if (inOverview)
+            {
+                await DuplicateSelectedRecordsInOverviewAsync(useCurrentValues);
+                return;
+            }
+
             IsDuplicating = true;
             Mouse.OverrideCursor = Cursors.Wait;
-            await DuplicateCurrentRecord(useCurrentValues);
+            try
+            {
+                await DuplicateCurrentRecord(useCurrentValues);
 
-            // Need to refresh how duplicate episodes are displayed, as otherwise the total in a sequence could be wrong
-            Episodes.Episodes.EpisodeGetEpisodesInRange(DataHandler.FileDatabase.FileTable, DataHandler.ImageCache.CurrentRow);
-
-            Mouse.OverrideCursor = null;
-            IsDuplicating = false;
+                // Need to refresh how duplicate episodes are displayed, as otherwise the total in a sequence could be wrong
+                Episodes.Episodes.EpisodeGetEpisodesInRange(DataHandler.FileDatabase.FileTable, DataHandler.ImageCache.CurrentRow);
+            }
+            finally
+            {
+                Mouse.OverrideCursor = null;
+                IsDuplicating = false;
+            }
         }
         #endregion
 

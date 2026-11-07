@@ -404,6 +404,32 @@ namespace Timelapse.Controls
 
         public int SelectedCount() => selectedIndices.Count;
 
+        public void ClearSelection()
+        {
+            selectedIndices.Clear();
+            anchorIndex = -1;
+            RefreshSelectionVisuals();
+            EnableOrDisableControlsAsNeeded();
+            OnSelectionChanged(new ThumbnailGridVirtualizedEventArgs(null));
+        }
+
+        // Rows were inserted in the file table, so the positions held here are wrong. Everything keyed by them is rebuilt,
+        // keeping the same files at the top left of the view and as the home and zoom anchor.
+        public void RefreshAfterFileTableInsertions(Func<int, int> newPosition)
+        {
+            CancelUpdate();
+            selectedIndices.Clear();
+            anchorIndex = -1;
+            int firstVisibleFile = newPosition(FirstVisibleFileIndex);
+            FileTableStartIndex = newPosition(FileTableStartIndex);
+            zoomAnchorFileIndex = newPosition(zoomAnchorFileIndex);
+            if (cellHeight > 0)
+            {
+                RebuildPool(cellWidth, cellHeight, firstVisibleFile);
+            }
+            EnableOrDisableControlsAsNeeded();
+        }
+
         public void RefreshBoundingBoxesAndEpisodeInfo()
         {
             foreach (ThumbnailInCell cell in pool.Where(c => c.Visibility == Visibility.Visible && c.ImageRow != null))
@@ -797,6 +823,9 @@ namespace Timelapse.Controls
             {
                 if (lip.BitmapSource == null) return;
                 ThumbnailInCell cell = lip.ThumbnailInCell;
+
+                // A load reported just before the pool was rebuilt still has its old cell, whose file table index may now be another file's
+                if (false == ReferenceEquals(cell.Parent, VirtualCanvas)) return;
 
                 // Stale-bitmap guard: reject if cell was reassigned since this load started
                 if (cell.DateTimeLastBitmapWasSet != lip.DateTimeLipInvoked) return;

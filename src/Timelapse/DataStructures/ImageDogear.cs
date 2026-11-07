@@ -47,6 +47,19 @@ namespace Timelapse.DataStructures
             return this.DogearedImageIndex;
         }
 
+        // Rows were inserted in the file table, so these images are now at different positions
+        public void UpdatePositions(Func<int, int> newPosition)
+        {
+            if (this.DogearedImageIndex != Constant.DatabaseValues.InvalidRow)
+            {
+                this.DogearedImageIndex = newPosition(this.DogearedImageIndex);
+            }
+            if (this.LastSeenImageIndex != Constant.DatabaseValues.InvalidRow)
+            {
+                this.LastSeenImageIndex = newPosition(this.LastSeenImageIndex);
+            }
+        }
+
         public bool IsDogearTheCurrentImage()
         {
             return this.DogearedImageIndex == datahandler.ImageCache.CurrentRow;

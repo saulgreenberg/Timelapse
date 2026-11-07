@@ -1037,6 +1037,30 @@ namespace Timelapse.Database
                 return;
             }
 
+            List<string> insertCommands = ComposeAddFilesCommands(files, onFileAdded);
+
+            // Execute all batches in one transaction — one fsync regardless of image count.
+            CreateBackupIfNeeded();
+            SqlOperationResult addFilesResult = Database.ExecuteNonQueryWithRollback(insertCommands);
+            while (!addFilesResult.Success)
+            {
+                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "add these files to the database", addFilesResult, this.FilePath);
+                if (retryChoice != true)
+                {
+                    if (retryChoice == false)
+                    {
+                        Application.Current.Shutdown();
+                    }
+                    return;
+                }
+                addFilesResult = Database.ExecuteNonQueryWithRollback(insertCommands);
+            }
+            InvalidateAllFoldersCache();
+        }
+
+        // The commands that insert these files, each with its current values if valid, or otherwise its default values.
+        private List<string> ComposeAddFilesCommands(List<ImageRow> files, Action<ImageRow, int> onFileAdded)
+        {
             StringBuilder queryColumns = new(Sql.InsertInto + DBTables.FileData + Sql.OpenParenthesis); // INSERT INTO DataTable (
             Dictionary<string, string> defaultValueLookup = GetDefaultControlValueLookup();
 
@@ -1307,24 +1331,7 @@ namespace Timelapse.Database
                     onFileAdded.Invoke(files[lastImageInserted], lastImageInserted);
                 }
             }
-
-            // Execute all batches in one transaction — one fsync regardless of image count.
-            CreateBackupIfNeeded();
-            SqlOperationResult addFilesResult = Database.ExecuteNonQueryWithRollback(insertCommands);
-            while (!addFilesResult.Success)
-            {
-                bool? retryChoice = Dialogs.TimelapseOperationRetryDialog(GlobalReferences.MainWindow, "add these files to the database", addFilesResult, this.FilePath);
-                if (retryChoice != true)
-                {
-                    if (retryChoice == false)
-                    {
-                        Application.Current.Shutdown();
-                    }
-                    return;
-                }
-                addFilesResult = Database.ExecuteNonQueryWithRollback(insertCommands);
-            }
-            InvalidateAllFoldersCache();
+            return insertCommands;
         }
 
         /// <summary>
