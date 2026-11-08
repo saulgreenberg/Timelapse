@@ -1,12 +1,15 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Timelapse.Controls;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.Enums;
 using Timelapse.Images;
+using Timelapse.Util;
+using Control = Timelapse.Constant.Control;
 
 namespace Timelapse.Database
 {
@@ -53,14 +56,16 @@ namespace Timelapse.Database
         // using the desired formatting options:
         // -  useClassificationOnly as just the classification category alone
         // - as Json as json formatted text or
-        // - as human-readable text
-        public bool RecognitionsPopulateFieldWithData(string dataLabel, RecognitionFormatEnum recognitionFormat, bool useClassificationOnly, bool useBboxCoords, bool useDetectionConf, bool useDetectionCategory, bool useClassConf, bool useClassCat, 
+        // - as human-readable text or
+        // - as the raw value of a single recognition item. If the field is a decimal field, only valid decimals (or blanks) are written
+        public bool RecognitionsPopulateFieldWithData(string dataLabel, RecognitionFormatEnum recognitionFormat, bool useClassificationOnly, bool useBboxCoords, bool useDetectionConf, bool useDetectionCategory, bool useClassConf, bool useClassCat,
             IProgress<ProgressBarArguments> progress)
         {
             if (Database == null || false == DetectionsExists())
             {
                 return false;
             }
+            string controlType = GetControlFromControls(dataLabel)?.Type;
             progress.Report(new(0, "Processing recognition data...", false, true));
             if (GlobalReferences.CancelTokenSource.Token.IsCancellationRequested)
             {
@@ -96,7 +101,42 @@ namespace Timelapse.Database
                     }
                 }
 
-                // Case 2: As human-readable/formatted text  
+                // Case 2: As the raw data of the single selected recognition item
+                else if (recognitionFormat == RecognitionFormatEnum.Raw)
+                {
+                    bool classificationsExist = bestBoundingBox.Classifications.Count >= 1;
+                    if (useBboxCoords)
+                    {
+                        recognitionData = FormattableString.Invariant($"{bestBoundingBox.Rectangle.Left:F3}, {bestBoundingBox.Rectangle.Top:F3}, ") +
+                                          FormattableString.Invariant($"{bestBoundingBox.Rectangle.Width:F3}, {bestBoundingBox.Rectangle.Height:F3}");
+                    }
+                    else if (useDetectionCategory)
+                    {
+                        recognitionData = GetDetectionLabelFromCategory(bestBoundingBox.DetectionCategory);
+                    }
+                    else if (useDetectionConf)
+                    {
+                        recognitionData = bestBoundingBox.Confidence.ToString(CultureInfo.InvariantCulture);
+                    }
+                    else if (useClassCat && classificationsExist)
+                    {
+                        recognitionData = bestBoundingBox.Classifications[0].Key;
+                    }
+                    else if (useClassConf && classificationsExist)
+                    {
+                        recognitionData = bestBoundingBox.Classifications[0].Value;
+                    }
+
+                    // Decimal fields can only hold a valid decimal or a blank, so skip any value that isn't one
+                    if (false == string.IsNullOrEmpty(recognitionData) &&
+                        ((controlType == Control.DecimalAny && false == IsCondition.IsDecimal(recognitionData)) ||
+                         (controlType == Control.DecimalPositive && false == IsCondition.IsDecimalPositive(recognitionData))))
+                    {
+                        continue;
+                    }
+                }
+
+                // Case 3: As human-readable/formatted text
                 else if (recognitionFormat == RecognitionFormatEnum.PlainText)
                 {
                     if (useBboxCoords)
@@ -127,7 +167,7 @@ namespace Timelapse.Database
                     recognitionData = recognitionData.TrimEnd(); // Remove any trailing newline
                 }
 
-                // Case 3 As json formatted or unformatted text: (asJson is always true here)
+                // Case 4 As json formatted or unformatted text: (asJson is always true here)
                 else
                 {
                     bboxPrintable ??= new BboxPrintable();

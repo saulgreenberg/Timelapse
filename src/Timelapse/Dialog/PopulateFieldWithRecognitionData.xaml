@@ -6,7 +6,7 @@
         xmlns:toolkit="http://timelapsewpf.toolkit/xaml"
         xmlns:controls="clr-namespace:Timelapse.Controls"
         mc:Ignorable="d"
-        Title="Populate a Field With RecognitionData" Height="690" Width="800" Loaded="Window_Loaded">
+        Title="Populate a Field With RecognitionData" Height="720" Width="800" Loaded="Window_Loaded">
     <Grid>
         <DockPanel Grid.Row="0">
             <ScrollViewer Height ="350" VerticalAlignment="Top"  DockPanel.Dock="Top">
@@ -17,6 +17,8 @@
                  What="Record recognition criteria from the highest confidence bounding box in a data field."
                  Solution="[ni] Select a [e]Note[/e] or [e]MultiLine[/e] data field to populate.
                     [ni] Select desired recognition data: [e]classification category[/e] only (e.g., [i]deer[/i]), or a mix of [e]selectable recognition data[/e] and its output format
+                    [li] [e]As raw data[/e] is available only when a single item is chosen. It outputs just that item's value (e.g., [i]0.987[/i]).
+                    [li] When outputting a [e]Confidence[/e] as raw data, you can also select a [e]Decimal[/e] or [e]Decimal positive[/e] data field. Values that aren't valid decimals are not written.
                     [ni] Click [e]Populate[/e] to begin populating the Note field for your selected files."
                  Result="The files in your current selection will have that field updated with the chosen recognition information."
                  Hint="Review the recorded recognition data, and correct it as needed. See [link:{x:Static constant:ExternalLinks.TimelapseGuideReference}|Timelapse Reference Guide] for nuances."
@@ -43,10 +45,10 @@
                     <!--The data field selection combobox-->
                     <StackPanel  Orientation="Horizontal"  Margin="0, 5,15,10">
                         <TextBlock Text="Select a data field to contain the recognition data:" VerticalAlignment="Top" FontWeight="Bold" Margin="0, 5,15,5"
-                                   ToolTip="Only Notes and MultiLineText fields are listed,&#x000A;as only these can reliably hold the recognition contents"/>
+                                   ToolTip="Only Notes and MultiLineText fields are listed,&#x000A;as only these can reliably hold the recognition contents.&#x000A;Decimal fields are also listed when outputting a single Confidence as raw data"/>
                         <ComboBox Name="ComboBoxSelectNoteField" Width="250" Height="30" VerticalAlignment="Top"  VerticalContentAlignment="Center" 
                                   SelectionChanged="ComboBoxSelectNoteField_SelectionChanged" 
-                                  ToolTip="Only Notes and MultiLineText fields are listed,&#x000A;as only these can reliably hold the recognition contents"/>
+                                  ToolTip="Only Notes and MultiLineText fields are listed,&#x000A;as only these can reliably hold the recognition contents.&#x000A;Decimal fields are also listed when outputting a single Confidence as raw data"/>
                     </StackPanel>
 
                     <!-- The main options panel-->
@@ -98,25 +100,25 @@
 
                                 <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"  FontWeight="DemiBold"  Margin="0,0,10,0"
                                        Text="Bounding box:"/>
-                                <CheckBox Name="CBBoundingBoxCoordinates"  Grid.Row="0" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"
+                                <CheckBox Name="CBBoundingBoxCoordinates" Click="DataToOutput_Click"  Grid.Row="0" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"
                                       Content ="Coordinates" />
                                 <TextBlock Grid.Row="0" Grid.Column="3" VerticalAlignment="Center"  Margin="10,0,0,0"
                                        Text="(x,y,width,height)"/>
 
                                 <TextBlock Grid.Row="1" Grid.Column="0" FontWeight="DemiBold" VerticalAlignment="Center" 
                                        Text="Detection:"/>
-                                <CheckBox Name="CBDetectionCategory" Grid.Row="1" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"  
+                                <CheckBox Name="CBDetectionCategory" Click="DataToOutput_Click" Grid.Row="1" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"  
                                        Content="Category" />
-                                <CheckBox Name="CBDetectionConfidence" Grid.Row="1" Grid.Column="2" IsChecked="True" VerticalAlignment="Center" Margin="10,0,0,0"
+                                <CheckBox Name="CBDetectionConfidence" Click="DataToOutput_Click" Grid.Row="1" Grid.Column="2" IsChecked="True" VerticalAlignment="Center" Margin="10,0,0,0"
                                        Content="Confidence" />
                                 <TextBlock Grid.Row="1" Grid.Column="3" VerticalAlignment="Center"  Margin="10,0,0,0"
                                        Text="e.g., animal, detection confidence 0.999"/>
 
                                 <TextBlock Grid.Row="2" Grid.Column="0" FontWeight="DemiBold" VerticalAlignment="Center" 
                                        Text="Classification:"/>
-                                <CheckBox Name="CBClassificationCategory" Grid.Row="2" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"
+                                <CheckBox Name="CBClassificationCategory" Click="DataToOutput_Click" Grid.Row="2" Grid.Column="1" IsChecked="True" VerticalAlignment="Center"
                                       Content="Category" />
-                                <CheckBox Name="CBClassificationConfidence" Grid.Row="2" Grid.Column="2" IsChecked="True" VerticalAlignment="Center" Margin="10,0,0,0"
+                                <CheckBox Name="CBClassificationConfidence" Click="DataToOutput_Click" Grid.Row="2" Grid.Column="2" IsChecked="True" VerticalAlignment="Center" Margin="10,0,0,0"
                                       Content="Confidence" />
                                 <TextBlock Grid.Row="2" Grid.Column="3" VerticalAlignment="Center"  Margin="10,0,0,0"
                                        Text="e.g., deer, classification confidence 0.987 "/>
@@ -138,14 +140,17 @@
                                     <RowDefinition Height="30" />
                                     <RowDefinition Height="30"  />
                                     <RowDefinition Height="30" />
+                                    <RowDefinition Height="30" />
                                 </Grid.RowDefinitions>
 
-                                <RadioButton Grid.Row="0" Grid.Column="0" Name="RBAsFormattedJson" Content="As formatted Json" GroupName="OutputFormat" VerticalAlignment="Center" IsChecked ="true" Margin="10, 0,0,0"
+                                <RadioButton Grid.Row="0" Grid.Column="0" Name="RBAsFormattedJson" Click="OutputFormat_Click" Content="As formatted Json" GroupName="OutputFormat" VerticalAlignment="Center" IsChecked ="true" Margin="10, 0,0,0"
                                              ToolTip="Outputs the recognition data as a pretty-printed json structure (with line breaks)"/>
-                                <RadioButton Grid.Row="1" Grid.Column="0" Name="RBAsUnformattedJson" Content="As unformatted Json" GroupName="OutputFormat" VerticalAlignment="Center" IsChecked ="false" Margin="10, 0,0,0"
+                                <RadioButton Grid.Row="1" Grid.Column="0" Name="RBAsUnformattedJson" Click="OutputFormat_Click" Content="As unformatted Json" GroupName="OutputFormat" VerticalAlignment="Center" IsChecked ="false" Margin="10, 0,0,0"
                                              ToolTip="Outputs the recognition data as a compact json structure, all on a single line"/>
-                                <RadioButton Grid.Row="2" Grid.Column="0" Name="RBAsPlainText" Content="As plain text" GroupName="OutputFormat" VerticalAlignment="Center" Margin="10, 0,0,0"
+                                <RadioButton Grid.Row="2" Grid.Column="0" Name="RBAsPlainText" Click="OutputFormat_Click" Content="As plain text" GroupName="OutputFormat" VerticalAlignment="Center" Margin="10, 0,0,0"
                                              ToolTip="Outputs the recognition data as rows of plain text, each comprising a descriptive label and the recognition value"/>
+                                <RadioButton Grid.Row="3" Grid.Column="0" Name="RBAsRaw" Click="OutputFormat_Click" Content="As raw data" GroupName="OutputFormat" VerticalAlignment="Center" Margin="10, 0,0,0"
+                                             ToolTip="Outputs only the value of the single selected recognition data, without any labels (e.g., 0.987).&#x000A;Available only when a single data checkbox is selected.&#x000A;For a Confidence, Decimal data fields can also be selected"/>
                             </Grid>
 
                         </GroupBox>

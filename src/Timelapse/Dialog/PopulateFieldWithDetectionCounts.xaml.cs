@@ -40,11 +40,13 @@ namespace Timelapse.Dialog
             // Set up a progress handler that will update the progress bar
             InitalizeProgressHandler(BusyCancelIndicator);
 
-            // Construct a list showing the available note fields in the combobox
+            // Construct a list showing the available numeric and text fields in the combobox
             foreach (ControlRow control in fileDatabase.Controls)
             {
                 switch (control.Type)
                 {
+                    case Control.Note:
+                    case Control.MultiLine:
                     case Control.Counter:
                     case Control.IntegerAny:
                     case Control.IntegerPositive:

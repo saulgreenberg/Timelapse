@@ -5,5 +5,6 @@
         FormattedJson,
         UnformattedJson,
         PlainText,
+        Raw,
     }
 }

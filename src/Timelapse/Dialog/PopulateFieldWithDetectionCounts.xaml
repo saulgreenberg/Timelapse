@@ -7,8 +7,8 @@
         xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
         mc:Ignorable="d"
         Title="Populate a data field with detection counts?" 
-        MinHeight="590" MinWidth="700"
-        Height="590" Width="700"
+        MinHeight="630" MinWidth="700"
+        Height="630" Width="700"
         ResizeMode="CanResizeWithGrip"
 		ShowInTaskbar="False"
 		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded" Closing="Window_Closing">
@@ -19,9 +19,9 @@
                             DialogTitle="Populate a data field with detection counts?"
                             What="For each file in the current selection: 
                                  [ni] Count the detected entities at or above a given confidence value, 
-                                  [ni] Record that count in a [e]Numeric[/e] data field of your choice ([i]Count, Integer, Decimal[/i]). 
+                                  [ni] Record that count in a [e]Numeric[/e] or [e]Text[/e] data field of your choice ([i]Count, Integer, Decimal, Note, Multiline[/i]). 
                                   [br]This is useful to get a rough count of how many entities are detected by the recognizer in each image."                                                              
-                            Solution="[ni] Select a [e]Numeric[/e] data field to populate.
+                            Solution="[ni] Select a [e]Numeric[/e] or [e]Text[/e] data field to populate.
                                       [ni] Select a [e]Confidence value[/e]. 
                                       [ni] Click [e]Populate[/e] to begin populating that data field for your selected files."
                             Result="[li] Only files in your current selection will be updated.
@@ -47,8 +47,8 @@
                     
                 </StackPanel>
                 <StackPanel Name="FeedbackPanel" Orientation="Vertical" Visibility="Collapsed">
-                    <TextBlock Name="TextBlockFeedbackLine1" Text="No counter fields are available" VerticalAlignment="Center" Margin="0,5,15,5" FontWeight="Bold" />
-                    <TextBlock Name="TextBlockFeedbackLine2" Text="You need to add at least one counter field in your template." VerticalAlignment="Center" Margin="0,5,0,5" FontWeight="Bold" />
+                    <TextBlock Name="TextBlockFeedbackLine1" Text="No Numeric or Text data fields are available" VerticalAlignment="Center" Margin="0,5,15,5" FontWeight="Bold" />
+                    <TextBlock Name="TextBlockFeedbackLine2" Text="You need to add at least one Numeric, Note or Multiline field in your template." VerticalAlignment="Center" Margin="0,5,0,5" FontWeight="Bold" />
                 </StackPanel>
             </StackPanel>
 

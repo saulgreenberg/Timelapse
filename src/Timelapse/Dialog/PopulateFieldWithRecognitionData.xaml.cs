@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,7 +23,11 @@ namespace Timelapse.Dialog
         #region Private Variables
 
         private readonly FileDatabase fileDatabase;
-        private readonly Dictionary<string, string> dataLabelByLabel;
+        // The Note, MultiLine and Decimal controls that could hold the recognition data, in template order
+        private readonly List<ControlRow> dataFieldControls;
+
+        // Whether the data field combobox currently lists the Decimal fields (null if not yet filled)
+        private bool? dataFieldComboBoxIncludesDecimalFields;
 
         // Used to remember the selections between invocations of the dialog
         // These are the default initial values, which will be modified as the user makes selections
@@ -43,7 +48,7 @@ namespace Timelapse.Dialog
             InitializeComponent();
             FormattedDialogHelper.SetupStaticReferenceResolver(Message);
             ThrowIf.IsNullArgument(fileDatabase, nameof(fileDatabase));
-            dataLabelByLabel = [];
+            dataFieldControls = [];
             this.fileDatabase = fileDatabase;
         }
 
@@ -53,33 +58,20 @@ namespace Timelapse.Dialog
             // Set up a progress handler that will update the progress bar
             InitalizeProgressHandler(BusyCancelIndicator);
             Debug.Print(dataFieldLabel);
-            ComboBoxSelectNoteField.SelectedItem = null;
-            // Construct a list showing the available note fields in the combobox
+            // Collect the fields that could hold the recognition data.
+            // Decimal fields are only listed in the combobox when a single Confidence is output as raw data
             foreach (ControlRow control in fileDatabase.Controls)
             {
-                if (control.Type is Control.Note or Control.MultiLine)
+                if (control.Type is Control.Note or Control.MultiLine or Control.DecimalAny or Control.DecimalPositive)
                 {
-                    // We only set the combobox to the remembered data field if it is present in the controls 
-                    if (dataFieldLabel == control.Label)
-                    {
-                        ComboBoxSelectNoteField.SelectedItem = dataFieldLabel;
-                    }
-                    dataLabelByLabel.Add(control.Label, control.DataLabel);
-                    ComboBoxSelectNoteField.Items.Add(control.Label);
+                    dataFieldControls.Add(control);
                 }
             }
-            dataFieldLabel = string.IsNullOrWhiteSpace((string)ComboBoxSelectNoteField.SelectedItem)
-                ? string.Empty
-                : (string)ComboBoxSelectNoteField.SelectedItem;
 
-            if (ComboBoxSelectNoteField.Items.Count == 0)
+            if (false == dataFieldControls.Any(control => control.Type is Control.Note or Control.MultiLine))
             {
                 PrimaryPanel.Visibility = Visibility.Collapsed;
                 FeedbackPanel.Visibility = Visibility.Visible;
-            }
-            else if (ComboBoxSelectNoteField.Items.Count == 1)
-            {
-                ComboBoxSelectNoteField.SelectedIndex = 0;
             }
 
             // Recall the initial or last used settings of the various options
@@ -92,14 +84,13 @@ namespace Timelapse.Dialog
             RBAsFormattedJson.IsChecked = useRecognitionFormat == RecognitionFormatEnum.FormattedJson;
             RBAsUnformattedJson.IsChecked = useRecognitionFormat == RecognitionFormatEnum.UnformattedJson;
             RBAsPlainText.IsChecked = useRecognitionFormat == RecognitionFormatEnum.PlainText;
+            RBAsRaw.IsChecked = useRecognitionFormat == RecognitionFormatEnum.Raw;
             RBClassificationOny.IsChecked = useClassificationOnly;
             RBChooseFields.IsChecked = useClassificationOnly == false;
             EnableOrDisableGroupBoxes(RBChooseFields.IsChecked == true);
 
             RBClassificationOny.Checked += RBClassificationOnly_Checked;
             RBChooseFields.Checked += RBChooseFields_Checked;
-
-            SetPopulateButtonEnableState();
         }
         #endregion
 
@@ -107,11 +98,24 @@ namespace Timelapse.Dialog
 
         private void ComboBoxSelectNoteField_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (sender is ComboBox cb)
+            // Ignore the null selection that occurs when the combobox items are cleared and refilled
+            if (sender is ComboBox { SelectedItem: string label })
             {
-                dataFieldLabel = ((string)cb.SelectedValue).Trim();
+                dataFieldLabel = label.Trim();
                 SetPopulateButtonEnableState();
             }
+        }
+
+        // A data checkbox was clicked, which may change whether raw data can be output
+        private void DataToOutput_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateRawDataStateAndDataFields();
+        }
+
+        // An output format was clicked, which may change whether decimal fields can be selected
+        private void OutputFormat_Click(object sender, RoutedEventArgs e)
+        {
+            UpdateRawDataStateAndDataFields();
         }
 
         private void RBClassificationOnly_Checked(object sender, RoutedEventArgs e)
@@ -157,12 +161,8 @@ namespace Timelapse.Dialog
             BusyCancelIndicator.IsBusy = true;
 
             // We need to set up the parameters for the call to PopulateFieldWithRecognitionData as we can't access the UI elements from the background thread
-            string dataLabelToUpdate = dataLabelByLabel[dataFieldLabel];
-            RecognitionFormatEnum recognitionFormat = RBAsFormattedJson.IsChecked == true
-                ? RecognitionFormatEnum.FormattedJson
-                : RBAsUnformattedJson.IsChecked == true
-                    ? RecognitionFormatEnum.UnformattedJson
-                    : RecognitionFormatEnum.PlainText;
+            string dataLabelToUpdate = dataFieldControls.First(control => control.Label == dataFieldLabel).DataLabel;
+            RecognitionFormatEnum recognitionFormat = GetSelectedRecognitionFormat();
             bool classificationOny = RBClassificationOny.IsChecked == true;
             bool boundingBoxCoordinates = CBBoundingBoxCoordinates.IsChecked == true;
             bool detectionConfidence = CBDetectionConfidence.IsChecked == true;
@@ -202,6 +202,7 @@ namespace Timelapse.Dialog
             RBAsPlainText.Foreground = brush;
             RBAsUnformattedJson.Foreground = brush;
             RBAsFormattedJson.Foreground = brush;
+            RBAsRaw.Foreground = brush;
 
             CBBoundingBoxCoordinates.Foreground = brush;
             CBClassificationCategory.Foreground = brush;
@@ -209,7 +210,82 @@ namespace Timelapse.Dialog
             CBDetectionCategory.Foreground = brush;
             CBDetectionConfidence.Foreground = brush;
 
+            UpdateRawDataStateAndDataFields();
+        }
+
+        // Raw data can only be output when a single data checkbox is selected in the mix of recognition data.
+        // Decimal fields can only hold raw data from a single Confidence, so only then are they listed as data fields.
+        private void UpdateRawDataStateAndDataFields()
+        {
+            bool isChooseFields = RBChooseFields.IsChecked == true;
+            int selectedCount = GetSelectedDataCheckboxCount();
+            RBAsRaw.IsEnabled = isChooseFields && selectedCount == 1;
+            if (isChooseFields)
+            {
+                RBAsRaw.Foreground = RBAsRaw.IsEnabled ? Brushes.Black : Brushes.DarkGray;
+            }
+
+            // Raw data no longer applies once several checkboxes are selected
+            if (RBAsRaw.IsChecked == true && isChooseFields && selectedCount > 1)
+            {
+                RBAsFormattedJson.IsChecked = true;
+            }
+
+            bool includeDecimalFields = RBAsRaw.IsEnabled && RBAsRaw.IsChecked == true &&
+                                        (CBDetectionConfidence.IsChecked == true || CBClassificationConfidence.IsChecked == true);
+            FillDataFieldComboBox(includeDecimalFields);
             SetPopulateButtonEnableState();
+        }
+
+        // Fill the combobox with the Note and MultiLine fields, and optionally the Decimal fields,
+        // keeping the current data field selected if it is still listed
+        private void FillDataFieldComboBox(bool includeDecimalFields)
+        {
+            if (dataFieldComboBoxIncludesDecimalFields == includeDecimalFields)
+            {
+                return;
+            }
+            dataFieldComboBoxIncludesDecimalFields = includeDecimalFields;
+
+            string previousDataFieldLabel = dataFieldLabel;
+            ComboBoxSelectNoteField.Items.Clear();
+            foreach (ControlRow control in dataFieldControls)
+            {
+                if (includeDecimalFields || control.Type is Control.Note or Control.MultiLine)
+                {
+                    ComboBoxSelectNoteField.Items.Add(control.Label);
+                }
+            }
+
+            if (ComboBoxSelectNoteField.Items.Contains(previousDataFieldLabel))
+            {
+                ComboBoxSelectNoteField.SelectedItem = previousDataFieldLabel;
+            }
+            else if (ComboBoxSelectNoteField.Items.Count == 1)
+            {
+                ComboBoxSelectNoteField.SelectedIndex = 0;
+            }
+            else
+            {
+                dataFieldLabel = string.Empty;
+            }
+        }
+
+        private int GetSelectedDataCheckboxCount()
+        {
+            return new[] { CBBoundingBoxCoordinates, CBDetectionCategory, CBDetectionConfidence, CBClassificationCategory, CBClassificationConfidence }
+                .Count(checkBox => checkBox.IsChecked == true);
+        }
+
+        private RecognitionFormatEnum GetSelectedRecognitionFormat()
+        {
+            return RBAsFormattedJson.IsChecked == true
+                ? RecognitionFormatEnum.FormattedJson
+                : RBAsUnformattedJson.IsChecked == true
+                    ? RecognitionFormatEnum.UnformattedJson
+                    : RBAsRaw.IsChecked == true
+                        ? RecognitionFormatEnum.Raw
+                        : RecognitionFormatEnum.PlainText;
         }
 
         // Record the current button states to the static variables so that they can be recalled next time the dialog is opened
@@ -222,11 +298,7 @@ namespace Timelapse.Dialog
             useClassificationConfidence = CBClassificationConfidence.IsChecked == true;
             useClassificationCategory = CBClassificationCategory.IsChecked == true;
 
-            useRecognitionFormat = RBAsFormattedJson.IsChecked == true
-                ? RecognitionFormatEnum.FormattedJson
-                : RBAsUnformattedJson.IsChecked == true
-                    ? RecognitionFormatEnum.UnformattedJson
-                    : RecognitionFormatEnum.PlainText;
+            useRecognitionFormat = GetSelectedRecognitionFormat();
         }
 
         // Enable or disable the Start/Done button based on the current selections
@@ -246,10 +318,11 @@ namespace Timelapse.Dialog
                 return;
             }
 
-            // Enable the Start/Done button if at least one of the checkboxes is selected
-            StartDoneButton.IsEnabled = CBBoundingBoxCoordinates.IsChecked == true ||
-                                        CBDetectionCategory.IsChecked == true || CBDetectionConfidence.IsChecked == true ||
-                                        CBClassificationCategory.IsChecked == true || CBClassificationConfidence.IsChecked == true;
+            // Enable the Start/Done button if at least one of the checkboxes is selected, or exactly one if outputting raw data
+            int selectedCount = GetSelectedDataCheckboxCount();
+            StartDoneButton.IsEnabled = RBAsRaw.IsChecked == true
+                ? selectedCount == 1
+                : selectedCount >= 1;
         }
         #endregion
     }
