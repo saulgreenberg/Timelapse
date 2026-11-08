@@ -144,42 +144,17 @@ namespace Timelapse.ControlsDataEntry
             // Used to signify the indeterminate state in no or multiple selections in the overview.
             if (value == null)
             {
+                // A value not in the menu mustn't stay selected under the placeholder, where it could be confirmed for all the selected images
+                core.RemoveNotInMenuItem();
                 ContentControl.ForceWatermark = true;
                 ContentControl.ToolTip = "Select an item to change the " + Label + " for all selected images";
                 return;
             }
             ContentControl.ForceWatermark = false;
-            //ContentControl.Text = value;
 
-            // Setting ComboBox.Text on a non-editable ComboBox doesn't properly select items by their content - it's unreliable,
-            // especially for empty strings. Finding the ComboBoxItem whose Content matches the value and then using
-            // SelectedItem will properly find and select the ComboBoxItem that has Content = string.Empty,
-            // instead of relying on the unreliable Text property for non-editable ComboBoxes
-            // Find the ComboBoxItem whose Content matches the value
-
-            // Find the matching item's index
-            int matchingIndex = -1;
-            for (int i = 0; i < ContentControl.Items.Count; i++)
+            // A value that isn't one of the menu's items is still shown, in italics
+            if (core.SelectValue(value))
             {
-                if (ContentControl.Items[i] is ComboBoxItem cbi && (string)cbi.Content == value)
-                {
-                    matchingIndex = i;
-                    break;
-                }
-            }
-
-            if (matchingIndex >= 0)
-            {
-                // Found it - select by index
-                ContentControl.SelectedIndex = matchingIndex;
-            }
-            else
-            {
-                // Not found - add it as a temporary item, select it so the value changes, then delete it
-                ComboBoxItem tempItem = new ComboBoxItem { Content = value };
-                ContentControl.Items.Add(tempItem);
-                ContentControl.SelectedIndex = ContentControl.Items.Count - 1;
-                ContentControl.Items.Remove(tempItem);
                 this.FlashContentControl(FlashEnum.UseErrorFlash);
                 NotificationOptions toastOptions = new()
                 {
@@ -187,17 +162,13 @@ namespace Timelapse.ControlsDataEntry
                     CloseAfter = 4000,
                     TopLeft = true,
                     Compact = true
-                    
-                     
                 };
-                string toastMessage = $"{this.Label} cannot display its value '{value}' as there is no matching menu item.";
+                string toastMessage = $"{this.Label}'s value '{value}' isn't one of its menu items.";
                 GlobalReferences.MainWindow.ToastNotifier.ShowWarning(toastMessage, toastOptions);
             }
 
-            ContentControl.ForceWatermark = false;
-            ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
+            ContentControl.ToolTip = core.Tooltip(value);
         }
-
         #endregion
 
         #region Hiding, visual Effects and Popup Previews

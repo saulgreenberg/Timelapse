@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Timelapse.Constant;
+using Timelapse.ControlsCore;
 using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DataTables;
@@ -409,8 +410,8 @@ namespace Timelapse.ControlsMetadata
                     ComboBox comboBox = fixedChoice.ContentControl;
                     foreach (Object t in comboBox.Items)
                     {
-                        // This check skips over the Separator
-                        if (t is ComboBoxItem cbi)
+                        // This check skips over the Separator, and over a value shown although it isn't one of the menu's items
+                        if (t is ComboBoxItem cbi && false == ChoiceControlCore.IsNotInMenuItem(cbi))
                         {
                             if (clipboardText == ((string)cbi.Content).Trim())
                             {

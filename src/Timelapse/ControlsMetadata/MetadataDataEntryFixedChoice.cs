@@ -123,17 +123,13 @@ namespace Timelapse.ControlsMetadata
                 return;
             }
 
-            // For some reason, the empty item was not setting the selected index to the item with the blank entry. 
-            // This is needed to set it explicitly.
-            if (string.IsNullOrEmpty(value))
-            {
-                ContentControl.SelectedIndex = 0;
-            }
+            // Selects the matching item, or shows a value that isn't one of the menu's items in italics
+            core.SelectValue(value);
 
-            // Set the note to the value provided  
-            // If the value is empty, we just make it the same as the tooltip so something meaningful is displayed..
+            // The text must be set too. This control saves its value when its selection changes, when the text may not yet
+            // have caught up with the selection, so a save could otherwise store the previous value.
             ContentControl.Text = value;
-            ContentControl.ToolTip = string.IsNullOrEmpty(value) ? "Blank entry" : value;
+            ContentControl.ToolTip = core.Tooltip(value);
         }
         #endregion
     }
