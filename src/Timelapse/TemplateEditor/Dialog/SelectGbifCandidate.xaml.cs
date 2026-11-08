@@ -34,7 +34,7 @@ namespace TimelapseTemplateEditor.Dialog
         private void CandidatesGrid_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             // Ignore double clicks that aren't on a row, e.g., on a column header
-            if (ItemsControl.ContainerFromElement(CandidatesGrid, e.OriginalSource as DependencyObject) is DataGridRow)
+            if (e.OriginalSource is DependencyObject source && ItemsControl.ContainerFromElement(CandidatesGrid, source) is DataGridRow)
             {
                 OkButton_OnClick(sender, e);
             }

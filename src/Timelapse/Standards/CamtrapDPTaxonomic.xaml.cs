@@ -15,6 +15,7 @@ using Timelapse.Dialog;
 using Timelapse.Util;
 using TimelapseTemplateEditor.Dialog;
 using TextBox = System.Windows.Controls.TextBox;
+// ReSharper disable UnusedMember.Global
 #pragma warning disable IDE1006
 
 namespace Timelapse.Standards
@@ -421,37 +422,44 @@ namespace Timelapse.Standards
 
         #region Callbacks: GBIF lookups
         // Fill in the selected definition's fields from GBIF, using its scientific name
+        // ReSharper disable once AsyncVoidEventHandlerMethod
         private async void GbifLookup_OnClick(object sender, RoutedEventArgs e)
         {
             string scientificName = GbifSpeciesLookup.WithoutQualifier(DataFieldScientificName.Text.Trim());
             await FillFieldsFromGbifAsync(scientificName, token => GbifSpeciesLookup.LookupAsync(scientificName, token));
         }
 
+        // ReSharper disable once AsyncVoidEventHandlerMethod
         private async void GbifKingdomLookup_OnClick(object sender, RoutedEventArgs e)
         {
             await FillFieldsFromGbifAtRankAsync(DataFieldKingdom.Text.Trim(), GbifSpeciesLookup.KingdomRank);
         }
 
+        // ReSharper disable once AsyncVoidEventHandlerMethod
         private async void GbifPhylumLookup_OnClick(object sender, RoutedEventArgs e)
         {
             await FillFieldsFromGbifAtRankAsync(DataFieldPhylum.Text.Trim(), GbifSpeciesLookup.PhylumRank);
         }
 
+        // ReSharper disable once AsyncVoidEventHandlerMethod
         private async void GbifClassLookup_OnClick(object sender, RoutedEventArgs e)
         {
             await FillFieldsFromGbifAtRankAsync(DataFieldClass.Text.Trim(), GbifSpeciesLookup.ClassRank);
         }
 
+        // ReSharper disable once AsyncVoidEventHandlerMethod
         private async void GbifOrderLookup_OnClick(object sender, RoutedEventArgs e)
         {
             await FillFieldsFromGbifAtRankAsync(DataFieldOrder.Text.Trim(), GbifSpeciesLookup.OrderRank);
         }
 
+        // ReSharper disable once AsyncVoidEventHandlerMethod
         private async void GbifFamilyLookup_OnClick(object sender, RoutedEventArgs e)
         {
             await FillFieldsFromGbifAtRankAsync(DataFieldFamily.Text.Trim(), GbifSpeciesLookup.FamilyRank);
         }
 
+        // ReSharper disable once AsyncVoidEventHandlerMethod
         private async void GbifGenusLookup_OnClick(object sender, RoutedEventArgs e)
         {
             await FillFieldsFromGbifAtRankAsync(DataFieldGenus.Text.Trim(), GbifSpeciesLookup.GenusRank);

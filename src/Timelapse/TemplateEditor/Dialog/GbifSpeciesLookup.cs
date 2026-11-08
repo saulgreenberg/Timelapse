@@ -337,9 +337,12 @@ namespace TimelapseTemplateEditor.Dialog
             IEnumerable<GbifCandidate> candidates = result["diagnostics"]?["alternatives"]?
                 .Where(item => item["usage"] is JObject)
                 .Where(item => false == exactOnly || (string)item["diagnostics"]?["matchType"] == ExactMatchType)
+                // The first Where keeps only items with a usage, so item["usage"] isn't null here or below
+                // ReSharper disable once PossibleNullReferenceException
                 .Where(item => rank == null || (string)item["usage"]["rank"] == rank)
                 .Select(item => new GbifCandidate
                 {
+                    // ReSharper disable once PossibleNullReferenceException
                     Key = (string)item["usage"]["key"],
                     Name = (string)item["usage"]["canonicalName"],
                     Rank = Tidy((string)item["usage"]["rank"]),

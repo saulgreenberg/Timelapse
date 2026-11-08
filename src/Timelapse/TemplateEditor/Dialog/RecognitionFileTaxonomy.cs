@@ -178,7 +178,7 @@ namespace TimelapseTemplateEditor.Dialog
                     return new();
                 }
 
-                while ((categories == null || descriptions == null) && false == isAtImages && reader.Read() && reader.TokenType == JsonToken.PropertyName)
+                while ((categories == null || descriptions == null) && reader.Read() && reader.TokenType == JsonToken.PropertyName)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     string propertyName = (string)reader.Value;
@@ -325,7 +325,7 @@ namespace TimelapseTemplateEditor.Dialog
             {
                 parts.RemoveAt(0);
             }
-            string PartFromEnd(int position) => parts.Count >= position ? parts[parts.Count - position] : string.Empty;
+            string PartFromEnd(int position) => parts.Count >= position ? parts[^position] : string.Empty;
 
             string commonName = PartFromEnd(1);
             string species = PartFromEnd(2);

@@ -12,13 +12,9 @@ namespace TimelapseTemplateEditor.Dialog
     /// <summary>
     /// A dialog that looks up taxa in GBIF, showing a busy indicator with a cancel button during each lookup.
     /// </summary>
-    public class GbifLookupDialogWindow : BusyableDialogWindow
+    public class GbifLookupDialogWindow(Window owner) : BusyableDialogWindow(owner)
     {
         private BusyCancelIndicator gbifBusyIndicator;
-
-        public GbifLookupDialogWindow(Window owner) : base(owner)
-        {
-        }
 
         // This must be invoked by the parent in Loaded
         protected void InitializeGbifLookups(BusyCancelIndicator busyCancelIndicator)

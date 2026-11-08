@@ -171,7 +171,7 @@ namespace Timelapse
             // Updating both files first keeps them matching, so the comparison below doesn't report a difference.
             if (false == State.IsViewOnly && await CamtrapDPScientificNameUpgrade.TryUpgradeAsync(this, tdbDatabasePath, fileDatabaseFilePath))
             {
-                templateDatabase.LoadControlsFromTemplateDBSortedByControlOrder();
+                await templateDatabase.LoadControlsFromTemplateDBSortedByControlOrderAsync();
             }
 
             TemplateSyncResults templateSyncResults = new();
@@ -793,11 +793,11 @@ namespace Timelapse
             DataHandler.FileDatabase.MetadataTableLoadRowsFromDatabase();
             MetadataUI.InitalizeFolderMetadataTabs();
             MetadataUI.RelativePathToCurrentImage = null;
-            MetadataUI.RelativePathToCurrentImage = DataHandler?.ImageCache?.Current?.RelativePath;
+            MetadataUI.RelativePathToCurrentImage = DataHandler.ImageCache.Current?.RelativePath;
 
             // A CamtrapDP data package is always needed, so it is created rather than waiting for the user to do it.
             // This also brings image sets created before this was done up to date.
-            if (false == State.IsViewOnly && DataHandler?.FileDatabase?.MetadataTablesIsCamtrapDPStandard() == true)
+            if (false == State.IsViewOnly && DataHandler.FileDatabase.MetadataTablesIsCamtrapDPStandard())
             {
                 MetadataUI.CreateDataPackageIfNeeded();
             }

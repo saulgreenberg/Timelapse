@@ -469,7 +469,7 @@ namespace Timelapse.Controls
                 IsChecked = !string.Equals(term.DatabaseValue, BooleanValue.False, StringComparison.OrdinalIgnoreCase)
             };
             term.DatabaseValue = true == checkBox.IsChecked ? BooleanValue.True : BooleanValue.False;
-            RoutedEventHandler changed = (_, _) => SetValue(term, checkBox.IsChecked.ToString()?.ToLower());
+            RoutedEventHandler changed = (_, _) => SetValue(term, checkBox.IsChecked.ToString().ToLower());
             checkBox.Checked += changed;
             checkBox.Unchecked += changed;
             AddFocusFeedback(checkBox);

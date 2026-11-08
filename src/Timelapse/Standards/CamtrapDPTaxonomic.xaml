@@ -53,11 +53,6 @@
             <DataGrid.Resources>
                 <local:VernacularNamesConverter x:Key="VernacularNamesConverter"/>
                 <SolidColorBrush x:Key="MissingValueBrush" Color="#FFB3B3"/>
-                <Style x:Key="MissingScientificNameHeaderStyle" TargetType="{x:Type DataGridColumnHeader}">
-                    <Setter Property="FontWeight" Value="Bold"/>
-                    <Setter Property="Background" Value="{StaticResource MissingValueBrush}"/>
-                    <Setter Property="ToolTip" Value="At least one taxonomic definition is missing its required scientific name"/>
-                </Style>
                 <local:MissingScientificNameConverter x:Key="MissingScientificNameConverter"/>
                 <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
                                  Color="LightBlue"/>

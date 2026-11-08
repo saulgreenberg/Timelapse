@@ -118,6 +118,7 @@ namespace Timelapse.Standards
             using SemaphoreSlim checksAllowed = new(GbifChecksAtOnce);
             bool[] matched = await Task.WhenAll(names.Select(async name =>
             {
+                // ReSharper disable once AccessToDisposedClosure
                 await checksAllowed.WaitAsync();
                 try
                 {
@@ -125,6 +126,7 @@ namespace Timelapse.Standards
                 }
                 finally
                 {
+                    // ReSharper disable once AccessToDisposedClosure
                     checksAllowed.Release();
                 }
             }));

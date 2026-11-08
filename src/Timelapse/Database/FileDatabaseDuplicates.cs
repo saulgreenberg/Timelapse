@@ -110,6 +110,8 @@ namespace Timelapse.Database
             {
                 detectionsByFileID.TryAdd(file.ID, []);
             }
+            // RefreshDetectionsDataTableAsync always sets detectionDataTable (or throws), so it isn't null here
+            // ReSharper disable once PossibleNullReferenceException
             foreach (DataRow detection in detectionDataTable.Rows)
             {
                 if (detectionsByFileID.TryGetValue(Convert.ToInt64(detection[DatabaseColumn.ID]), out List<DataRow> detections))

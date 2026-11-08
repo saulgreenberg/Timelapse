@@ -75,6 +75,7 @@ namespace TimelapseTemplateEditor.Dialog
         }
 
         #region Selecting the file and getting its definitions
+        // ReSharper disable once AsyncVoidEventHandlerMethod
         private async void SelectFile_OnClick(object sender, RoutedEventArgs e)
         {
             if (Dialogs.TryGetFileFromUserUsingOpenFileDialog(
@@ -200,6 +201,9 @@ namespace TimelapseTemplateEditor.Dialog
             Progress.Report(new(0, $"Reading {Path.GetFileName(filePath)}...", true, true));
             BusyCancelIndicator.IsBusy = true;
             WindowCloseButtonIsEnabled(false);
+            // The token isn't passed to Task.Run: Read checks it, and the catch below turns a cancellation into null.
+            // Passed to Task.Run, a cancellation before the task starts would be thrown here, outside that catch.
+            // ReSharper disable once MethodSupportsCancellation
             RecognitionFileTaxonomy taxonomy = await Task.Run(() =>
             {
                 try
@@ -348,6 +352,7 @@ namespace TimelapseTemplateEditor.Dialog
             {
                 return [.. await Task.WhenAll(items.Select(async item =>
                 {
+                    // ReSharper disable once AccessToDisposedClosure
                     await simultaneousRequests.WaitAsync(Token);
                     try
                     {
@@ -359,6 +364,7 @@ namespace TimelapseTemplateEditor.Dialog
                     }
                     finally
                     {
+                        // ReSharper disable once AccessToDisposedClosure
                         simultaneousRequests.Release();
                     }
                 }))];

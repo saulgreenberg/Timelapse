@@ -263,6 +263,8 @@ public class SQLiteWrapper
             }
             finally
             {
+                // System.Data.SQLite has no truly asynchronous dispose, so DisposeAsync would gain nothing
+                // ReSharper disable once MethodHasAsyncOverload
                 transaction?.Dispose();
                 connection.Dispose();
             }

@@ -183,7 +183,7 @@ namespace TimelapseTemplateEditor.Dialog
         // The text's lines and the items in alphabetic order, each on its own line and only once
         public static string TextWithItems(string text, List<string> items)
         {
-            IEnumerable<string> lines = text.Split(Environment.NewLine, StringSplitOptions.None)
+            IEnumerable<string> lines = text.Split(Environment.NewLine)
                 .Select(line => line.Trim())
                 .Where(line => line.Length > 0);
             return string.Join(Environment.NewLine, lines.Concat(items).Distinct().OrderBy(item => item, StringComparer.CurrentCultureIgnoreCase));

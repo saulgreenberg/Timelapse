@@ -2083,7 +2083,7 @@ namespace Timelapse.Dialog
         public static bool? MenuEditDuplicateSelectedRecordsConfirmDialog(Window owner, int count, bool useCurrentValues)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            var dialog = new FormattedDialog()
             {
                 Owner = owner,
                 DialogTitle = $"Duplicate {count:N0} records?",
@@ -4128,18 +4128,21 @@ namespace Timelapse.Dialog
         #region Template Editor Dialogs: Species list
         public static bool? EditorSpeciesListUnsavedChangesDialog(Window owner)
         {
-            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            var dialog = new FormattedDialog()
             {
                 Owner = owner,
                 DialogTitle = "You haven't saved your changes!",
                 What = "You haven't saved the changes to your species list.",
                 Solution = "[li] Select [e]Exit without saving changes[/e] to exit anyway, which loses those changes.[br 2]" +
                            "[li] Select [e]Cancel[/e] to go back, where you can use [e]Save to file[/e].",
-                Icon = DialogIconType.Warning
+                Icon = DialogIconType.Warning,
+                OkButton =
+                {
+                    Content = "Exit without saving changes",
+                    Width = double.NaN,
+                    Padding = new Thickness(10, 0, 10, 0)
+                }
             };
-            dialog.OkButton.Content = "Exit without saving changes";
-            dialog.OkButton.Width = double.NaN;
-            dialog.OkButton.Padding = new Thickness(10, 0, 10, 0);
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
             return dialog.BuildAndShowDialog();
         }
@@ -4203,9 +4206,12 @@ namespace Timelapse.Dialog
                           $"[li] #DarkSlateGray[[e]{filePath}[/e]]",
                 Result = "Nothing was changed.",
                 Solution = "Select a species list file created by [e]Save to file[/e] in the Template Editor's [e]File > Edit a species list[/e].",
-                Icon = DialogIconType.Warning
+                Icon = DialogIconType.Warning,
+                OkButton =
+                {
+                    Content = "Okay"
+                }
             };
-            dialog.OkButton.Content = "Okay";
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
             dialog.BuildAndShowDialog();
         }
@@ -4241,7 +4247,7 @@ namespace Timelapse.Dialog
         public static bool? CamtrapDPScientificNamesNotMatchedDialog(Window owner, List<string> names)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            var dialog = new FormattedDialog()
             {
                 Owner = owner,
                 DialogTitle = "Some names may not be scientific names",
@@ -4259,7 +4265,7 @@ namespace Timelapse.Dialog
         public static bool? CamtrapDPScientificNamesNotCheckedDialog(Window owner, string reason)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
-            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            var dialog = new FormattedDialog()
             {
                 Owner = owner,
                 DialogTitle = "The scientific names couldn't be checked",
@@ -4308,9 +4314,12 @@ namespace Timelapse.Dialog
                 DialogTitle = "Some of the species list couldn't be used",
                 What = $"{addedCount} definition(s) were added from the species list file.",
                 Problem = string.Join("[br 2]", notes.ConvertAll(note => $"[li] {note}")),
-                Icon = DialogIconType.Information
+                Icon = DialogIconType.Information,
+                OkButton =
+                {
+                    Content = "Okay"
+                }
             };
-            dialog.OkButton.Content = "Okay";
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
             dialog.BuildAndShowDialog();
         }
@@ -4411,7 +4420,7 @@ namespace Timelapse.Dialog
 
         public static bool? EditorSpeciesListGbifUseClosestMatchDialog(Window owner, string scientificName, string matchName, string matchRank, bool isSynonym)
         {
-            var dialog = new FormattedDialog(MessageBoxButtonType.OKCancel)
+            var dialog = new FormattedDialog()
             {
                 Owner = owner,
                 DialogTitle = "Use GBIF's match?",
