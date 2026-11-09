@@ -234,6 +234,9 @@ namespace Timelapse.Dialog
             bool includeDecimalFields = RBAsRaw.IsEnabled && RBAsRaw.IsChecked == true &&
                                         (CBDetectionConfidence.IsChecked == true || CBClassificationConfidence.IsChecked == true);
             FillDataFieldComboBox(includeDecimalFields);
+            TextBlockDecimalFieldsNote.Visibility = includeDecimalFields && dataFieldControls.Any(control => control.Type is Control.DecimalAny or Control.DecimalPositive)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
             SetPopulateButtonEnableState();
         }
 

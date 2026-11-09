@@ -15,10 +15,10 @@
                  Icon="{x:Static toolkit:DialogIconType.Question}"
                  DialogTitle="Populate a data field with recognition data?"
                  What="Record recognition criteria from the highest confidence bounding box in a data field."
-                 Solution="[ni] Select a [e]Note[/e] or [e]MultiLine[/e] data field to populate.
+                 Solution="[ni] Select a data field to populate (normally [e]Note[/e] or [e]MultiLine[/e] fields, but see below).
                     [ni] Select desired recognition data: [e]classification category[/e] only (e.g., [i]deer[/i]), or a mix of [e]selectable recognition data[/e] and its output format
-                    [li] [e]As raw data[/e] is available only when a single item is chosen. It outputs just that item's value (e.g., [i]0.987[/i]).
-                    [li] When outputting a [e]Confidence[/e] as raw data, you can also select a [e]Decimal[/e] or [e]Decimal positive[/e] data field. Values that aren't valid decimals are not written.
+                    [li 2] [e]Raw data[/e] is available only when a single item is chosen, to output just the field's value (e.g., [i]0.987[/i]).
+                    [li 2] When outputting only [e]Confidence[/e] as raw data, [e]Decimal[/e]-type data fields become available in the menu.
                     [ni] Click [e]Populate[/e] to begin populating the Note field for your selected files."
                  Result="The files in your current selection will have that field updated with the chosen recognition information."
                  Hint="Review the recorded recognition data, and correct it as needed. See [link:{x:Static constant:ExternalLinks.TimelapseGuideReference}|Timelapse Reference Guide] for nuances."
@@ -89,7 +89,7 @@
                                     <RowDefinition Height="30" />
                                     <RowDefinition Height="30"  />
                                     <RowDefinition Height="30" />
-
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
@@ -122,6 +122,11 @@
                                       Content="Confidence" />
                                 <TextBlock Grid.Row="2" Grid.Column="3" VerticalAlignment="Center"  Margin="10,0,0,0"
                                        Text="e.g., deer, classification confidence 0.987 "/>
+
+                                <!--Shown only when the Decimal fields are added to the data field drop-down menu-->
+                                <TextBlock Name="TextBlockDecimalFieldsNote" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" Foreground="#FF1F5F9E" FontStyle="Italic" Margin="0,8,0,0" Visibility="Collapsed">
+                                    Drop-down menu now includes <Bold>Decimal</Bold> data fields, as raw confidence values are decimal.
+                                </TextBlock>
                             </Grid>
                         </GroupBox>
 
