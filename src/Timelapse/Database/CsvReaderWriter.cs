@@ -561,6 +561,12 @@ namespace Timelapse.Database
                 string duplicatePath = string.Empty; // a duplicate was identified, and this holds the duplicate path
                 List<Dictionary<string, string>> duplicatesDictionaryList = [];
                 CultureInfo provider = CultureInfo.InvariantCulture;
+
+                // A CSV without any DateTime, Date or Time column (e.g., one that only updates some data fields) intentionally leaves
+                // each file's date/time alone, so missing date/time values are only reported when one of those columns is present.
+                bool csvHasDateTimeColumns = dataLabelsFromCSV.Contains(DatabaseColumn.DateTime)
+                                             || dataLabelsFromCSV.Contains(ControlDeprecated.DateLabel)
+                                             || dataLabelsFromCSV.Contains(ControlDeprecated.TimeLabel);
                 foreach (Dictionary<string, string> rowDict in sortedRowDictionaryList)
                 {
                     if (totalFilesProcessed % 10000 == 0)
@@ -775,7 +781,7 @@ namespace Timelapse.Database
                         imageToUpdate.Columns.Add(new(DatabaseColumn.DateTime, dateTime));
                         // Debug.Print("Wrote DateTime: " + dateTime.ToString());
                     }
-                    else if (dateTime == DateTime.MinValue && datePortion == DateTime.MinValue)
+                    else if (csvHasDateTimeColumns && dateTime == DateTime.MinValue && datePortion == DateTime.MinValue)
                     {
                         dateTimeErrors++;
                         importErrors.Add($"{currentPath}: Could not extract datetime");
@@ -814,7 +820,6 @@ namespace Timelapse.Database
                 // perform any remaining updates
                 if (dateTimeErrors != 0)
                 {
-                    // Need to check IF THIS WORKS FOR files with no date-time fields!
                     importErrors.Add($"The Date/Time was not updated for {dateTimeErrors} / {totalFilesProcessed} files. ");
                     if (dataLabelsFromCSV.Contains(DatabaseColumn.DateTime) || (dataLabelsFromCSV.Contains(ControlDeprecated.DateLabel) &&
                                                                                 dataLabelsFromCSV.Contains(ControlDeprecated.TimeLabel)))
