@@ -275,6 +275,14 @@ namespace Timelapse.Images
             var staThread = new Thread(() =>
             {
                 result = GetVideoBitmapCore(filePath, desiredWidth, displayIntent, out corrupt);
+                // The bitmap is owned by this STA thread, so freeze it here (only its owner can) to make it usable
+                // on the UI thread. Otherwise reading it there, e.g., its PixelHeight, throws an InvalidOperationException.
+                if (result is { IsFrozen: false, CanFreeze: true })
+                {
+                    result.Freeze();
+                }
+                // Release the Dispatcher that PumpDispatcherMessages created for this thread
+                Dispatcher.CurrentDispatcher.InvokeShutdown();
             });
             staThread.SetApartmentState(ApartmentState.STA);
             staThread.Start();

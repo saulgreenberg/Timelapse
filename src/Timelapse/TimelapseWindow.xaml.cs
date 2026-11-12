@@ -398,12 +398,22 @@ namespace Timelapse
 
         #region Exception Management
 
+        // Set once an unhandled exception starts the shutdown. While the exception dialog is open, the UI keeps
+        // processing events (timers, mouse wheel), which can raise the same exception again. Those later exceptions
+        // are ignored, so the user sees one bug report and Close() isn't called on a window that is already closing.
+        private bool isShuttingDownAfterException;
+
         // Catches exceptions thrown from WPF dispatcher-invoked code on the UI thread (event handlers, Loaded
         // callbacks, etc.). These never reach OnUnhandledException because WPF's dispatcher catches them first.
         // Setting e.Handled = true prevents WPF from terminating the app before our dialog has a chance to run.
         private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
             e.Handled = true;
+            if (isShuttingDownAfterException)
+            {
+                return;
+            }
+            isShuttingDownAfterException = true;
             if (e.Exception is SqlOperationException sqlEx)
             {
                 AppLog.Error("Unhandled dispatcher exception (SQLite). Shutting down.", e.Exception);
@@ -427,11 +437,16 @@ namespace Timelapse
         // If we get an exception that wasn't handled, show a dialog asking the user to send the bug report to us.
         public void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
+            if (isShuttingDownAfterException)
+            {
+                return;
+            }
             if (e.ExceptionObject is SqlOperationException sqlEx)
             {
                 // A typed SQLite failure was thrown deliberately.
                 // sqlEx.Result carries ErrorMessage, FailingStatement, and the original Exception (which includes the sqlException.Message)
                 // for inclusion in a bug-report dialog or email.
+                isShuttingDownAfterException = true;
                 AppLog.Error("Unhandled exception (SQLite). Shutting down.", sqlEx);
                 ExceptionShutdownDialog dialog = new(this, sqlEx);
                 dialog.ShowDialog();
@@ -444,6 +459,7 @@ namespace Timelapse
             }
             else
             {
+                isShuttingDownAfterException = true;
                 AppLog.Error("Unhandled exception. Shutting down.", e.ExceptionObject as Exception);
                 ExceptionShutdownDialog dialog = new(this, e);
                 dialog.ShowDialog();
