@@ -2679,18 +2679,21 @@ namespace Timelapse.Database
 
                             // 2nd: for each image identified in the recognition file,
                             //      remap (if needed) the json detection category numbers to the new mapping identified in the lookup table
-                            foreach (KeyValuePair<string, string> kvp in detectionCategoryLookupMappingDict)
+                            //      Each detection is looked up once, as remapping one mapping at a time would chain them (e.g., 0->1 then 1->2 would turn a 0 into a 2)
+                            foreach (image image in jsonRecognizer.images)
                             {
-                                jsonRecognizer.images.ForEach(image =>
+                                if (image.detections == null)
                                 {
-                                    foreach (detection detection in image.detections)
+                                    // The json file may actually report some detections as null rather than an empty list, in which case we just skip it.
+                                    continue;
+                                }
+                                foreach (detection detection in image.detections)
+                                {
+                                    if (detection.category != null && detectionCategoryLookupMappingDict.TryGetValue(detection.category, out string newCategoryNumber))
                                     {
-                                        if (detection.category == kvp.Key)
-                                        {
-                                            detection.category = kvp.Value;
-                                        }
+                                        detection.category = newCategoryNumber;
                                     }
-                                });
+                                }
                             }
                         }
 
