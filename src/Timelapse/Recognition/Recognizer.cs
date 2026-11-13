@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using Timelapse.Constant;
 using Timelapse.Enums;
@@ -200,6 +201,53 @@ namespace Timelapse.Recognition
             }
 
             return remap;
+        }
+
+        // Timelapse reserves detection category 0 for Empty, but some recognizers number their detection categories from 0 (e.g., 0 = animal).
+        // If so, shift every detection category number up by 1, both in detection_categories and in each detection.
+        // Returns true if the categories were shifted.
+        public bool ShiftZeroBasedDetectionCategoriesIfNeeded()
+        {
+            if (false == IsZeroBased(detection_categories)
+                || detection_categories.Keys.Any(key => false == int.TryParse(key, NumberStyles.None, CultureInfo.InvariantCulture, out _)))
+            {
+                return false;
+            }
+
+            detection_categories = detection_categories.ToDictionary(kvp => ShiftCategoryNumber(kvp.Key), kvp => kvp.Value);
+            if (images == null)
+            {
+                return true;
+            }
+            foreach (image image in images)
+            {
+                if (image.detections == null)
+                {
+                    continue;
+                }
+                // Video detections are in the same list (with their frame_number), so this covers both images and videos
+                foreach (detection detection in image.detections)
+                {
+                    if (int.TryParse(detection.category, NumberStyles.None, CultureInfo.InvariantCulture, out _))
+                    {
+                        detection.category = ShiftCategoryNumber(detection.category);
+                    }
+                }
+            }
+            return true;
+        }
+
+        // True if the detection categories include a 0 that isn't Empty
+        public static bool IsZeroBased(Dictionary<string, string> detectionCategories)
+        {
+            return detectionCategories != null
+                && detectionCategories.TryGetValue(RecognizerValues.NoDetectionCategory, out string label)
+                && false == string.Equals(label, RecognizerValues.EmptyDetectionLabel, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string ShiftCategoryNumber(string category)
+        {
+            return (int.Parse(category, NumberStyles.None, CultureInfo.InvariantCulture) + 1).ToString(CultureInfo.InvariantCulture);
         }
 
         // Fix a known but rare recognition bug where no classification label is provided

@@ -990,6 +990,10 @@ namespace Timelapse.Database
                 // If the Detections Table is missing the frame_number column, add it.
                 AddDetectionsVideoTableIfNeeded(Database);
 
+                // If recognitions were imported from a file that numbers its detection categories from 0 (e.g., 0 = animal), repair them
+                // Do this before the Custom Selection is restored, as the repair can change its detection category
+                RepairZeroBasedDetectionCategoriesIfNeeded();
+
                 // If a previous version's ResetIDsAndVacuum left this database stuck in WAL
                 // mode, revert it — see SQLiteNeededFixes.md finding #11.
                 RevertJournalModeFromWalIfNeeded(Database);
@@ -2563,6 +2567,12 @@ namespace Timelapse.Database
                     using JsonReader reader = new JsonTextReader(capturedSr);
                     JsonSerializer serializer = new();
                     jsonRecognizer = serializer.Deserialize<Recognizer>(reader);
+
+                    // Timelapse reserves detection category 0 for Empty. If the file numbers its detection categories from 0 (e.g., 0 = animal), shift them all up by 1
+                    if (jsonRecognizer.ShiftZeroBasedDetectionCategoriesIfNeeded())
+                    {
+                        AppLog.Warning($"JsonDeserializeRecognizerFileAsync: {path} numbers its detection categories from 0, so they were all shifted up by 1.");
+                    }
 
                     // Fix a known but rare recognition bug where no classification label is provided
                     // Replaces buggy classification category with a label "unknownClassification" and removes the corresponding description (if any)

@@ -3518,6 +3518,28 @@ namespace Timelapse.Dialog
 
         #region MessageBox: Shortcut management
         // Using shortcut
+        // The recognitions in the database were repaired, as they came from a file that numbers its detection categories from 0
+        public static void DetectionCategoriesRepairedDialog(Window owner, string report)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            Cursor cursor = Mouse.OverrideCursor;
+            Mouse.OverrideCursor = null;
+
+            var dialog = new FormattedDialog(MessageBoxButtonType.OK)
+            {
+                Owner = owner,
+                Icon = DialogIconType.Information,
+                DialogTitle = "Your recognition detection categories were corrected",
+                What = report.Replace(Environment.NewLine, "[li] "),
+                Result = "[li] Detections that were hidden among the empty images can now be found again in their detection category."
+                         + "[li] A copy of your data file from before the correction was saved in your [i]Backup[/i] folder.",
+                Reason = "Timelapse reserves detection category 0 for Empty (no detections). "
+                         + "Some recognizers number their detection categories from 0 (e.g., 0 = animal), which Timelapse used to misread.",
+            };
+            dialog.BuildAndShowDialog();
+            Mouse.OverrideCursor = cursor;
+        }
+
         public static void ShortcutDetectedDialog(Window owner, string path)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));

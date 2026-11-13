@@ -176,6 +176,7 @@ namespace Timelapse
 
             TemplateSyncResults templateSyncResults = new();
             bool backUpJustMade = false;
+            string detectionCategoriesRepairReport = null;
             using (FileDatabase fileDB = await FileDatabase.UpgradeDatabasesAndCompareTemplates(fileDatabaseFilePath, templateDatabase, templateSyncResults)
                        .ConfigureAwait(true))
             {
@@ -208,6 +209,7 @@ namespace Timelapse
                         templateSyncResults.UseTdbTemplate = true;
                     }
                     backUpJustMade = fileDB.mostRecentBackup != DateTime.MinValue;
+                    detectionCategoriesRepairReport = fileDB.DetectionCategoriesRepairReport;
                 }
                 else if (System.IO.File.Exists(fileDatabaseFilePath))
                 {
@@ -219,6 +221,11 @@ namespace Timelapse
                     Dialogs.DatabaseFileNotLoadedAsCorruptDialog(this, fileDatabaseFilePath, isEmpty);
                     return new(false, string.Empty);
                 }
+            }
+
+            if (detectionCategoriesRepairReport != null)
+            {
+                Dialogs.DetectionCategoriesRepairedDialog(this, detectionCategoriesRepairReport);
             }
 
 
