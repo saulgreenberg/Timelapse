@@ -47,11 +47,11 @@
                 <Run Text="Timelapse is a volunteer effort, and is supplied 'as is'."/>
                 <LineBreak/>
                 <Run Text="It uses the "/>
-                <Hyperlink Name="NavigateCreativeCommonLicense" RequestNavigate="Hyperlink_RequestNavigate">
-                    Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International license.
+                <Hyperlink Name="NavigateGplLicense" RequestNavigate="Hyperlink_RequestNavigate">
+                    GNU General Public License v3 (or later).
                  </Hyperlink>
                 <LineBreak/>
-                <Run Text="Timelapse also depends on 3rd party software (see below), which may have different license terms. They generally allow non-commercial use"/>
+                <Run Text="Timelapse also depends on 3rd party software (see below), which may have different license terms. They generally allow commercial use."/>
                  <LineBreak/>
                  <LineBreak/>
                  <Run Text="Specific details on its terms of use can be found"/>
@@ -62,15 +62,22 @@
             </TextBlock>
 
             <TextBlock HorizontalAlignment="Left" Margin="10,10,10,0"  VerticalAlignment="Top" DataContext="{Binding}" TextWrapping="Wrap" FontSize="14" >
+                <Run FontWeight="Bold" Text="Donations: " FontSize="14"/>
+            </TextBlock>
+            <TextBlock HorizontalAlignment="Left" Margin="70,0,10,0"  VerticalAlignment="Top" DataContext="{Binding}" TextWrapping="Wrap"  FontSize="14">        
+                <Run Text="Your donation helps fund software development, user support, equipment, and out-of-pocket expenses."/>
+                <LineBreak/>
+                <Run Text="Email Saul to find out how to donate."/>
+            </TextBlock>
+
+            <TextBlock HorizontalAlignment="Left" Margin="10,10,10,0"  VerticalAlignment="Top" DataContext="{Binding}" TextWrapping="Wrap" FontSize="14" >
                 <Run FontWeight="Bold" Text="Requests: " FontSize="14"/>
             </TextBlock>
             <TextBlock HorizontalAlignment="Left" Margin="70,0,10,0"  VerticalAlignment="Top" DataContext="{Binding}" TextWrapping="Wrap"  FontSize="14">        
                 <Run Text="We are very interested in making Timelapse better for you."/>
                 <LineBreak/>              
                 <Run Text="Email Saul with any comments, problems and suggestions for improvements."/>
-                <LineBreak/>
-                <LineBreak/>
-                <Run Text="Donations are appreciated but not necessary."/>
+
             </TextBlock>
 
             <TextBlock HorizontalAlignment="Left" Margin="10,10,10,0"   VerticalAlignment="Top" DataContext="{Binding}" TextWrapping="Wrap" FontSize="14" >
@@ -81,11 +88,11 @@
                 <Run Text="Timelapse incorporates 3rd party software under their license terms. We thank their developers."/>
             </TextBlock>
             <TextBlock FontSize="11" FontStyle="Italic" HorizontalAlignment="Left" Margin="70,0,10,0"  VerticalAlignment="Top" DataContext="{Binding}" TextWrapping="Wrap" >      
-                <Run Text="Extended WPF Toolkit (xceed.org: Community License)  &#x2022;  ExifToolWrapper (brain2cpu.com) &#x2022; ExifTool (Phil Harvey)"/>
+                <Run Text="Modified community version of Extended.Wpf.Toolkit, (xceed.org)  &#x2022;  ExifToolWrapper (brain2cpu.com) &#x2022; ExifTool (Phil Harvey)"/>
                  <LineBreak/>
-                <Run Text="ImageSharp (Six Labors) &#x2022; MetadataExtractor+XMPCore (Drew Noakes)  &#x2022;  Newtonsoft (Json.net)"/>
+                <Run Text="ImageSharp (Six Labors) &#x2022; MetadataExtractor+XMPCore (Drew Noakes)  &#x2022;  Newtonsoft (Json.net) &#x2022; CsvHelper (Josh Close)"/>
                 <LineBreak/> 
-                <Run Text="System.Data.Sqlite (system.data.sqlite.org) &#x2022; NReco Video Converter (nrecosite.com) &#x2022; FFMpeg (ffmpeg.org)"/>
+                <Run Text="System.Data.Sqlite (system.data.sqlite.org) &#x2022; NReco Video Converter (nrecosite.com) &#x2022; FFMpeg (ffmpeg.org) &#x2022; Dirkster.AvalonDock"/>
             </TextBlock>
         </StackPanel>
         

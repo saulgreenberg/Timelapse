@@ -450,8 +450,8 @@ namespace Timelapse.Constant
         public const string TimelapseVideosRandomSampling = TimelapseVideosUploadLink + "/Lesson-RandomSampling.mp4";
 
         public static readonly Uri TimlapseVersionChangesLink = new("https://timelapse.ucalgary.ca/versions");
-        public static readonly Uri CreativeCommonsLicenseLink = new("https://creativecommons.org/licenses/by-nc-sa/4.0/");
-        public static readonly Uri AdditionalLicenseDetailsLink = new("https://github.com/saulgreenberg/Timelapse/blob/master/LICENSE.md");
+        public static readonly Uri GplLicenseLink = new("https://www.gnu.org/licenses/gpl-3.0.html");
+        public static readonly Uri AdditionalLicenseDetailsLink = new("https://github.com/saulgreenberg/Timelapse/blob/master/NOTICE.md");
 
         // Videos - Presentations
         public const string TimelapseVideosImageRecognitionTalk = TimelapseVideosUploadLink + "/ImageRecognitionForCameraTraps.mp4";

@@ -28,7 +28,7 @@ namespace Timelapse.Dialog
             Dialogs.TryPositionAndFitDialogIntoWindow(this);
 
             NavigateVersionUrl.NavigateUri = ExternalLinks.TimlapseVersionChangesLink;
-            NavigateCreativeCommonLicense.NavigateUri = ExternalLinks.CreativeCommonsLicenseLink;
+            NavigateGplLicense.NavigateUri = ExternalLinks.GplLicenseLink;
             NavigateAdditionalLicenseDetails.NavigateUri = ExternalLinks.AdditionalLicenseDetailsLink;
 
             Version curVersion = Assembly.GetExecutingAssembly().GetName().Version;
