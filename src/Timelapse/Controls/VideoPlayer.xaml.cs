@@ -257,6 +257,14 @@ namespace Timelapse.Controls
         {
             this.Pause();
 
+            // After the end of a video, the media player ignores speed ratio changes and keeps the old speed on the next play.
+            // Briefly playing it from the beginning at speed 1 and pausing it again resets that, so the next play respects the speed ratio.
+            // (Tested: stopping it, or pausing and playing it later, does not help.)
+            this.MediaElementCurrentPosition = TimeSpan.Zero;
+            this.MediaElement.SpeedRatio = 1;
+            this.MediaElement.Play();
+            this.MediaElement.Pause();
+
             SliderScrubbing.Value = SliderScrubbing.Minimum; // Go back to the beginning
             if (CBRepeat.IsChecked == true)
             {
