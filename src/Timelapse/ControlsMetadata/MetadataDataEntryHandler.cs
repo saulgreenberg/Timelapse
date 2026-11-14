@@ -293,7 +293,17 @@ namespace Timelapse.ControlsMetadata
             {
                 return;
             }
-            string newContent = Clipboard.GetText().Trim();
+            // Its in a try / catch as one user reported an unusual error: OpenClipboardFailed
+            string newContent;
+            try
+            {
+                newContent = Clipboard.GetText().Trim();
+            }
+            catch
+            {
+                Debug.Print("Error in getting text from clipboard (see MenuItemPasteFromClipboard_Click in MetadataDataEntryHandler");
+                return;
+            }
             control.SetContentAndTooltip(newContent);
             UpdateMetadataTableAndMetadataDatabase(control);
         }
@@ -472,7 +482,15 @@ namespace Timelapse.ControlsMetadata
                     // Since there an empty string to Copy, just show 'Copy'
                     menuItemCopyToClipboard.Header = "Copy";
                 }
-                Clipboard.SetText(clipboardText);
+                // Its in a try / catch as one user reported an unusual error: OpenClipboardFailed
+                try
+                {
+                    Clipboard.SetText(clipboardText);
+                }
+                catch
+                {
+                    Debug.Print("Error in setting text in clipboard (see Container_PreviewMouseRightButtonDown in MetadataDataEntryHandler");
+                }
             }
         }
         #endregion

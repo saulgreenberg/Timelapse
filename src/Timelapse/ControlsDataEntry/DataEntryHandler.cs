@@ -660,7 +660,17 @@ namespace Timelapse.ControlsDataEntry
             {
                 return;
             }
-            string newContent = Clipboard.GetText().Trim();
+            // Its in a try / catch as one user reported an unusual error: OpenClipboardFailed
+            string newContent;
+            try
+            {
+                newContent = Clipboard.GetText().Trim();
+            }
+            catch
+            {
+                Debug.Print("Error in getting text from clipboard (see MenuItemPasteFromClipboard_Click in DataEntryHandler");
+                return;
+            }
             if (control is DataEntryCounter)
             {
                 // For counters, removing any leading 0's, but if this ends up with an empty string, then revert to 0
@@ -818,8 +828,18 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // We save the displayable text so we can put it in the paste menu header later
                         dateTimeCustomPasteHeader = DateTimeHandler.ToStringDisplayDateTime(dateTime);
-                        Clipboard.SetText(DateTimeHandler.ToStringDatabaseDateTime(dateTime));
-                        clipboardText = Clipboard.GetText();
+                        // Its in a try / catch as another process can briefly hold the clipboard open (OpenClipboardFailed).
+                        // If so, disable paste, as it would otherwise paste the unconverted text
+                        try
+                        {
+                            Clipboard.SetText(DateTimeHandler.ToStringDatabaseDateTime(dateTime));
+                            clipboardText = Clipboard.GetText();
+                        }
+                        catch
+                        {
+                            menuItemPasteFromClipboard.IsEnabled = false;
+                            Debug.Print("Error in setting text in clipboard (see Container_PreviewMouseRightButtonDown in DataEntryHandler");
+                        }
                     }
                 }
                 else if (control is DataEntryDate)
@@ -831,8 +851,18 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // We save the displayable text so we can put it in the paste menu header later
                         dateTimeCustomPasteHeader = DateTimeHandler.ToStringDisplayDatePortion(dateTime);
-                        Clipboard.SetText(DateTimeHandler.ToStringDatabaseDate(dateTime));
-                        clipboardText = Clipboard.GetText();
+                        // Its in a try / catch as another process can briefly hold the clipboard open (OpenClipboardFailed).
+                        // If so, disable paste, as it would otherwise paste the unconverted text
+                        try
+                        {
+                            Clipboard.SetText(DateTimeHandler.ToStringDatabaseDate(dateTime));
+                            clipboardText = Clipboard.GetText();
+                        }
+                        catch
+                        {
+                            menuItemPasteFromClipboard.IsEnabled = false;
+                            Debug.Print("Error in setting text in clipboard (see Container_PreviewMouseRightButtonDown in DataEntryHandler");
+                        }
                     }
                 }
                 else if (control is DataEntryTime)
@@ -844,8 +874,18 @@ namespace Timelapse.ControlsDataEntry
                     {
                         // We save the displayable text so we can put it in the paste menu header later
                         dateTimeCustomPasteHeader = DateTimeHandler.ToStringTime(dateTime);
-                        Clipboard.SetText(DateTimeHandler.ToStringTime(dateTime));
-                        clipboardText = Clipboard.GetText();
+                        // Its in a try / catch as another process can briefly hold the clipboard open (OpenClipboardFailed).
+                        // If so, disable paste, as it would otherwise paste the unconverted text
+                        try
+                        {
+                            Clipboard.SetText(DateTimeHandler.ToStringTime(dateTime));
+                            clipboardText = Clipboard.GetText();
+                        }
+                        catch
+                        {
+                            menuItemPasteFromClipboard.IsEnabled = false;
+                            Debug.Print("Error in setting text in clipboard (see Container_PreviewMouseRightButtonDown in DataEntryHandler");
+                        }
                     }
                 }
 

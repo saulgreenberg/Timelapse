@@ -242,12 +242,24 @@ namespace Timelapse
             // (paste as text) and selected in File Explorer (drag in as an attachment). This avoids
             // embedding the log in the mailto URI, which can silently fail once the encoded body
             // exceeds what ShellExecute will accept for a large, SQL-dump-heavy log.
-            Clipboard.Clear();
-            Clipboard.SetText(logContents);
+            // Another process can briefly hold the clipboard open (OpenClipboardFailed). If so, the user can still attach the selected file
+            bool copiedToClipboard = true;
+            try
+            {
+                Clipboard.Clear();
+                Clipboard.SetText(logContents);
+            }
+            catch
+            {
+                copiedToClipboard = false;
+            }
             ProcessExecution.TryProcessStartUsingFileExplorerToSelectFile(logPath);
 
-            string body = $"1. Paste the log file into this email (Ctrl+V). Alternately, Timelapse raised a File Explorer "
-                        + $"window with the file {Path.GetFileName(logPath)} selected, which you can attach to your email."
+            string body = (copiedToClipboard
+                        ? $"1. Paste the log file into this email (Ctrl+V). Alternately, Timelapse raised a File Explorer "
+                          + $"window with the file {Path.GetFileName(logPath)} selected, which you can attach to your email."
+                        : $"1. Attach the log file to this email. Timelapse raised a File Explorer "
+                          + $"window with the file {Path.GetFileName(logPath)} selected, which you can drag into your email.")
                         + Environment.NewLine + Environment.NewLine
                         + "2. Add details describing the problem you are having, as that will help the Timelapse developer try to figure out what is going on.";
 
@@ -255,8 +267,11 @@ namespace Timelapse
             if (!ProcessExecution.TryProcessStart(uri))
             {
                 MessageBox.Show(
-                    $"Could not open your email client. The error log has been copied to your clipboard (paste it with Ctrl+V) "
-                    + $"and selected in File Explorer, so you can paste or attach it into an email to {Constant.ExternalLinks.EmailAddress} manually."
+                    (copiedToClipboard
+                        ? $"Could not open your email client. The error log has been copied to your clipboard (paste it with Ctrl+V) "
+                          + $"and selected in File Explorer, so you can paste or attach it into an email to {Constant.ExternalLinks.EmailAddress} manually."
+                        : $"Could not open your email client. The error log has been selected in File Explorer, "
+                          + $"so you can attach it to an email to {Constant.ExternalLinks.EmailAddress} manually.")
                     + $"{Environment.NewLine}Log file: {logPath}",
                     "Email Failed", MessageBoxButton.OK, MessageBoxImage.Warning);
             }

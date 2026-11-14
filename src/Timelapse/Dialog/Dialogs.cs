@@ -740,7 +740,15 @@ namespace Timelapse.Dialog
             };
             if (e?.ExceptionObject != null)
             {
-                Clipboard.SetText(e.ExceptionObject.ToString() ?? string.Empty);
+                // Another process can briefly hold the clipboard open (OpenClipboardFailed). Copying the error is a nicety, so don't let it stop the dialog
+                try
+                {
+                    Clipboard.SetText(e.ExceptionObject.ToString() ?? string.Empty);
+                }
+                catch
+                {
+                    // Nothing to do: the dialog below still explains the problem
+                }
             }
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
             dialog.BuildAndShowDialog();
@@ -764,7 +772,15 @@ namespace Timelapse.Dialog
             };
             if (e != null)
             {
-                Clipboard.SetText(e.ToString());
+                // Another process can briefly hold the clipboard open (OpenClipboardFailed). Copying the error is a nicety, so don't let it stop the dialog
+                try
+                {
+                    Clipboard.SetText(e.ToString());
+                }
+                catch
+                {
+                    // Nothing to do: the dialog below still explains the problem
+                }
             }
             FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
             dialog.BuildAndShowDialog();
