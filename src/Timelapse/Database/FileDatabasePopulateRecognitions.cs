@@ -50,26 +50,32 @@ namespace Timelapse.Database
         #pragma warning restore IDE1006
         #endregion
 
-        #region RecognitionsPopulateFieldWithData
-        // Given a data label corresponding to a note or multiline field,
-        // populate that field with the selected recognition data from the best bounding box for each image
+        #region RecognitionsComputeFieldData / RecognitionsWriteFieldData
+        // Populating a field with recognition data is done in two steps, so the caller can check the computed values before they are written
+        // (e.g., whether raw categories match a FixedChoice field's menu items) without a second pass over the detections:
+        // 1. RecognitionsComputeFieldData returns the value for each file, keyed by file ID
+        // 2. RecognitionsWriteFieldData writes those values into the field
+
+        // Given a data label corresponding to a note or multiline field (or a decimal or fixed choice field, for raw data),
+        // compute the selected recognition data from the best bounding box for each image
         // using the desired formatting options:
         // -  useClassificationOnly as just the classification category alone
         // - as Json as json formatted text or
         // - as human-readable text or
-        // - as the raw value of a single recognition item. If the field is a decimal field, only valid decimals (or blanks) are written
-        public bool RecognitionsPopulateFieldWithData(string dataLabel, RecognitionFormatEnum recognitionFormat, bool useClassificationOnly, bool useBboxCoords, bool useDetectionConf, bool useDetectionCategory, bool useClassConf, bool useClassCat,
+        // - as the raw value of a single recognition item. If the field is a decimal field, only valid decimals (or blanks) are included
+        // Returns null if there are no detections or the operation was cancelled
+        public Dictionary<long, string> RecognitionsComputeFieldData(string dataLabel, RecognitionFormatEnum recognitionFormat, bool useClassificationOnly, bool useBboxCoords, bool useDetectionConf, bool useDetectionCategory, bool useClassConf, bool useClassCat,
             IProgress<ProgressBarArguments> progress)
         {
             if (Database == null || false == DetectionsExists())
             {
-                return false;
+                return null;
             }
             string controlType = GetControlFromControls(dataLabel)?.Type;
             progress.Report(new(0, "Processing recognition data...", false, true));
             if (GlobalReferences.CancelTokenSource.Token.IsCancellationRequested)
             {
-                return false;
+                return null;
             }
 
             BboxPrintable bboxPrintable = null;
@@ -222,10 +228,29 @@ namespace Timelapse.Database
                     recognitionData = BoundingBoxPrettyPrint(bboxPrintable, recognitionFormat == RecognitionFormatEnum.FormattedJson);
                 }
 
-                // Update the current image and Add it to the list of data to be written to the database, and 
-                // TODO:Check if we need to do the SetValue ???
-                image.SetValueFromDatabaseString(dataLabel, recognitionData);
+                // Add it to the list of data to be written to the database
                 dict.Add(image.ID, recognitionData);
+            }
+            return dict;
+        }
+
+        // Write the values computed by RecognitionsComputeFieldData into the field identified by dataLabel,
+        // updating both the in-memory file table and the database
+        public bool RecognitionsWriteFieldData(string dataLabel, Dictionary<long, string> dict, IProgress<ProgressBarArguments> progress)
+        {
+            if (Database == null || dict == null)
+            {
+                return false;
+            }
+
+            // Update the current images
+            // TODO:Check if we need to do the SetValue ???
+            foreach (ImageRow image in FileTable)
+            {
+                if (dict.TryGetValue(image.ID, out string recognitionData))
+                {
+                    image.SetValueFromDatabaseString(dataLabel, recognitionData);
+                }
             }
 
             // We now have a list of all fields and their contents

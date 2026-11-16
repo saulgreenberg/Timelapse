@@ -160,6 +160,42 @@ namespace Timelapse.DataStructures
         //    }
         //}
 
+        // Add the items that aren't already in the choice list (ignoring blanks).
+        // If the current list is mostly in alphabetic order, each item is inserted at its alphabetic position;
+        // otherwise the new items are added (sorted among themselves) to the end of the list.
+        // Returns the number of items added.
+        public int AddChoices(IEnumerable<string> itemsToAdd)
+        {
+            ChoiceList ??= [];
+            List<string> newItems = [];
+            foreach (string item in itemsToAdd ?? [])
+            {
+                string trimmedItem = item?.Trim();
+                if (false == string.IsNullOrWhiteSpace(trimmedItem) && false == ChoiceList.Contains(trimmedItem) && false == newItems.Contains(trimmedItem))
+                {
+                    newItems.Add(trimmedItem);
+                }
+            }
+            newItems.Sort(StringComparer.CurrentCultureIgnoreCase);
+
+            bool isMostlyAlphabetic = IsMostlyAlphabetic(ChoiceList);
+            foreach (string newItem in newItems)
+            {
+                int index = ChoiceList.Count;
+                if (isMostlyAlphabetic)
+                {
+                    // Insert before the first item that comes after it alphabetically
+                    index = ChoiceList.FindIndex(choice => StringComparer.CurrentCultureIgnoreCase.Compare(choice, newItem) > 0);
+                    if (index < 0)
+                    {
+                        index = ChoiceList.Count;
+                    }
+                }
+                ChoiceList.Insert(index, newItem);
+            }
+            return newItems.Count;
+        }
+
         public bool Contains(string itemToCheck)
         {
             if (string.IsNullOrEmpty(itemToCheck) && IncludeEmptyChoice)
@@ -171,6 +207,25 @@ namespace Timelapse.DataStructures
         #endregion
 
         #region Private static helpers
+
+        // A list is mostly in alphabetic order if at least 80% of its neighbouring pairs are in order.
+        // Lists of fewer than three items are treated as alphabetic, as there is too little to tell.
+        private static bool IsMostlyAlphabetic(List<string> list)
+        {
+            if (list.Count < 3)
+            {
+                return true;
+            }
+            int pairsInOrder = 0;
+            for (int i = 1; i < list.Count; i++)
+            {
+                if (StringComparer.CurrentCultureIgnoreCase.Compare(list[i - 1], list[i]) <= 0)
+                {
+                    pairsInOrder++;
+                }
+            }
+            return pairsInOrder >= 0.8 * (list.Count - 1);
+        }
 
         // Transform a text list by
         // - trimming leading and trailing white space for each line,

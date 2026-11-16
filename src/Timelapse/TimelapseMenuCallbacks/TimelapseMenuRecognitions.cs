@@ -6,8 +6,10 @@ using System.Windows;
 using Microsoft.Win32;
 using Timelapse.Constant;
 using Timelapse.Controls;
+using Timelapse.ControlsDataEntry;
 using Timelapse.Database;
 using Timelapse.DataStructures;
+using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
 using Timelapse.Enums;
@@ -77,6 +79,56 @@ namespace Timelapse
                     }
                 }
             }
+        }
+
+        // Add the given items to a FixedChoice field's menu, in both the template (.tdb) and the data (.ddb) files' template tables,
+        // and refresh that field's data entry menu so it shows them.
+        // The two files' choice lists are each checked before anything is changed; returns false (changing nothing) if either can't be read.
+        public bool TryAddChoicesToTemplate(string dataLabel, List<string> itemsToAdd)
+        {
+            ControlRow ddbControl = DataHandler?.FileDatabase?.GetControlFromControls(dataLabel);
+            ControlRow tdbControl = templateDatabase?.GetControlFromControls(dataLabel);
+            if (ddbControl?.Type != Constant.Control.FixedChoice || tdbControl?.Type != Constant.Control.FixedChoice)
+            {
+                return false;
+            }
+
+            // Check the structure of each List: it should be a json choice list, or empty.
+            // A non-empty List that doesn't read as one (e.g., an old or corrupted format) is left alone.
+            Choices ddbChoices = Choices.ChoicesFromJson(ddbControl.List);
+            Choices tdbChoices = Choices.ChoicesFromJson(tdbControl.List);
+            if ((false == string.IsNullOrWhiteSpace(ddbControl.List) && ddbChoices.ChoiceList.Count == 0) ||
+                (false == string.IsNullOrWhiteSpace(tdbControl.List) && tdbChoices.ChoiceList.Count == 0))
+            {
+                return false;
+            }
+
+            // Update the template file's control, then the data file's control
+            if (tdbChoices.AddChoices(itemsToAdd) > 0)
+            {
+                tdbControl.List = tdbChoices.GetAsJson;
+                templateDatabase.SyncControlToDatabase(tdbControl);
+            }
+            if (ddbChoices.AddChoices(itemsToAdd) > 0)
+            {
+                ddbControl.List = ddbChoices.GetAsJson;
+                DataHandler.FileDatabase.SyncControlToDatabase(ddbControl);
+            }
+
+            // Syncing reloads the data file's controls, so refresh using the reloaded control:
+            // the file table column that knows the valid choices, and the data entry menu
+            ControlRow updatedControl = DataHandler.FileDatabase.GetControlFromControls(dataLabel) ?? ddbControl;
+            FileTableColumn column = FileTableColumn.CreateColumnMatchingControlRowsType(updatedControl);
+            if (column != null)
+            {
+                DataHandler.FileDatabase.FileTableColumnsByDataLabel[dataLabel] = column;
+            }
+            if (DataEntryControls?.ControlsByDataLabelForExport.TryGetValue(dataLabel, out DataEntryControl dataEntryControl) == true &&
+                dataEntryControl is DataEntryChoice dataEntryChoice)
+            {
+                dataEntryChoice.SetMenuItems(updatedControl);
+            }
+            return true;
         }
         #endregion
 

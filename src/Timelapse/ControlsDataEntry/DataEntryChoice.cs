@@ -59,7 +59,19 @@ namespace Timelapse.ControlsDataEntry
             // Callback used to allow Enter to select the highlit item
             ContentControl.PreviewKeyDown += ContentCtl_PreviewKeyDown;
 
-            // Add items to the combo box. If we have an  EmptyChoiceItem, then  add an 'empty string' to the end 
+            SetMenuItems(control);
+        }
+        #endregion
+
+        #region Public Methods - SetMenuItems
+        // Set the combo box's menu items from the control's choice list.
+        // Also called after the template's choice list is updated, so the menu shows the new items.
+        public void SetMenuItems(ControlRow control)
+        {
+            ThrowIf.IsNullArgument(control, nameof(control));
+            ContentControl.Items.Clear();
+
+            // Add items to the combo box. If we have an  EmptyChoiceItem, then  add an 'empty string' to the end
             ComboBoxItem cbi;
             Choices choices = Choices.ChoicesFromJson(control.List);
             foreach (string choice in choices.ChoiceList)

@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Timelapse.Database;
+using Timelapse.DataStructures;
 using Timelapse.DataTables;
 using Timelapse.DebuggingSupport;
 using Timelapse.Enums;
@@ -23,11 +24,11 @@ namespace Timelapse.Dialog
         #region Private Variables
 
         private readonly FileDatabase fileDatabase;
-        // The Note, MultiLine and Decimal controls that could hold the recognition data, in template order
+        // The Note, MultiLine, Decimal and FixedChoice controls that could hold the recognition data, in template order
         private readonly List<ControlRow> dataFieldControls;
 
-        // Whether the data field combobox currently lists the Decimal fields (null if not yet filled)
-        private bool? dataFieldComboBoxIncludesDecimalFields;
+        // Whether the data field combobox currently lists the Decimal fields and the FixedChoice fields (null if not yet filled)
+        private (bool Decimal, bool Choice)? dataFieldComboBoxIncludes;
 
         // Used to remember the selections between invocations of the dialog
         // These are the default initial values, which will be modified as the user makes selections
@@ -59,10 +60,11 @@ namespace Timelapse.Dialog
             InitalizeProgressHandler(BusyCancelIndicator);
             Debug.Print(dataFieldLabel);
             // Collect the fields that could hold the recognition data.
-            // Decimal fields are only listed in the combobox when a single Confidence is output as raw data
+            // Decimal fields are only listed in the combobox when a single Confidence is output as raw data,
+            // and FixedChoice fields only when a single Detection or Classification category is output as raw data
             foreach (ControlRow control in fileDatabase.Controls)
             {
-                if (control.Type is Control.Note or Control.MultiLine or Control.DecimalAny or Control.DecimalPositive)
+                if (control.Type is Control.Note or Control.MultiLine or Control.DecimalAny or Control.DecimalPositive or Control.FixedChoice)
                 {
                     dataFieldControls.Add(control);
                 }
@@ -143,7 +145,12 @@ namespace Timelapse.Dialog
         private async Task Start_ClickAsync()
         {
             RememberButtonState(); // So we remember this button state, as the dialog may be reused
-            bool isCompleted = await PopulateAsync().ConfigureAwait(true);
+            bool? isCompleted = await PopulateAsync().ConfigureAwait(true);
+            if (isCompleted == null)
+            {
+                // The user cancelled the Choice field mismatch warning, so stay in this dialog to choose differently
+                return;
+            }
             DialogResult = isCompleted;
         }
 
@@ -155,13 +162,17 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Populate Logic
-        private async Task<bool> PopulateAsync()
+        // Returns true if the field was populated, false if it wasn't,
+        // or null if the user cancelled the warning that some raw categories don't match a FixedChoice field's menu items
+        private async Task<bool?> PopulateAsync()
         {
             bool result = false;
+            Dictionary<long, string> fieldData = null;
             BusyCancelIndicator.IsBusy = true;
 
-            // We need to set up the parameters for the call to PopulateFieldWithRecognitionData as we can't access the UI elements from the background thread
-            string dataLabelToUpdate = dataFieldControls.First(control => control.Label == dataFieldLabel).DataLabel;
+            // We need to set up the parameters for the call to RecognitionsComputeFieldData as we can't access the UI elements from the background thread
+            ControlRow controlToUpdate = dataFieldControls.First(control => control.Label == dataFieldLabel);
+            string dataLabelToUpdate = controlToUpdate.DataLabel;
             RecognitionFormatEnum recognitionFormat = GetSelectedRecognitionFormat();
             bool classificationOny = RBClassificationOny.IsChecked == true;
             bool boundingBoxCoordinates = CBBoundingBoxCoordinates.IsChecked == true;
@@ -172,7 +183,7 @@ namespace Timelapse.Dialog
 
             await Task.Run(() =>
             {
-                result = fileDatabase.RecognitionsPopulateFieldWithData(dataLabelToUpdate,
+                fieldData = fileDatabase.RecognitionsComputeFieldData(dataLabelToUpdate,
                         recognitionFormat,
                         classificationOny,
                         boundingBoxCoordinates,
@@ -181,6 +192,39 @@ namespace Timelapse.Dialog
                         classificationConfidence,
                         classificationCategory,
                         Progress);
+            }, Token).ConfigureAwait(true);
+            if (fieldData == null)
+            {
+                BusyCancelIndicator.IsBusy = false;
+                return false;
+            }
+
+            // A FixedChoice field only gets raw categories: warn the user if some of them don't match its menu items
+            if (controlToUpdate.Type == Control.FixedChoice)
+            {
+                Choices choices = Choices.ChoicesFromJson(controlToUpdate.List);
+                List<string> mismatchedCategories = [.. fieldData.Values
+                    .Where(category => false == string.IsNullOrWhiteSpace(category) && false == choices.Contains(category))
+                    .Distinct()];
+                if (mismatchedCategories.Count > 0)
+                {
+                    BusyCancelIndicator.IsBusy = false;
+                    if (false == Dialogs.PopulateChoiceFieldWithMismatchedCategoriesDialog(this, controlToUpdate.Label, detectionCategory, mismatchedCategories, out bool updateTemplate))
+                    {
+                        return null;
+                    }
+                    if (updateTemplate && false == GlobalReferences.MainWindow.TryAddChoicesToTemplate(dataLabelToUpdate, mismatchedCategories))
+                    {
+                        // Shouldn't happen, but if the template's choice list can't be read, it is left as is and the field is still populated
+                        TracePrint.PrintMessage($"Could not add the recognition categories to the {controlToUpdate.Label} menu");
+                    }
+                    BusyCancelIndicator.IsBusy = true;
+                }
+            }
+
+            await Task.Run(() =>
+            {
+                result = fileDatabase.RecognitionsWriteFieldData(dataLabelToUpdate, fieldData, Progress);
             }, Token).ConfigureAwait(true);
             BusyCancelIndicator.IsBusy = false;
             return result;
@@ -215,6 +259,7 @@ namespace Timelapse.Dialog
 
         // Raw data can only be output when a single data checkbox is selected in the mix of recognition data.
         // Decimal fields can only hold raw data from a single Confidence, so only then are they listed as data fields.
+        // Likewise, FixedChoice fields are only listed when raw data is from a single Detection or Classification category.
         private void UpdateRawDataStateAndDataFields()
         {
             bool isChooseFields = RBChooseFields.IsChecked == true;
@@ -231,30 +276,36 @@ namespace Timelapse.Dialog
                 RBAsFormattedJson.IsChecked = true;
             }
 
-            bool includeDecimalFields = RBAsRaw.IsEnabled && RBAsRaw.IsChecked == true &&
-                                        (CBDetectionConfidence.IsChecked == true || CBClassificationConfidence.IsChecked == true);
-            FillDataFieldComboBox(includeDecimalFields);
+            bool isRawData = RBAsRaw.IsEnabled && RBAsRaw.IsChecked == true;
+            bool includeDecimalFields = isRawData && (CBDetectionConfidence.IsChecked == true || CBClassificationConfidence.IsChecked == true);
+            bool includeChoiceFields = isRawData && (CBDetectionCategory.IsChecked == true || CBClassificationCategory.IsChecked == true);
+            FillDataFieldComboBox(includeDecimalFields, includeChoiceFields);
             TextBlockDecimalFieldsNote.Visibility = includeDecimalFields && dataFieldControls.Any(control => control.Type is Control.DecimalAny or Control.DecimalPositive)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            TextBlockChoiceFieldsNote.Visibility = includeChoiceFields && dataFieldControls.Any(control => control.Type is Control.FixedChoice)
                 ? Visibility.Visible
                 : Visibility.Collapsed;
             SetPopulateButtonEnableState();
         }
 
-        // Fill the combobox with the Note and MultiLine fields, and optionally the Decimal fields,
+        // Fill the combobox with the Note and MultiLine fields, and optionally the Decimal fields or the FixedChoice fields,
         // keeping the current data field selected if it is still listed
-        private void FillDataFieldComboBox(bool includeDecimalFields)
+        private void FillDataFieldComboBox(bool includeDecimalFields, bool includeChoiceFields)
         {
-            if (dataFieldComboBoxIncludesDecimalFields == includeDecimalFields)
+            if (dataFieldComboBoxIncludes == (includeDecimalFields, includeChoiceFields))
             {
                 return;
             }
-            dataFieldComboBoxIncludesDecimalFields = includeDecimalFields;
+            dataFieldComboBoxIncludes = (includeDecimalFields, includeChoiceFields);
 
             string previousDataFieldLabel = dataFieldLabel;
             ComboBoxSelectNoteField.Items.Clear();
             foreach (ControlRow control in dataFieldControls)
             {
-                if (includeDecimalFields || control.Type is Control.Note or Control.MultiLine)
+                if (control.Type is Control.Note or Control.MultiLine ||
+                    (includeDecimalFields && control.Type is Control.DecimalAny or Control.DecimalPositive) ||
+                    (includeChoiceFields && control.Type is Control.FixedChoice))
                 {
                     ComboBoxSelectNoteField.Items.Add(control.Label);
                 }

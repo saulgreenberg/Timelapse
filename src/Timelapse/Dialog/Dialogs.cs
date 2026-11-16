@@ -2254,6 +2254,75 @@ namespace Timelapse.Dialog
             dialog.BuildAndShowDialog();
         }
 
+        /// <summary>
+        /// Some of the recognition categories that would populate a Choice field don't match its menu items.
+        /// Returns true if the user clicks Ok to populate the field anyway, or the Update button to update the template first
+        /// (then updateTemplate is true). Returns false if the user cancels.
+        /// </summary>
+        public static bool PopulateChoiceFieldWithMismatchedCategoriesDialog(Window owner, string choiceFieldLabel, bool isDetectionCategory, List<string> mismatchedCategories, out bool updateTemplate)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            ThrowIf.IsNullArgument(mismatchedCategories, nameof(mismatchedCategories));
+            updateTemplate = false;
+            string category = isDetectionCategory ? "detection category" : "classification category";
+            string categories = isDetectionCategory ? "detection categories" : "classification categories";
+            string updateButtonText = $"Update {choiceFieldLabel} to include these categories";
+            List<string> sortedMismatches = [.. mismatchedCategories];
+            sortedMismatches.Sort(StringComparer.OrdinalIgnoreCase);
+            StringBuilder mismatchList = new();
+            foreach (string mismatch in sortedMismatches)
+            {
+                mismatchList.Append($"[li] {mismatch}");
+            }
+
+            var dialog = new FormattedDialog()
+            {
+                Owner = owner,
+                DialogTitle = $"Some {categories} don't match the {choiceFieldLabel} menu",
+                Icon = DialogIconType.Warning,
+                What = $"Some of the {categories} don't match the [e]{choiceFieldLabel}[/e] menu items, which means you won't be able to select those from the menu.",
+                Result = $"If you select [b]Ok[/b], the field will be populated by the {categories} data as expected. "
+                         + $"While that {category} data will be displayed, you won't be able to manually select it from the menu.",
+                Solution = $"[ni] You can use the template editor to add choices to the [e]{choiceFieldLabel}[/e]."
+                           + $"[ni] Also, the [i]Species Editor[/i], found in the Template's [i]File[/i] menu, can be used to extract {category} data from the recognition file, "
+                           + $"which you can then add to the [e]{choiceFieldLabel}[/e] by the option available in its [i]List[/i] field."
+                           + $"[ni] Alternately, Timelapse can update the template to include the missing {categories} in the [e]{choiceFieldLabel}[/e] menu. "
+                           + "Make sure that this is ok, as it can lead to template differences if you use copies of this template elsewhere.[br 2]"
+                           + "Select:[br 2]"
+                           + $"[li] [b]{updateButtonText}[/b] to add them to the menu, then populate the field"
+                           + $"[li] [b]Ok[/b] to populate the [e]{choiceFieldLabel}[/e] anyway"
+                           + "[li] [b]Cancel[/b] to abort",
+                Hint = $"The {categories} that don't match the menu items are:[br 2]"
+                       + mismatchList,
+            };
+
+            // The Update button goes at the left of the button row, apart from Ok and Cancel
+            Button updateButton = dialog.ExtraButton;
+            updateButton.Content = updateButtonText;
+            updateButton.Visibility = Visibility.Visible;
+            if (updateButton.Parent is System.Windows.Controls.Panel buttonPanel && buttonPanel.Parent is Grid dialogGrid)
+            {
+                buttonPanel.Children.Remove(updateButton);
+                Grid.SetRow(updateButton, Grid.GetRow(buttonPanel));
+                Grid.SetColumn(updateButton, 0);
+                Grid.SetColumnSpan(updateButton, dialogGrid.ColumnDefinitions.Count);
+                updateButton.HorizontalAlignment = System.Windows.HorizontalAlignment.Left;
+                updateButton.Margin = new(10);
+                dialogGrid.Children.Add(updateButton);
+            }
+            bool updateClicked = false;
+            updateButton.Click += (_, _) =>
+            {
+                updateClicked = true;
+                dialog.DialogResult = true;
+            };
+
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            bool proceed = dialog.BuildAndShowDialog() == true;
+            updateTemplate = proceed && updateClicked;
+            return proceed;
+        }
+
         #endregion
 
         #region FormattedDialog Deletions and Missing
