@@ -202,7 +202,8 @@ namespace Timelapse.Database
             try
             {
                 SQLiteConnectionStringBuilder builder = new() { DataSource = path, ReadOnly = true, FailIfMissing = true };
-                using SQLiteConnection connection = new(builder.ConnectionString);
+                // Created through SQLiteWrapper, as all connections are, so the SQLite Console can show its statement
+                using SQLiteConnection connection = SQLiteWrapper.GetNewSqliteConnection(builder.ConnectionString);
                 connection.Open();
                 using SQLiteCommand command = new(
                     $"SELECT {DetectionCategoriesColumns.Label} FROM {DBTables.DetectionCategories} WHERE {DetectionCategoriesColumns.Category} IN (0, '0')", connection);

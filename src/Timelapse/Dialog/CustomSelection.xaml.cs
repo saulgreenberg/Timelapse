@@ -423,7 +423,7 @@ namespace Timelapse.Dialog
                             SearchTermOperator.GreaterThan,
                             SearchTermOperator.LessThanOrEqual,
                             SearchTermOperator.GreaterThanOrEqual,
-                            SearchTermOperator.IsOneOrMoreOf
+                            SearchTermOperator.IsAnyOf
                         ];
                         break;
                     case Control.MultiChoice:
@@ -480,7 +480,7 @@ namespace Timelapse.Dialog
                     IsEnabled = searchTerm.UseForSearching,
                     ItemsSource = termOperators,
                     Margin = thickness,
-                    // The drop-down list widens to fit longer operators (e.g., is one or more of), while the box itself keeps this width
+                    // The drop-down list widens to fit longer operators (e.g., is any of), while the box itself keeps this width
                     Width = 78,
                     Height = 25,
                     SelectedValue = searchTerm.Operator,
@@ -705,7 +705,7 @@ namespace Timelapse.Dialog
                         break;
 
                     case Control.FixedChoice:
-                        // FixedChoice presents a combo box, or a check combo box (as MultiChoice does) for the operator that takes several values (is one or more of)
+                        // FixedChoice presents a combo box, or a check combo box (as MultiChoice does) for the operator that takes several values (is any of)
                         if (IsMultipleValueOperator(searchTerm.Operator))
                         {
                             this.CheckComboBoxCreateValueControl(searchTerm, thickness, gridRowIndex, tabIndex++, includeEmptyItem: true);
@@ -1811,10 +1811,10 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Value controls: combo box and check combo box (FixedChoice and MultiChoice)
-        // The Fixed Choice operator that takes several values (is one or more of), selected in a check combo box rather than a combo box
+        // The Fixed Choice operator that takes several values (is any of), selected in a check combo box rather than a combo box
         private static bool IsMultipleValueOperator(string termOperator)
         {
-            return termOperator is SearchTermOperator.IsOneOrMoreOf;
+            return termOperator is SearchTermOperator.IsAnyOf;
         }
 
         // A combo box for selecting a single value (FixedChoice)
@@ -1840,7 +1840,7 @@ namespace Timelapse.Dialog
             SearchTerms.Children.Add(comboBoxValue);
         }
 
-        // A check combo box for selecting several values (MultiChoice, and FixedChoice with is one or more of).
+        // A check combo box for selecting several values (MultiChoice, and FixedChoice with is any of).
         // The list's empty item is removed, or (if includeEmptyItem) shown as (empty) so it can be seen and selected
         private void CheckComboBoxCreateValueControl(SearchTerm searchTerm, Thickness thickness, int gridRowIndex, int controlTabIndex, bool includeEmptyItem)
         {

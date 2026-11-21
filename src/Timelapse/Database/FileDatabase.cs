@@ -3718,10 +3718,14 @@ namespace Timelapse.Database
                         // - for different lists
                         // - for an empty databaseValue when we shouldn't include an empty choice
                         // - for a non empty databaseValue that isn't in the list
-                        if (firstNotSecond.Count != 0 || secondNotFirst.Count != 0 ||
-                            (stFromJson.DatabaseValue == string.Empty && false == choices.IncludeEmptyChoice) ||
-                            (stFromJson.DatabaseValue != string.Empty && false == choices.ChoiceList.Contains(stFromJson.DatabaseValue))
-                           )
+                        // except for a Fixed Choice 'is any of', whose value lists several items: each must be in the list, or be the (empty) item
+                        bool isAnyOf = stFromJson.ControlType == Control.FixedChoice && stFromJson.Operator == SearchTermOperator.IsAnyOf;
+                        bool isValueValid = isAnyOf
+                            ? CustomSelection.SplitIntoChoiceItems(stFromJson.DatabaseValue, choices.ChoiceList)
+                                .All(item => item == SearchTermOperator.EmptyChoiceItem || choices.ChoiceList.Contains(item))
+                            : false == ((stFromJson.DatabaseValue == string.Empty && false == choices.IncludeEmptyChoice) ||
+                                        (stFromJson.DatabaseValue != string.Empty && false == choices.ChoiceList.Contains(stFromJson.DatabaseValue)));
+                        if (firstNotSecond.Count != 0 || secondNotFirst.Count != 0 || false == isValueValid)
                         {
                             // Didn't pass the test as some list items or its defaults don't match whats in the template.  Use the default
                             CustomSelection = new(Controls);

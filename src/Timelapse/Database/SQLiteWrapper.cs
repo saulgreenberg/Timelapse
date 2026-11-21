@@ -2427,7 +2427,35 @@ public class SQLiteWrapper
         // Its an obscur bug and solution reported by others: sqlite doesn't really document that argument very well. But it seems to fix it.
         public static SQLiteConnection GetNewSqliteConnection(string connectionString)
         {
-            return new(connectionString, true);
+            SQLiteConnection connection = new(connectionString, true);
+            connection.StateChange += Connection_StateChange;
+            return connection;
+        }
+        #endregion
+
+        #region Statement tracing (SQLite Console)
+        // Set by the SQLite Console while it is visible, to receive each SQL statement as it is executed (on the executing thread).
+        // While it is null, connections aren't traced, so tracing costs nothing.
+        public static Action<string> StatementExecuted { get; set; }
+
+        // SQLite only traces a connection that is open, and a trace handler must be re-added each time the connection is reopened,
+        // so the handler is (re)attached whenever a connection opens, if the console wants statements
+        private static void Connection_StateChange(object sender, StateChangeEventArgs e)
+        {
+            if (sender is not SQLiteConnection connection)
+            {
+                return;
+            }
+            connection.Trace -= Connection_Trace;
+            if (e.CurrentState == ConnectionState.Open && StatementExecuted != null)
+            {
+                connection.Trace += Connection_Trace;
+            }
+        }
+
+        private static void Connection_Trace(object sender, TraceEventArgs e)
+        {
+            StatementExecuted?.Invoke(e.Statement);
         }
         #endregion
 

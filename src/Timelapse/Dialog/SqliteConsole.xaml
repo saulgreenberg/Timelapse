@@ -1,0 +1,40 @@
+<Window x:Class="Timelapse.Dialog.SqliteConsole"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+        Title="SQLite Console"
+        MinHeight="300" MinWidth="500"
+        Height="650" Width="850"
+        ShowInTaskbar="True"
+        Loaded="Window_Loaded" Closing="Window_Closing" IsVisibleChanged="Window_IsVisibleChanged">
+    <DockPanel>
+        <toolkit:FormattedMessageContent x:Name="Message" DockPanel.Dock="Top"
+                                         Icon="{x:Static toolkit:DialogIconType.Information}"
+                                         DialogTitle="SQLite Console"
+                                         What="Display SQLite statements generated whenever a Select option changes."
+                                         ShowExplanationVisibility="False" />
+
+        <!--Which statements to show, with the Clear button on the right-->
+        <DockPanel DockPanel.Dock="Top" Margin="20,5,10,5">
+            <Button Name="ButtonClear" DockPanel.Dock="Right" Content="_Clear" Padding="15,5" VerticalAlignment="Center" Click="ButtonClear_Click"
+                    ToolTip="Clear the console"/>
+            <StackPanel Orientation="Vertical">
+                <RadioButton Name="RBSelectOnly" GroupName="ShowWhat" Content="Show only SELECT statements" Margin="0,2,0,2" Checked="ShowWhat_Checked"
+                             ToolTip="Show each SQLite statement that begins with SELECT, as it is executed"/>
+                <RadioButton Name="RBAll" GroupName="ShowWhat" Content="Show all statements" IsChecked="True" Margin="0,2,0,2" Checked="ShowWhat_Checked"
+                             ToolTip="Show every SQLite statement, as it is executed"/>
+                <RadioButton Name="RBWhereOnly" GroupName="ShowWhat" Content="Show only WHERE expressions when selecting" Margin="0,2,0,2" Checked="ShowWhat_Checked"
+                             ToolTip="Show only the WHERE expression created from the current selection criteria, each time it is created"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!--The console. Read-only, but with a visible caret so text can be selected from the keyboard (Shift with the arrow, Home and End keys)
+            as well as with the mouse (drag, or Shift-click to extend a selection)-->
+        <TextBox Name="TextBoxConsole" Margin="10,5,10,10" IsReadOnly="True" IsReadOnlyCaretVisible="True" FontFamily="Consolas" FontSize="12"
+                 TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                 Background="#FFF7F7F7" BorderBrush="LightGray"/>
+    </DockPanel>
+</Window>

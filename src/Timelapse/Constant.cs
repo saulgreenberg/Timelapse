@@ -751,9 +751,9 @@ namespace Timelapse.Constant
         public const string Includes = " Includes ";
         public const string Excludes = " Excludes ";
         // Fixed Choice only
-        public const string IsOneOrMoreOf = " is one or more of ";
+        public const string IsAnyOf = " is any of ";
 
-        // In a Fixed Choice's multi-select menu (is one or more of), the item that stands for an empty value,
+        // In a Fixed Choice's multi-select menu (is any of), the item that stands for an empty value,
         // as a blank item can't be seen in the menu or in its comma-separated text
         public const string EmptyChoiceItem = "(empty)";
         public const string GreaterThan = "\u003E";

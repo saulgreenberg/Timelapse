@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +9,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Timelapse.Constant;
 using Timelapse.Controls;
+using Timelapse.Database;
 using Timelapse.DataStructures;
 using Timelapse.DebuggingSupport;
 using Timelapse.Dialog;
@@ -53,6 +55,62 @@ namespace Timelapse
             MenuItemSelectRandomSample.IsEnabled = MenuItemSelectRandomSample.IsEnabled &&   DataHandler?.FileDatabase?.CountAllCurrentlySelectedFiles > 2;
 
             this.MenuItemSetRelativePathSearchTerm();
+
+            // The SQLite Console is only revealed if SHIFT is held down as the menu is opened
+            Visibility sqliteConsoleVisibility = (Keyboard.Modifiers & ModifierKeys.Shift) != 0 ? Visibility.Visible : Visibility.Collapsed;
+            MenuItemSelectSqliteConsoleSeparator.Visibility = sqliteConsoleVisibility;
+            MenuItemSelectSqliteConsole.Visibility = sqliteConsoleVisibility;
+        }
+        #endregion
+
+        #region SQLite Console
+        // The console runs on its own UI thread, so it stays usable while a modal dialog (e.g., Custom Select) blocks the windows on this thread.
+        // It is created when first opened; closing it only hides it, so it keeps its contents.
+        // Both fields are only used through the console's own dispatcher, except to check whether it exists
+        private SqliteConsole sqliteConsole;
+        private Dispatcher sqliteConsoleDispatcher;
+        private bool sqliteConsoleStarted;
+
+        private void MenuItemSelectSqliteConsole_Click(object sender, RoutedEventArgs e)
+        {
+            if (false == sqliteConsoleStarted)
+            {
+                sqliteConsoleStarted = true;
+                Thread thread = new(() =>
+                {
+                    sqliteConsoleDispatcher = Dispatcher.CurrentDispatcher;
+                    sqliteConsole = new();
+                    sqliteConsole.Show();
+                    Dispatcher.Run();
+                })
+                {
+                    Name = "SQLite Console",
+                    // A background thread can't keep Timelapse running after it closes
+                    IsBackground = true
+                };
+                thread.SetApartmentState(ApartmentState.STA);
+                thread.Start();
+                return;
+            }
+
+            // Show it (if hidden) and bring it to the front, on its own thread.
+            // The dispatcher is null only if the console is still starting, in which case it is about to appear anyway
+            sqliteConsoleDispatcher?.BeginInvoke(() =>
+            {
+                if (false == sqliteConsole.IsVisible)
+                {
+                    sqliteConsole.Show();
+                }
+                sqliteConsole.Activate();
+            });
+        }
+
+        // Stop tracing and shut down the console's thread when Timelapse closes
+        private void SqliteConsoleShutdown()
+        {
+            SQLiteWrapper.StatementExecuted = null;
+            CustomSelection.WhereExpressionCreated = null;
+            sqliteConsoleDispatcher?.InvokeShutdown();
         }
         #endregion
 

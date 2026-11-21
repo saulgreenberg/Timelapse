@@ -122,7 +122,7 @@ Verified 2026-11-21 with a small test harness against the built toolkit:
 Where `IsEditable` is true:
 
 - `DataEntryMultiChoice` and `MetadataDataEntryMultiChoice` set `IsEditable = isReadOnly` (the property is used inversely, as a read-only flag). Data entry controls are only read-only in **view-only mode** (`DataEntryControl.ContentReadOnly`).
-- Custom Select's check combo boxes (MultiChoice, and Fixed Choice *is one or more of*) and editable data entry leave `IsEditable` false, so they are **not** affected: their checked items are set when the drop-down opens, from `Text.Split(',')`, which keeps spaces.
+- Custom Select's check combo boxes (MultiChoice, and Fixed Choice *is any of*) and editable data entry leave `IsEditable` false, so they are **not** affected: their checked items are set when the drop-down opens, from `Text.Split(',')`, which keeps spaces.
 
 ### Risk of Fixing
 
@@ -154,6 +154,6 @@ Done, not yet committed or hand tested. `CheckComboBox.UpdateFromText()` now spl
 2. Open the image set in view-only mode. Before the fix, the field shows *Elk*; after it, *Elk,Red deer*. Check the folder metadata MultiChoice the same way.
 3. In normal mode, confirm the field still shows both, the drop-down checks both, and ticking a third item keeps both.
 4. With menu items *AA*, *AABB* and *AA BB*, set values of each and of combinations; confirm in view-only and normal modes that each is shown as itself and never as one of the others.
-5. Custom Select: confirm a MultiChoice selection, and a Fixed Choice *is one or more of* selection, with Red deer still reopen with Red deer checked.
+5. Custom Select: confirm a MultiChoice selection, and a Fixed Choice *is any of* selection, with Red deer still reopen with Red deer checked.
 
 ---

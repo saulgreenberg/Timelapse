@@ -112,7 +112,8 @@ namespace Timelapse
                     DataHandler.FileDatabase.ImageSet.MostRecentFileID = DataHandler.ImageCache.Current.ID;
                 }
 
-                DataHandler.FileDatabase.ImageSet.SearchTermsAsJSON = JsonConvert.SerializeObject(DataHandler.FileDatabase.CustomSelection, Formatting.Indented);
+                // Saved in a form older versions of Timelapse can also restore (see ToJsonForSaving)
+                DataHandler.FileDatabase.ImageSet.SearchTermsAsJSON = DataHandler.FileDatabase.CustomSelection.ToJsonForSaving();
                 DataHandler.FileDatabase.ImageSet.FolderSearchTermsAsJSON = DataHandler.FileDatabase.CustomSelection.FolderMetadata == null
                     ? string.Empty
                     : JsonConvert.SerializeObject(DataHandler.FileDatabase.CustomSelection.FolderMetadata, Formatting.Indented);

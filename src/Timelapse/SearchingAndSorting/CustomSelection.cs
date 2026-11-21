@@ -307,6 +307,37 @@ namespace Timelapse.SearchingAndSorting
         }
         #endregion
 
+        #region Public Methods - Json for saving
+        // The custom selection as Json, for saving in the database so it can be restored when the image set is reopened.
+        // Older versions of Timelapse don't know the Fixed Choice 'is any of' operator. Restoring a term that uses it with a single value
+        // (or none) passes their checks, but builds an invalid query, which makes them shut down. So such terms are saved as the
+        // equivalent '=' (a single value means the same). Terms with several values are kept: older versions reject those values
+        // as not being menu items, and safely revert to selecting all files. This custom selection itself isn't changed
+        public string ToJsonForSaving()
+        {
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(this, Newtonsoft.Json.Formatting.Indented);
+            CustomSelection copy = Newtonsoft.Json.JsonConvert.DeserializeObject<CustomSelection>(json);
+            bool changed = false;
+            foreach (SearchTerm searchTerm in copy?.SearchTerms ?? [])
+            {
+                if (searchTerm.ControlType != Control.FixedChoice || searchTerm.Operator != SearchTermOperator.IsAnyOf)
+                {
+                    continue;
+                }
+                List<string> items = SplitIntoChoiceItems(searchTerm.DatabaseValue, searchTerm.List);
+                if (items.Count <= 1)
+                {
+                    searchTerm.Operator = SearchTermOperator.Equal;
+                    searchTerm.DatabaseValue = items.Count == 0 || items[0] == SearchTermOperator.EmptyChoiceItem ? string.Empty : items[0];
+                    changed = true;
+                }
+            }
+            return changed
+                ? Newtonsoft.Json.JsonConvert.SerializeObject(copy, Newtonsoft.Json.Formatting.Indented)
+                : json;
+        }
+        #endregion
+
         #region Public Methods - Refresh a choice list
         // The search terms' choice lists are copied from the template when the custom selection is created or restored.
         // When a FixedChoice or MultiChoice control's menu items change afterwards (e.g., when categories are added to it
@@ -406,9 +437,9 @@ namespace Timelapse.SearchingAndSorting
             switch (expression)
             {
                 case SearchTermOperator.Equal:
-                // 'is one or more of' builds its own sub-expression (see FixedChoiceIsOneOrMoreOfWhere),
+                // 'is any of' builds its own sub-expression (see FixedChoiceIsAnyOfWhere),
                 // so it is only treated as Equal if used elsewhere
-                case SearchTermOperator.IsOneOrMoreOf:
+                case SearchTermOperator.IsAnyOf:
                     return "=";
                 case SearchTermOperator.NotEqual:
                     return "<>";

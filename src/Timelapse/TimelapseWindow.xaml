@@ -578,6 +578,12 @@
                               InputGestureText="F5" 
                               Click="MenuItemSelectReselect_Click" 
                               ToolTip="Refresh the display based on the current  selection and sorting criteria."/>
+                    <!-- Only shown when SHIFT is held down as the Select menu is opened -->
+                    <Separator Name="MenuItemSelectSqliteConsoleSeparator" Visibility="Collapsed"/>
+                    <MenuItem Name="MenuItemSelectSqliteConsole" Visibility="Collapsed"
+                              Header="SQLite Console (for debugging)"
+                              Click="MenuItemSelectSqliteConsole_Click"
+                              ToolTip="Open a console that displays the SQLite statements Timelapse executes"/>
                 </MenuItem>
 
                 <!-- Sort Menu -->

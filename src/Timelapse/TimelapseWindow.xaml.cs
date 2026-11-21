@@ -362,6 +362,7 @@ namespace Timelapse
         {
             Keyboard.ClearFocus();
             CloseTimelapseAndSaveState(true);
+            SqliteConsoleShutdown();
         }
 
         private void DeleteTheDeletedFilesFolderIfNeeded()

@@ -12,6 +12,8 @@ namespace Timelapse.SearchingAndSorting
     public partial class CustomSelection
     {
         #region Public Methods- GetFilesWhere() creates and returns a well-formed query
+        // Set by the SQLite Console while it is visible, to receive each WHERE expression GetFilesWhere creates. Null otherwise
+        public static Action<string> WhereExpressionCreated { get; set; }
 
         public string GetFilesWhere()
         {
@@ -188,16 +190,17 @@ namespace Timelapse.SearchingAndSorting
             }
 
             //Debug.Print("CustomSelection GetFilesWhere: " + where);
+            WhereExpressionCreated?.Invoke(where);
             return where;
         }
 
         #endregion
 
         #region Helpers: Fixed Choice operators that take several values
-        // A Fixed Choice 'is one or more of' search term: a bracketed Or sub-expression with one term per selected item, e.g.,
+        // A Fixed Choice 'is any of' search term: a bracketed Or sub-expression with one term per selected item, e.g.,
         // ( Species = "Deer" OR Species = "Elk" OR ( Species IS NULL OR Species = '' ) ).
         // A single selected item (or none, which searches for an empty value) is the same as =, so it isn't bracketed
-        private static string FixedChoiceIsOneOrMoreOfWhere(string dataLabel, SearchTerm searchTerm)
+        private static string FixedChoiceIsAnyOfWhere(string dataLabel, SearchTerm searchTerm)
         {
             List<string> items = SplitIntoChoiceItems(searchTerm.DatabaseValue, searchTerm.List);
             if (items.Count == 0)
@@ -292,10 +295,10 @@ namespace Timelapse.SearchingAndSorting
                     // If we are using detections, then we have to qualify the data label e.g., DataTable.X
                     string dataLabel = RecognitionSelections.UseRecognition ? DBTables.FileData + Sql.Dot + searchTerm.DataLabel : searchTerm.DataLabel;
 
-                    // A Fixed Choice 'is one or more of' becomes a bracketed Or sub-expression of its selected items
-                    if (searchTerm.ControlType == Control.FixedChoice && searchTerm.Operator == SearchTermOperator.IsOneOrMoreOf)
+                    // A Fixed Choice 'is any of' becomes a bracketed Or sub-expression of its selected items
+                    if (searchTerm.ControlType == Control.FixedChoice && searchTerm.Operator == SearchTermOperator.IsAnyOf)
                     {
-                        whereForTerm = FixedChoiceIsOneOrMoreOfWhere(dataLabel, searchTerm);
+                        whereForTerm = FixedChoiceIsAnyOfWhere(dataLabel, searchTerm);
                     }
                     // Check to see if the search term is querying for an empty string
                     else if (string.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == SearchTermOperator.Equal)
