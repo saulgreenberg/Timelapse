@@ -66,9 +66,10 @@ namespace Timelapse
         #region SQLite Console
         // The console runs on its own UI thread, so it stays usable while a modal dialog (e.g., Custom Select) blocks the windows on this thread.
         // It is created when first opened; closing it only hides it, so it keeps its contents.
-        // Both fields are only used through the console's own dispatcher, except to check whether it exists
+        // The console is only used on its own thread, through its dispatcher. The dispatcher is set on that thread
+        // and read on this one, so it is volatile. sqliteConsoleStarted is only used on this thread
         private SqliteConsole sqliteConsole;
-        private Dispatcher sqliteConsoleDispatcher;
+        private volatile Dispatcher sqliteConsoleDispatcher;
         private bool sqliteConsoleStarted;
 
         private void MenuItemSelectSqliteConsole_Click(object sender, RoutedEventArgs e)
