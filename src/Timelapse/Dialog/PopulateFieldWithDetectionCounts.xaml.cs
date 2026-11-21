@@ -84,6 +84,12 @@ namespace Timelapse.Dialog
             confidenceValue = SliderConfidence.Value;
         }
 
+        // Reset the slider to its default value, the bounding box display threshold (ValueChanged then updates confidenceValue)
+        private void ButtonResetConfidence_Click(object sender, RoutedEventArgs e)
+        {
+            SliderConfidence.Value = GlobalReferences.TimelapseState.BoundingBoxDisplayThreshold;
+        }
+
         private async void Start_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -98,8 +104,12 @@ namespace Timelapse.Dialog
 
         private async Task Start_ClickAsync()
         {
-
-            bool isCompleted = await PopulateAsync().ConfigureAwait(true);
+            bool? isCompleted = await PopulateAsync().ConfigureAwait(true);
+            if (isCompleted == null)
+            {
+                // The user cancelled the overwrite warning, so stay in this dialog to choose differently
+                return;
+            }
             DialogResult = isCompleted;
         }
 
@@ -118,14 +128,40 @@ namespace Timelapse.Dialog
         }
 
 
-        private async Task<bool> PopulateAsync()
+        // Returns true if the field was populated, false if it wasn't,
+        // or null if the user cancelled the warning that existing values would be overwritten
+        private async Task<bool?> PopulateAsync()
         {
             bool result = false;
+            Dictionary<long, string> counts = null;
+            int overwriteCount = 0;
+            string dataLabelToUpdate = dataLabelByLabel[dataFieldLabel];
             BusyCancelIndicator.IsBusy = true;
             await Task.Run(() =>
             {
-                string dataLabelToUpdate = dataLabelByLabel[dataFieldLabel];
-                result = fileDatabase.RecognitionsPopulateFieldWithDetectionCounts(dataLabelToUpdate, confidenceValue, Progress);
+                counts = fileDatabase.RecognitionsComputeDetectionCounts(confidenceValue, Progress);
+                overwriteCount = fileDatabase.RecognitionsCountValuesToOverwrite(dataLabelToUpdate, counts);
+            }, Token).ConfigureAwait(true);
+            if (counts == null)
+            {
+                BusyCancelIndicator.IsBusy = false;
+                return false;
+            }
+
+            // Warn the user if existing, different values in the field would be overwritten
+            if (overwriteCount > 0)
+            {
+                BusyCancelIndicator.IsBusy = false;
+                if (false == Dialogs.PopulateFieldOverwriteWarningDialog(this, dataFieldLabel, overwriteCount, fileDatabase.FileTable.RowCount))
+                {
+                    return null;
+                }
+                BusyCancelIndicator.IsBusy = true;
+            }
+
+            await Task.Run(() =>
+            {
+                result = fileDatabase.RecognitionsWriteFieldData(dataLabelToUpdate, counts, Progress);
             }, Token).ConfigureAwait(true);
             BusyCancelIndicator.IsBusy = false;
             return result;

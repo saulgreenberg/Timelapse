@@ -7,8 +7,8 @@
         xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
         mc:Ignorable="d"
         Title="Populate a data field with detection counts?" 
-        MinHeight="630" MinWidth="700"
-        Height="630" Width="700"
+        MinHeight="630" MinWidth="760"
+        Height="630" Width="760"
         ResizeMode="CanResizeWithGrip"
 		ShowInTaskbar="False"
 		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded" Closing="Window_Closing">
@@ -17,38 +17,42 @@
             <toolkit:FormattedMessageContent x:Name="Message" DockPanel.Dock="Top"
                             Icon="{x:Static toolkit:DialogIconType.Question}"
                             DialogTitle="Populate a data field with detection counts?"
-                            What="For each file in the current selection: 
-                                 [ni] Count the detected entities at or above a given confidence value, 
-                                  [ni] Record that count in a [e]Numeric[/e] or [e]Text[/e] data field of your choice ([i]Count, Integer, Decimal, Note, Multiline[/i]). 
-                                  [br]This is useful to get a rough count of how many entities are detected by the recognizer in each image."                                                              
-                            Solution="[ni] Select a [e]Numeric[/e] or [e]Text[/e] data field to populate.
-                                      [ni] Select a [e]Confidence value[/e]. 
-                                      [ni] Click [e]Populate[/e] to begin populating that data field for your selected files."
-                            Result="[li] Only files in your current selection will be updated.
-                                    [li] The selected data field for each file is updated with the detection count."
-                            Hint="The count can vary considerably depending on the chosen confidence threshold. 
-                                  [li] Very low / very high confidence value tends to over / under estimate the count.
-                                  [li] The estimated count can be inspected and altered if needed.
-                                  [li] For videos, the count is taken from the single frame with the most detections at or above the confidence value."
+                            What="Estimates how many entities are in each file by counting its bounding boxes.
+                            [br]For each file in the current selection, Timelapse:
+                                 [ni] Counts the bounding boxes at or above the selected confidence value,
+                                 [ni] Records that count in the selected [e]Numeric[/e] or [e]Text[/e] data field ([i]Count, Integer, Decimal, Note, Multiline[/i])."
+                            Solution="[ni] Select the data field to populate.
+                                      [ni] Select the minimum [e]Confidence value[/e].
+                                      [ni] Click [e]Populate[/e]."
+                            Result="[li] Each selected file's field is set to its count.
+                                    [li] Files with no bounding boxes at or above that confidence receive a count of 0.
+                                    [li] Any existing data in that field is overwritten."
+                            Hint="[e]Counts are only estimates[/e], so check them and correct any that are wrong.
+                                  [li] A low confidence value may over-count, by including spurious bounding boxes.
+                                  [li] A high confidence value may under-count, by ignoring valid bounding boxes.
+                                  [li] Every detection category is counted (e.g., animal, person, vehicle).
+                                  [li] For videos, the count is from the frame with the most bounding boxes at or above the confidence value."
                             ShowExplanationVisibility="False" />
             <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch" Margin="10">
                 <Rectangle Fill="#FF868686" Height="2" Margin="0,0,0,10"/>
-                <StackPanel Name="PrimaryPanel" Orientation="Vertical" Margin="70,0,0,10">
+                <StackPanel Name="PrimaryPanel" Orientation="Vertical" Margin="20,0,0,10">
                     <StackPanel  Orientation="Horizontal">
                         <TextBlock Text="Select a data field to contain the count data:" VerticalAlignment="Top" FontWeight="Bold" Margin="0, 5,15,5"/>
-                        <ComboBox Name="ComboBoxSelectNoteField" Width="250" Height="30" VerticalAlignment="Top" SelectionChanged="ComboBoxSelectNoteField_SelectionChanged" />
+                        <toolkit:WatermarkComboBox Name="ComboBoxSelectNoteField" Watermark="Nothing selected" HideOnFocus="False" Width="250" Height="30" VerticalAlignment="Top" SelectionChanged="ComboBoxSelectNoteField_SelectionChanged" />
                     </StackPanel>
 
                     <StackPanel  Orientation="Horizontal" Margin="63,10,0,0">
                         <TextBlock Text="Select a Confidence value (0 - 1):" VerticalAlignment="Top" FontWeight="Bold" Margin="0,0,15,0" />
                         <Slider Name="SliderConfidence" Width="250" Height="30" VerticalAlignment="Bottom" TickFrequency=".01" IsSnapToTickEnabled="True" ValueChanged="SliderConfidence_ValueChanged" Maximum="1" />
                         <TextBlock Name="TextBlockSliderValue" Text="0" Width="25" Margin="5,0,0,0" TextAlignment="Right"/>
+                        <Button Name="ButtonResetConfidence" Content="Reset" VerticalAlignment="Top" Padding="10,2" Margin="15,0,0,0" Click="ButtonResetConfidence_Click"
+                                ToolTip="Reset the confidence value to the bounding box display threshold,&#x000A;as set in Recognitions | Set bounding box options&#x2026;" />
                     </StackPanel>
                     
                 </StackPanel>
                 <StackPanel Name="FeedbackPanel" Orientation="Vertical" Visibility="Collapsed">
                     <TextBlock Name="TextBlockFeedbackLine1" Text="No Numeric or Text data fields are available" VerticalAlignment="Center" Margin="0,5,15,5" FontWeight="Bold" />
-                    <TextBlock Name="TextBlockFeedbackLine2" Text="You need to add at least one Numeric, Note or Multiline field in your template." VerticalAlignment="Center" Margin="0,5,0,5" FontWeight="Bold" />
+                    <TextBlock Name="TextBlockFeedbackLine2" Text="Add at least one Count, Integer, Decimal, Note or Multiline field to your template." VerticalAlignment="Center" Margin="0,5,0,5" FontWeight="Bold" />
                 </StackPanel>
             </StackPanel>
 

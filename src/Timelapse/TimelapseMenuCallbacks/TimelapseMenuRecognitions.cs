@@ -32,7 +32,12 @@ namespace Timelapse
                 detectionsExist = DataHandler.FileDatabase.DetectionsExists();
             }
             // Enable / disable various menu items depending on whether we are looking at the single image view or overview
+            MenuItemPopulateWithRecognitions.IsEnabled = detectionsExist;
             MenuItemPopulateWithDetectionCounts.IsEnabled = detectionsExist;
+            MenuItemPopulateWithDetectionCategory.IsEnabled = detectionsExist;
+            // Only available when the recognition data has classification categories
+            MenuItemPopulateWithClassificationCategory.IsEnabled = detectionsExist && DataHandler.FileDatabase.ClassificationCategoriesExist();
+            MenuItemPopulateWithBoundingBoxCoordinates.IsEnabled = detectionsExist;
             MenuItemPopulateWithRecognitinoData.IsEnabled = detectionsExist;
             MenuBoundingBoxSetOptions.IsEnabled = detectionsExist;
         }
@@ -50,6 +55,66 @@ namespace Timelapse
                 {
 
                     PopulateFieldWithDetectionCounts dialog = new(this, DataHandler.FileDatabase);
+                    if (true == dialog.ShowDialog())
+                    {
+                        FileShow(DataHandler.ImageCache.CurrentRow, true);
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region Populate a data field with the detection category
+        private void MenuItemPopulateDataFieldWithDetectionCategory_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataHandler?.FileDatabase?.Database != null && DataHandler.FileDatabase.DetectionsExists())
+            {
+                // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
+                if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, DataHandler.FileDatabase, State.SuppressSelectedPopulateFieldFromMetadataPrompt,
+                        "Populate a data field with the Detection category...",
+                        optOut => { State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut; }))
+                {
+                    PopulateFieldWithDetectionCategory dialog = new(this, DataHandler.FileDatabase);
+                    if (true == dialog.ShowDialog())
+                    {
+                        FileShow(DataHandler.ImageCache.CurrentRow, true);
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region Populate a data field with the classification category
+        private void MenuItemPopulateDataFieldWithClassificationCategory_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataHandler?.FileDatabase?.Database != null && DataHandler.FileDatabase.ClassificationCategoriesExist())
+            {
+                // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
+                if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, DataHandler.FileDatabase, State.SuppressSelectedPopulateFieldFromMetadataPrompt,
+                        "Populate a data field with the Classification category...",
+                        optOut => { State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut; }))
+                {
+                    PopulateFieldWithClassificationCategory dialog = new(this, DataHandler.FileDatabase);
+                    if (true == dialog.ShowDialog())
+                    {
+                        FileShow(DataHandler.ImageCache.CurrentRow, true);
+                    }
+                }
+            }
+        }
+        #endregion
+
+        #region Populate a data field with the bounding box coordinates
+        private void MenuItemPopulateDataFieldWithBoundingBoxCoordinates_Click(object sender, RoutedEventArgs e)
+        {
+            if (DataHandler?.FileDatabase?.Database != null && DataHandler.FileDatabase.DetectionsExists())
+            {
+                // Warn the user that they are currently in a selection displaying only a subset of files, and make sure they want to continue.
+                if (Dialogs.MaybePromptToApplyOperationOnSelectionDialog(this, DataHandler.FileDatabase, State.SuppressSelectedPopulateFieldFromMetadataPrompt,
+                        "Populate a data field with the Bounding box coordinates...",
+                        optOut => { State.SuppressSelectedPopulateFieldFromMetadataPrompt = optOut; }))
+                {
+                    PopulateFieldWithBoundingBoxCoordinates dialog = new(this, DataHandler.FileDatabase);
                     if (true == dialog.ShowDialog())
                     {
                         FileShow(DataHandler.ImageCache.CurrentRow, true);

@@ -81,7 +81,11 @@ namespace Timelapse
             MenuItemAddaxAICheckForUpdates.IsEnabled = true;
             MenuBoundingBoxSetOptions.IsEnabled = filesSelected; // Hidden when no image set
             MenuItemImportDetectionData.IsEnabled = filesSelected;
+            MenuItemPopulateWithRecognitions.IsEnabled = filesSelected;
             MenuItemPopulateWithDetectionCounts.IsEnabled = filesSelected;
+            MenuItemPopulateWithDetectionCategory.IsEnabled = filesSelected;
+            MenuItemPopulateWithClassificationCategory.IsEnabled = filesSelected;
+            MenuItemPopulateWithBoundingBoxCoordinates.IsEnabled = filesSelected;
 
             // CamtrapDP menu
             MenuItemCamtrapDP.IsEnabled = filesSelected;
@@ -146,7 +150,11 @@ namespace Timelapse
                 MenuItemFindMissingImage.Visibility = Visibility.Collapsed;
                 MenuItemFindMissingFolder.Visibility = Visibility.Collapsed;
 
+                MenuItemPopulateWithRecognitions.Visibility = Visibility.Collapsed;
                 MenuItemPopulateWithDetectionCounts.Visibility = Visibility.Collapsed;
+                MenuItemPopulateWithDetectionCategory.Visibility = Visibility.Collapsed;
+                MenuItemPopulateWithClassificationCategory.Visibility = Visibility.Collapsed;
+                MenuItemPopulateWithBoundingBoxCoordinates.Visibility = Visibility.Collapsed;
                 MenuItemPopulateWithRecognitinoData.Visibility = Visibility.Collapsed;
 
                 MenuS1.Visibility = Visibility.Collapsed;

@@ -606,11 +606,23 @@
                     <MenuItem Name="MenuBoundingBoxSetOptions" Header="Set bounding box options&#x2026;" Visibility="Visible"
                               Click="MenuBoundingBoxSetOptions_Click" ToolTip="Set various options for displaying image recognition bounding boxes" />
 
-                    <MenuItem Name="MenuItemPopulateWithDetectionCounts" Header="Populate a data field with detection counts&#x2026;" Visibility="Visible"
-                              Click="MenuItemPopulateDataFieldWithDetectionCounts_Click" ToolTip="Populates a data field in your currently selected files with detection counts over a given confidence values" />
+                    <MenuItem Name="MenuItemPopulateWithRecognitions" Header="Populate a data field with" Visibility="Visible"
+                              ToolTip="Populates a data field in your currently selected files with recognition information">
+                        <MenuItem Name="MenuItemPopulateWithDetectionCounts" Header="the file's detection count&#x2026;" Visibility="Visible"
+                                  Click="MenuItemPopulateDataFieldWithDetectionCounts_Click" ToolTip="Populates a data field in your currently selected files with detection counts over a given confidence values" />
 
-                    <MenuItem Name="MenuItemPopulateWithRecognitinoData" Header="Populate a data field with recognition data&#x2026;" Visibility="Visible"
-                              Click="MenuItemPopulateDataFieldWithRecognitionData_Click" ToolTip="Populates a data field in your currently selected files with recognition data of your choice" />
+                        <MenuItem Name="MenuItemPopulateWithDetectionCategory" Header="the file's detection category&#x2026;" Visibility="Visible"
+                                  Click="MenuItemPopulateDataFieldWithDetectionCategory_Click" ToolTip="Populates a data field in your currently selected files with the detection category of each file's highest-confidence bounding box" />
+
+                        <MenuItem Name="MenuItemPopulateWithClassificationCategory" Header="the file's classification category&#x2026;" Visibility="Visible"
+                                  Click="MenuItemPopulateDataFieldWithClassificationCategory_Click" ToolTip="Populates a data field in your currently selected files with the classification category of each file's highest-confidence bounding box.&#x000A;Only available when the recognition data has classification categories." />
+
+                        <MenuItem Name="MenuItemPopulateWithBoundingBoxCoordinates" Header="the file's bounding box coordinates&#x2026;" Visibility="Visible"
+                                  Click="MenuItemPopulateDataFieldWithBoundingBoxCoordinates_Click" ToolTip="Populates a data field in your currently selected files with the coordinates of each file's highest-confidence bounding box" />
+
+                        <MenuItem Name="MenuItemPopulateWithRecognitinoData" Header="any or all of the file's recognition data&#x2026;" Visibility="Visible"
+                                  Click="MenuItemPopulateDataFieldWithRecognitionData_Click" ToolTip="Populates a data field in your currently selected files with any or all of each file's recognition data, in the format of your choice" />
+                    </MenuItem>
 
                     <Separator />
 

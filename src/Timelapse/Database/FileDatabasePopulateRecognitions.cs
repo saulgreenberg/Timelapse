@@ -18,7 +18,8 @@ namespace Timelapse.Database
         // This file contains methods that populate note/multiline fields or counter fields with recognition data and/or detection counts
         // It implements the methods called by:
         //  - PopulateFieldWithRecognitionData dialog
-        //  - PopulateFieldWithDetectionCount dialog
+        //  - PopulateFieldWithDetectionCounts dialog
+        //  - PopulateFieldWithDetectionCategory, PopulateFieldWithClassificationCategory and PopulateFieldWithBoundingBoxCoordinates dialogs
 
         #region BboxPrintable: A class that allows us to pretty print bounding box data as json
         #pragma warning disable IDE1006
@@ -59,12 +60,12 @@ namespace Timelapse.Database
         // Given a data label corresponding to a note or multiline field (or a decimal or fixed choice field, for raw data),
         // compute the selected recognition data from the best bounding box for each image
         // using the desired formatting options:
-        // -  useClassificationOnly as just the classification category alone
         // - as Json as json formatted text or
         // - as human-readable text or
         // - as the raw value of a single recognition item. If the field is a decimal field, only valid decimals (or blanks) are included
+        // Files without a bounding box get an empty value, which clears their field
         // Returns null if there are no detections or the operation was cancelled
-        public Dictionary<long, string> RecognitionsComputeFieldData(string dataLabel, RecognitionFormatEnum recognitionFormat, bool useClassificationOnly, bool useBboxCoords, bool useDetectionConf, bool useDetectionCategory, bool useClassConf, bool useClassCat,
+        public Dictionary<long, string> RecognitionsComputeFieldData(string dataLabel, RecognitionFormatEnum recognitionFormat, bool useBboxCoords, bool useDetectionConf, bool useDetectionCategory, bool useClassConf, bool useClassCat,
             IProgress<ProgressBarArguments> progress)
         {
             if (Database == null || false == DetectionsExists())
@@ -78,7 +79,6 @@ namespace Timelapse.Database
                 return null;
             }
 
-            BboxPrintable bboxPrintable = null;
             Dictionary<long, string> dict = [];
             foreach (ImageRow image in FileTable)
             {
@@ -87,151 +87,155 @@ namespace Timelapse.Database
                 
                 if (bestBoundingBox == null)
                 {
+                    // No bounding box: the field is cleared, so any existing data in it is overwritten
+                    dict.Add(image.ID, string.Empty);
                     continue;
                 }
 
-                // At this point, we have the best bounding box for this image
-                // See what print options we have, and create the recognition data string accordingly
-                string recognitionData = string.Empty;
+                string recognitionData = RecognitionsFormatBoundingBox(bestBoundingBox, recognitionFormat, useBboxCoords, useDetectionConf, useDetectionCategory, useClassConf, useClassCat);
 
-                // Case 1: useClassificationOnly means we just print the classification by itself
-                if (useClassificationOnly)
+                // Decimal fields can only hold a valid decimal or a blank, so skip any raw value that isn't one
+                if (recognitionFormat == RecognitionFormatEnum.Raw &&
+                    false == string.IsNullOrEmpty(recognitionData) &&
+                    ((controlType == Control.DecimalAny && false == IsCondition.IsDecimal(recognitionData)) ||
+                     (controlType == Control.DecimalPositive && false == IsCondition.IsDecimalPositive(recognitionData))))
                 {
-                    if (bestBoundingBox.Classifications.Count >= 1)
-                    {
-                        recognitionData += bestBoundingBox.Classifications[0].Key;
-                    }
-                    else
-                    {
-                        recognitionData += GetDetectionLabelFromCategory(bestBoundingBox.DetectionCategory);
-                    }
-                }
-
-                // Case 2: As the raw data of the single selected recognition item
-                else if (recognitionFormat == RecognitionFormatEnum.Raw)
-                {
-                    bool classificationsExist = bestBoundingBox.Classifications.Count >= 1;
-                    if (useBboxCoords)
-                    {
-                        recognitionData = FormattableString.Invariant($"{bestBoundingBox.Rectangle.Left:F3}, {bestBoundingBox.Rectangle.Top:F3}, ") +
-                                          FormattableString.Invariant($"{bestBoundingBox.Rectangle.Width:F3}, {bestBoundingBox.Rectangle.Height:F3}");
-                    }
-                    else if (useDetectionCategory)
-                    {
-                        recognitionData = GetDetectionLabelFromCategory(bestBoundingBox.DetectionCategory);
-                    }
-                    else if (useDetectionConf)
-                    {
-                        recognitionData = bestBoundingBox.Confidence.ToString(CultureInfo.InvariantCulture);
-                    }
-                    else if (useClassCat && classificationsExist)
-                    {
-                        recognitionData = bestBoundingBox.Classifications[0].Key;
-                    }
-                    else if (useClassConf && classificationsExist)
-                    {
-                        recognitionData = bestBoundingBox.Classifications[0].Value;
-                    }
-
-                    // Decimal fields can only hold a valid decimal or a blank, so skip any value that isn't one
-                    if (false == string.IsNullOrEmpty(recognitionData) &&
-                        ((controlType == Control.DecimalAny && false == IsCondition.IsDecimal(recognitionData)) ||
-                         (controlType == Control.DecimalPositive && false == IsCondition.IsDecimalPositive(recognitionData))))
-                    {
-                        continue;
-                    }
-                }
-
-                // Case 3: As human-readable/formatted text
-                else if (recognitionFormat == RecognitionFormatEnum.PlainText)
-                {
-                    if (useBboxCoords)
-                    {
-                        recognitionData += $"Coordinates: " +
-                                           $"({bestBoundingBox.Rectangle.Left:F3}, {bestBoundingBox.Rectangle.Top:F3}, " +
-                                           $"{bestBoundingBox.Rectangle.Width:F3}, {bestBoundingBox.Rectangle.Height:F3}){Environment.NewLine}";
-                    }
-                    if (useDetectionCategory)
-                    {
-                        recognitionData += $"Detection category: {GetDetectionLabelFromCategory(bestBoundingBox.DetectionCategory)}{Environment.NewLine}";
-                    }
-                    if (useDetectionConf)
-                    {
-                        recognitionData += $"Detection confidence: {bestBoundingBox.Confidence}{Environment.NewLine}";
-                    }
-
-
-                    bool classificationsExist = bestBoundingBox.Classifications.Count >= 1;
-                    if (useClassCat && classificationsExist)
-                    {
-                        recognitionData += $"Classification category: {bestBoundingBox.Classifications[0].Key}{Environment.NewLine}";
-                    }
-                    if (useClassConf && classificationsExist)
-                    {
-                        recognitionData += $"Classification confidence: {bestBoundingBox.Classifications[0].Value}{Environment.NewLine}";
-                    }
-                    recognitionData = recognitionData.TrimEnd(); // Remove any trailing newline
-                }
-
-                // Case 4 As json formatted or unformatted text: (asJson is always true here)
-                else
-                {
-                    bboxPrintable ??= new BboxPrintable();
-                    if (useBboxCoords)
-                    {
-                        bboxPrintable.coordinates = new BboxPrintable._coordinates
-                        {
-                            X = Math.Round(bestBoundingBox.Rectangle.Left, 3),
-                            Y = Math.Round(bestBoundingBox.Rectangle.Top, 3),
-                            Width = Math.Round(bestBoundingBox.Rectangle.Width, 3),
-                            Height = Math.Round(bestBoundingBox.Rectangle.Height, 3)
-                        };
-                    }
-                    else
-                    {
-                        bboxPrintable.coordinates = null;
-                    }
-
-                    if (useDetectionConf || useDetectionCategory)
-                    {
-                        bboxPrintable.detection = new BboxPrintable._detection
-                        {
-                            confidence = useDetectionConf ? Math.Round(bestBoundingBox.Confidence, 3) : null,
-                            category = useDetectionCategory ? GetDetectionLabelFromCategory(bestBoundingBox.DetectionCategory) : null
-                        };
-                    }
-                    else
-                    {
-                        bboxPrintable.detection = null;
-                    }
-
-                    if ((useClassConf || useClassCat) && bestBoundingBox.Classifications.Count >= 1)
-                    {
-                        // Classification confidence is a string,
-                        // so try to parse it as a double so we can round it and print it as a json number
-                        double? confAsDouble = null;
-                        if (double.TryParse(bestBoundingBox.Classifications[0].Value, out double tmpConfAsDouble))
-                        {
-                            confAsDouble = Math.Round(tmpConfAsDouble, 3);
-                        }
-                        bboxPrintable.classification = new BboxPrintable._classification
-                        {
-                            confidence = useClassConf ? confAsDouble : null,
-                            category = useClassCat ? bestBoundingBox.Classifications[0].Key : null
-                        };
-                    }
-                    else
-                    {
-                        bboxPrintable.classification = null;
-                    }
-
-                    recognitionData = BoundingBoxPrettyPrint(bboxPrintable, recognitionFormat == RecognitionFormatEnum.FormattedJson);
+                    continue;
                 }
 
                 // Add it to the list of data to be written to the database
                 dict.Add(image.ID, recognitionData);
             }
             return dict;
+        }
+
+        // Format the recognition data of a single bounding box using the desired formatting options (see RecognitionsComputeFieldData).
+        // Also used by the PopulateFieldWithRecognitionData dialog to show an example of the output
+        public string RecognitionsFormatBoundingBox(BoundingBox boundingBox, RecognitionFormatEnum recognitionFormat, bool useBboxCoords, bool useDetectionConf, bool useDetectionCategory, bool useClassConf, bool useClassCat)
+        {
+            string recognitionData = string.Empty;
+
+            // Case 1: As the raw data of the single selected recognition item
+            if (recognitionFormat == RecognitionFormatEnum.Raw)
+            {
+                bool classificationsExist = boundingBox.Classifications.Count >= 1;
+                if (useBboxCoords)
+                {
+                    recognitionData = FormattableString.Invariant($"{boundingBox.Rectangle.Left:F3}, {boundingBox.Rectangle.Top:F3}, ") +
+                                      FormattableString.Invariant($"{boundingBox.Rectangle.Width:F3}, {boundingBox.Rectangle.Height:F3}");
+                }
+                else if (useDetectionCategory)
+                {
+                    recognitionData = GetDetectionLabelFromCategory(boundingBox.DetectionCategory);
+                }
+                else if (useDetectionConf)
+                {
+                    recognitionData = boundingBox.Confidence.ToString(CultureInfo.InvariantCulture);
+                }
+                else if (useClassCat && classificationsExist)
+                {
+                    recognitionData = boundingBox.Classifications[0].Key;
+                }
+                else if (useClassConf && classificationsExist)
+                {
+                    recognitionData = boundingBox.Classifications[0].Value;
+                }
+            }
+
+            // Case 2: As human-readable/formatted text
+            else if (recognitionFormat == RecognitionFormatEnum.PlainText)
+            {
+                if (useBboxCoords)
+                {
+                    recognitionData += $"Coordinates: " +
+                                       $"({boundingBox.Rectangle.Left:F3}, {boundingBox.Rectangle.Top:F3}, " +
+                                       $"{boundingBox.Rectangle.Width:F3}, {boundingBox.Rectangle.Height:F3}){Environment.NewLine}";
+                }
+                if (useDetectionCategory)
+                {
+                    recognitionData += $"Detection category: {GetDetectionLabelFromCategory(boundingBox.DetectionCategory)}{Environment.NewLine}";
+                }
+                if (useDetectionConf)
+                {
+                    recognitionData += $"Detection confidence: {boundingBox.Confidence}{Environment.NewLine}";
+                }
+
+
+                bool classificationsExist = boundingBox.Classifications.Count >= 1;
+                if (useClassCat && classificationsExist)
+                {
+                    recognitionData += $"Classification category: {boundingBox.Classifications[0].Key}{Environment.NewLine}";
+                }
+                if (useClassConf && classificationsExist)
+                {
+                    recognitionData += $"Classification confidence: {boundingBox.Classifications[0].Value}{Environment.NewLine}";
+                }
+                recognitionData = recognitionData.TrimEnd(); // Remove any trailing newline
+            }
+
+            // Case 3: As json formatted or unformatted text
+            else
+            {
+                BboxPrintable bboxPrintable = new();
+                if (useBboxCoords)
+                {
+                    bboxPrintable.coordinates = new BboxPrintable._coordinates
+                    {
+                        X = Math.Round(boundingBox.Rectangle.Left, 3),
+                        Y = Math.Round(boundingBox.Rectangle.Top, 3),
+                        Width = Math.Round(boundingBox.Rectangle.Width, 3),
+                        Height = Math.Round(boundingBox.Rectangle.Height, 3)
+                    };
+                }
+                else
+                {
+                    bboxPrintable.coordinates = null;
+                }
+
+                if (useDetectionConf || useDetectionCategory)
+                {
+                    bboxPrintable.detection = new BboxPrintable._detection
+                    {
+                        confidence = useDetectionConf ? Math.Round(boundingBox.Confidence, 3) : null,
+                        category = useDetectionCategory ? GetDetectionLabelFromCategory(boundingBox.DetectionCategory) : null
+                    };
+                }
+                else
+                {
+                    bboxPrintable.detection = null;
+                }
+
+                if ((useClassConf || useClassCat) && boundingBox.Classifications.Count >= 1)
+                {
+                    // Classification confidence is a string,
+                    // so try to parse it as a double so we can round it and print it as a json number
+                    double? confAsDouble = null;
+                    if (double.TryParse(boundingBox.Classifications[0].Value, out double tmpConfAsDouble))
+                    {
+                        confAsDouble = Math.Round(tmpConfAsDouble, 3);
+                    }
+                    bboxPrintable.classification = new BboxPrintable._classification
+                    {
+                        confidence = useClassConf ? confAsDouble : null,
+                        category = useClassCat ? boundingBox.Classifications[0].Key : null
+                    };
+                }
+                else
+                {
+                    bboxPrintable.classification = null;
+                }
+
+                recognitionData = BoundingBoxPrettyPrint(bboxPrintable, recognitionFormat == RecognitionFormatEnum.FormattedJson);
+
+                // An empty json object means none of the selected data exists for this box (e.g., only Classification items are selected,
+                // but the box has no classification). Use an empty value instead, so the field is cleared as in the other formats,
+                // and as for files without a bounding box
+                if (recognitionData == "{}")
+                {
+                    recognitionData = string.Empty;
+                }
+            }
+            return recognitionData;
         }
 
         // Write the values computed by RecognitionsComputeFieldData into the field identified by dataLabel,
@@ -287,17 +291,19 @@ namespace Timelapse.Database
         }
         #endregion
 
-        #region Recognitions: DetectionsAddCountToCounter
-        // Given a Counter DataLabel, count the number of detections associated with each image, and set that image's counter to that count
-        public bool RecognitionsPopulateFieldWithDetectionCounts(string counterDataLabel, double? confidenceValue, IProgress<ProgressBarArguments> progress)
+        #region Recognitions: RecognitionsComputeDetectionCounts
+        // Count the number of detections associated with each image, returning that count (as a string) keyed by file ID,
+        // so the caller can check the counts before writing them with RecognitionsWriteFieldData.
+        // Returns null if there are no detections
+        public Dictionary<long, string> RecognitionsComputeDetectionCounts(double? confidenceValue, IProgress<ProgressBarArguments> progress)
         {
             if (Database == null || false == DetectionsExists())
             {
-                return false;
+                return null;
             }
-            progress.Report(new(0, "Populating fields...", false, true));
+            progress.Report(new(0, "Counting detections...", false, true));
 
-            Dictionary<long, int> dict = [];
+            Dictionary<long, string> dict = [];
             foreach (ImageRow image in FileTable)
             {
                 // Count the bounding boxes at or above the confidence value in each frame, and use the largest of those counts.
@@ -310,32 +316,35 @@ namespace Timelapse.Database
                     .Select(frame => frame.Count())
                     .DefaultIfEmpty(0)
                     .Max();
-                dict.Add(image.ID, count);
-                image.SetValueFromDatabaseString(counterDataLabel, count.ToString());
+                dict.Add(image.ID, count.ToString());
             }
+            return dict;
+        }
+        #endregion
 
-            List<ColumnTuplesWithWhere> columnTuplesWithWhereList = [];
-            foreach (KeyValuePair<long, int> kvp in dict)
+        #region RecognitionsCountValuesToOverwrite
+        // Count the selected files whose field already holds a non-empty value that differs from its new value,
+        // i.e., the existing data that writing these new values would overwrite.
+        // This only reads the in-memory file table, so it is fast even for very large selections
+        public int RecognitionsCountValuesToOverwrite(string dataLabel, Dictionary<long, string> newValues)
+        {
+            if (newValues == null)
             {
-                // Update the imageRow in the file table with the new value
-                //this.UpdateFile(kvp.Key, counterDataLabel, kvp.Value.ToString());
-
-                // Add a query to update the row in the database
-                ColumnTuplesWithWhere columnTuplesWithWhere = new();
-                columnTuplesWithWhere.Columns.Add(new(counterDataLabel, kvp.Value.ToString()));
-                columnTuplesWithWhere.SetWhere(kvp.Key);
-                columnTuplesWithWhereList.Add(columnTuplesWithWhere);
+                return 0;
             }
-
-            progress.Report(new(0, "Updating database...", false, true));
-            if (columnTuplesWithWhereList.Count > 0)
+            int count = 0;
+            foreach (ImageRow image in FileTable)
             {
-                // Update the Database
-                UpdateFiles(columnTuplesWithWhereList);
-                // Force an update of the current image in case the current values have changed
-
+                if (newValues.TryGetValue(image.ID, out string newValue))
+                {
+                    string existingValue = image.GetValueDatabaseString(dataLabel);
+                    if (false == string.IsNullOrEmpty(existingValue) && existingValue != newValue)
+                    {
+                        count++;
+                    }
+                }
             }
-            return true;
+            return count;
         }
         #endregion
 

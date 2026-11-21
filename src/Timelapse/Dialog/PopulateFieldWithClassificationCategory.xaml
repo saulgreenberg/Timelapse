@@ -1,0 +1,60 @@
+<controls:BusyableDialogWindow x:Class="Timelapse.Dialog.PopulateFieldWithClassificationCategory"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Timelapse.Controls"
+        xmlns:toolkit="clr-namespace:TimelapseWpf.Toolkit;assembly=TimelapseWpf.Toolkit"
+        mc:Ignorable="d"
+        Title="Populate a data field with the classification category?"
+        MinHeight="630" MinWidth="760"
+        Height="630" Width="760"
+        ResizeMode="CanResizeWithGrip"
+		ShowInTaskbar="False"
+		WindowStartupLocation="CenterOwner" BorderBrush="Black" Loaded="Window_Loaded">
+    <Grid>
+        <DockPanel Grid.Row="0">
+            <!-- CLASSIFICATION_CATEGORY_EXAMPLES in What is replaced in code with up to four of this image set's classification categories, e.g., (e.g., deer, elk, coyote) -->
+            <toolkit:FormattedMessageContent x:Name="Message" DockPanel.Dock="Top"
+                            Icon="{x:Static toolkit:DialogIconType.Question}"
+                            DialogTitle="Populate a data field with the classification category?"
+                            What="Records the classification category CLASSIFICATION_CATEGORY_EXAMPLES of each file's highest-confidence bounding box.
+                            [br]For each file in the current selection, Timelapse:
+                                 [ni] Finds its bounding box with the highest confidence value,
+                                 [ni] Records that box's classification category in the selected [e]Text[/e] or [e]Choice[/e] data field ([i]Note, Multiline, Choice[/i])."
+                            Solution="[ni] Select the data field to populate.
+                                      [ni] Click [e]Populate[/e]."
+                            Result="[li] Each selected file's field is set to its classification category.
+                                    [li] Files with no bounding boxes, or whose box has no classification, have that field cleared.
+                                    [li] Any existing data in that field is overwritten."
+                            Hint="[e]Only one category is recorded per file[/e], so check the results and correct any that are wrong.
+                                  [li] The highest-confidence bounding box is used, even if its confidence is low.
+                                  [li] A file with several entities gets the category of only one of them.
+                                  [li] For a [e]Choice[/e] field, Timelapse:
+                                  [li 2] warns you if some categories aren't among its menu items,
+                                  [li 2] offers to add them."
+                            ShowExplanationVisibility="False" />
+            <StackPanel Orientation="Vertical" DockPanel.Dock="Top" VerticalAlignment="Stretch" Margin="10">
+                <Rectangle Fill="#FF868686" Height="2" Margin="0,0,0,10"/>
+                <StackPanel Name="PrimaryPanel" Orientation="Vertical" Margin="20,0,0,10">
+                    <StackPanel  Orientation="Horizontal">
+                        <TextBlock Text="Select a data field to contain the classification category:" VerticalAlignment="Top" FontWeight="Bold" Margin="0, 5,15,5"/>
+                        <toolkit:WatermarkComboBox Name="ComboBoxSelectNoteField" Watermark="Nothing selected" HideOnFocus="False" Width="250" Height="30" VerticalAlignment="Top" SelectionChanged="ComboBoxSelectNoteField_SelectionChanged" />
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Name="FeedbackPanel" Orientation="Vertical" Visibility="Collapsed">
+                    <TextBlock Name="TextBlockFeedbackLine1" Text="No Text or Choice data fields are available" VerticalAlignment="Center" Margin="0,5,15,5" FontWeight="Bold" />
+                    <TextBlock Name="TextBlockFeedbackLine2" Text="Add at least one Note, Multiline or Choice field to your template." VerticalAlignment="Center" Margin="0,5,0,5" FontWeight="Bold" />
+                </StackPanel>
+            </StackPanel>
+
+            <DockPanel LastChildFill="True" >
+                <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button x:Name="CancelButton" IsCancel="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10" Click="CancelButton_Click">_Cancel</Button>
+                    <Button x:Name="StartDoneButton" IsDefault="True" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Padding="10" Margin="10,10,10,10"  IsEnabled="False" Click="Start_Click">_Populate</Button>
+                </StackPanel>
+            </DockPanel>
+        </DockPanel>
+        <controls:BusyCancelIndicator x:Name="BusyCancelIndicator" IsBusy="False" Grid.Row="0" CancelClick="CancelAsyncOperationButton_Click"/>
+    </Grid>
+    </controls:BusyableDialogWindow>

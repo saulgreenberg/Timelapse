@@ -2256,17 +2256,16 @@ namespace Timelapse.Dialog
 
         /// <summary>
         /// Some of the recognition categories that would populate a Choice field don't match its menu items.
+        /// categoryKind is "detection" or "classification".
         /// Returns true if the user clicks Ok to populate the field anyway, or the Update button to update the template first
         /// (then updateTemplate is true). Returns false if the user cancels.
         /// </summary>
-        public static bool PopulateChoiceFieldWithMismatchedCategoriesDialog(Window owner, string choiceFieldLabel, bool isDetectionCategory, List<string> mismatchedCategories, out bool updateTemplate)
+        public static bool PopulateChoiceFieldWithMismatchedCategoriesDialog(Window owner, string choiceFieldLabel, string categoryKind, List<string> mismatchedCategories, out bool updateTemplate)
         {
             ThrowIf.IsNullArgument(owner, nameof(owner));
             ThrowIf.IsNullArgument(mismatchedCategories, nameof(mismatchedCategories));
             updateTemplate = false;
-            string category = isDetectionCategory ? "detection category" : "classification category";
-            string categories = isDetectionCategory ? "detection categories" : "classification categories";
-            string updateButtonText = $"Update {choiceFieldLabel} to include these categories";
+            string categories = $"{categoryKind} categories";
             List<string> sortedMismatches = [.. mismatchedCategories];
             sortedMismatches.Sort(StringComparer.OrdinalIgnoreCase);
             StringBuilder mismatchList = new();
@@ -2275,29 +2274,41 @@ namespace Timelapse.Dialog
                 mismatchList.Append($"[li] {mismatch}");
             }
 
+            // A short list of mismatched categories is shown in What; a longer one goes in the collapsible, scrollable Details section
+            const int maxCategoriesInWhat = 6;
+            bool isShortList = sortedMismatches.Count <= maxCategoriesInWhat;
+            string notSelectable = $"They will still be shown in the field, but you won't be able to select them from its menu.";
+            string what = isShortList
+                ? $"These {categories}, found in your selected files, aren't items in the [e]{choiceFieldLabel}[/e] menu. {notSelectable}[br 2]{mismatchList}"
+                : $"{sortedMismatches.Count} {categories} found in your selected files aren't items in the [e]{choiceFieldLabel}[/e] menu (see [e]Details[/e] below).[br]{notSelectable}";
+
             var dialog = new FormattedDialog()
             {
                 Owner = owner,
-                DialogTitle = $"Some {categories} don't match the {choiceFieldLabel} menu",
+                DialogTitle = $"Some {categories} aren't in the {choiceFieldLabel} menu",
+                // Slightly wider than the default (MaxWidth 640) so the Update line in Solution doesn't wrap
+                MaxWidth = 700,
+                Width = 700,
                 Icon = DialogIconType.Warning,
-                What = $"Some of the {categories} don't match the [e]{choiceFieldLabel}[/e] menu items, which means you won't be able to select those from the menu.",
-                Result = $"If you select [b]Ok[/b], the field will be populated by the {categories} data as expected. "
-                         + $"While that {category} data will be displayed, you won't be able to manually select it from the menu.",
-                Solution = $"[ni] You can use the template editor to add choices to the [e]{choiceFieldLabel}[/e]."
-                           + $"[ni] Also, the [i]Species Editor[/i], found in the Template's [i]File[/i] menu, can be used to extract {category} data from the recognition file, "
-                           + $"which you can then add to the [e]{choiceFieldLabel}[/e] by the option available in its [i]List[/i] field."
-                           + $"[ni] Alternately, Timelapse can update the template to include the missing {categories} in the [e]{choiceFieldLabel}[/e] menu. "
-                           + "Make sure that this is ok, as it can lead to template differences if you use copies of this template elsewhere.[br 2]"
-                           + "Select:[br 2]"
-                           + $"[li] [b]{updateButtonText}[/b] to add them to the menu, then populate the field"
-                           + $"[li] [b]Ok[/b] to populate the [e]{choiceFieldLabel}[/e] anyway"
-                           + "[li] [b]Cancel[/b] to abort",
-                Hint = $"The {categories} that don't match the menu items are:[br 2]"
-                       + mismatchList,
+                What = what,
+                Result = $"Updating adds the categories to this template's [e]{choiceFieldLabel}[/e] menu. Copies of this template used elsewhere won't have them.",
+                Solution = $"[li] [b]Update [i]{choiceFieldLabel}[/i]'s menu items to include these categories[/b] adds them, then populates the field,"
+                           + "[li] [b]Ok[/b] populates the field without changing the menu,"
+                           + "[li] [b]Cancel[/b] returns without populating the field.",
+                Hint = "[li] You can modify menu items yourself in the Template Editor:"
+                       + $"[li 2] edit the [e]{choiceFieldLabel}[/e] [i]List[/i], or"
+                       + $"[li 2] use the [i]Species Editor[/i] (Template's [i]File[/i] menu) to extract the {categories} from the recognition file.",
+                Details = isShortList ? string.Empty : mismatchList.ToString(),
+                DetailsHeading = $"Click to show the {sortedMismatches.Count} {categories} that aren't in the menu",
             };
 
             // The Update button goes at the left of the button row, apart from Ok and Cancel
             Button updateButton = dialog.ExtraButton;
+            // The button shows the field name in bold italics, matching how it appears in the dialog text
+            TextBlock updateButtonText = new();
+            updateButtonText.Inlines.Add(new Run("Update "));
+            updateButtonText.Inlines.Add(new Run(choiceFieldLabel) { FontWeight = FontWeights.Bold, FontStyle = FontStyles.Italic });
+            updateButtonText.Inlines.Add(new Run("'s menu items to include these categories"));
             updateButton.Content = updateButtonText;
             updateButton.Visibility = Visibility.Visible;
             if (updateButton.Parent is System.Windows.Controls.Panel buttonPanel && buttonPanel.Parent is Grid dialogGrid)
@@ -2321,6 +2332,32 @@ namespace Timelapse.Dialog
             bool proceed = dialog.BuildAndShowDialog() == true;
             updateTemplate = proceed && updateClicked;
             return proceed;
+        }
+
+        /// <summary>
+        /// Populating a data field would overwrite existing, different values in some of the selected files.
+        /// Returns true if the user clicks Ok to overwrite them, or false if the user cancels.
+        /// </summary>
+        public static bool PopulateFieldOverwriteWarningDialog(Window owner, string fieldLabel, int overwriteCount, int selectedCount)
+        {
+            ThrowIf.IsNullArgument(owner, nameof(owner));
+            string files = selectedCount == 1 ? "file" : "files";
+            string has = overwriteCount == 1 ? "has" : "have";
+            string values = overwriteCount == 1 ? "value" : "values";
+            var dialog = new FormattedDialog()
+            {
+                Owner = owner,
+                DialogTitle = $"Overwrite existing data in {fieldLabel}?",
+                Icon = DialogIconType.Warning,
+                What = $"{overwriteCount:N0} of {selectedCount:N0} selected {files} already {has} a different value in [e]{fieldLabel}[/e]. "
+                       + $"Populating the field will overwrite those {values}.",
+                Solution = "Select:"
+                           + "[li] [b]Ok[/b] to overwrite them and populate the field,"
+                           + "[li] [b]Cancel[/b] to return without populating the field.",
+                Hint = "Overwritten values can't be recovered, so cancel if you want to keep them.",
+            };
+            FormattedDialogHelper.SetupStaticReferenceResolver(dialog);
+            return dialog.BuildAndShowDialog() == true;
         }
 
         #endregion

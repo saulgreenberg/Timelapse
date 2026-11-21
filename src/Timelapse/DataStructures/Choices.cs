@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Controls;
 
 namespace Timelapse.DataStructures
@@ -160,7 +161,7 @@ namespace Timelapse.DataStructures
         //    }
         //}
 
-        // Add the items that aren't already in the choice list (ignoring blanks).
+        // Add the items that aren't already in the choice list, ignoring case (and ignoring blanks).
         // If the current list is mostly in alphabetic order, each item is inserted at its alphabetic position;
         // otherwise the new items are added (sorted among themselves) to the end of the list.
         // Returns the number of items added.
@@ -171,7 +172,7 @@ namespace Timelapse.DataStructures
             foreach (string item in itemsToAdd ?? [])
             {
                 string trimmedItem = item?.Trim();
-                if (false == string.IsNullOrWhiteSpace(trimmedItem) && false == ChoiceList.Contains(trimmedItem) && false == newItems.Contains(trimmedItem))
+                if (false == string.IsNullOrWhiteSpace(trimmedItem) && false == ChoiceList.Contains(trimmedItem, StringComparer.OrdinalIgnoreCase) && false == newItems.Contains(trimmedItem, StringComparer.OrdinalIgnoreCase))
                 {
                     newItems.Add(trimmedItem);
                 }
@@ -194,6 +195,37 @@ namespace Timelapse.DataStructures
                 ChoiceList.Insert(index, newItem);
             }
             return newItems.Count;
+        }
+
+        // For each value that matches a choice, ignoring case, use the choice's own spelling (e.g., deer becomes Deer).
+        // Returns the distinct non-empty values that don't match any choice, ignoring case
+        public List<string> UseChoiceSpellingAndGetMismatches(Dictionary<long, string> values)
+        {
+            Dictionary<string, string> spellings = new(StringComparer.OrdinalIgnoreCase);
+            foreach (string choice in ChoiceList ?? [])
+            {
+                spellings.TryAdd(choice, choice);
+            }
+
+            List<string> mismatches = [];
+            HashSet<string> mismatchesSeen = new(StringComparer.OrdinalIgnoreCase);
+            foreach (long id in values.Keys.ToList())
+            {
+                string value = values[id];
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    continue;
+                }
+                if (spellings.TryGetValue(value, out string spelling))
+                {
+                    values[id] = spelling;
+                }
+                else if (mismatchesSeen.Add(value))
+                {
+                    mismatches.Add(value);
+                }
+            }
+            return mismatches;
         }
 
         public bool Contains(string itemToCheck)

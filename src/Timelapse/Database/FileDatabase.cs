@@ -3458,6 +3458,14 @@ namespace Timelapse.Database
             }
             return detectionExists == true;
         }
+
+        /// <summary>
+        /// Return if the recognition data includes classification categories (i.e., a non-empty classification categories table exists)
+        /// </summary>
+        public bool ClassificationCategoriesExist()
+        {
+            return DetectionsExists() && Database.TableExistsAndNotEmpty(DBTables.ClassificationCategories);
+        }
         #endregion
 
         #region BoundingBox Thresholds
