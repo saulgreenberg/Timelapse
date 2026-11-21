@@ -16,6 +16,11 @@ namespace Timelapse.SearchingAndSorting
         // Whether the folder metadata terms are used at all
         public bool UseFolderMetadata { get; set; }
 
+        // Only set in saved Json, when the terms were saved as not in use so that older versions of Timelapse select all files
+        // (see ToJsonForSaving): whether they are really in use. Older versions ignore it; this version restores UseFolderMetadata from it
+        [Newtonsoft.Json.JsonProperty(NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public bool? SavedUseFolderMetadata { get; set; }
+
         // How the folder metadata terms are combined with each other. They are always ANDed with the other search terms.
         public CustomSelectionOperatorEnum CombiningOperator { get; set; } = CustomSelectionOperatorEnum.And;
 
@@ -100,6 +105,31 @@ namespace Timelapse.SearchingAndSorting
             Levels.Add(levelTerms);
         }
 
+        // The folder metadata terms as Json, for saving in the database. Terms using 'is any of' are saved in a form
+        // older versions of Timelapse can also restore (see SearchTerm.UseOperatorOlderVersionsKnow).
+        // If older versions can't restore the whole selection exactly (see CustomSelection.OlderVersionsCannotRestoreExactly),
+        // the terms are saved as not in use for them, so they select all files. This selection itself isn't changed
+        public string ToJsonForSaving(bool olderVersionsSelectAll)
+        {
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(this, Newtonsoft.Json.Formatting.Indented);
+            FolderMetadataSelection copy = Newtonsoft.Json.JsonConvert.DeserializeObject<FolderMetadataSelection>(json);
+            List<SearchTerm> terms = [.. (copy?.Levels ?? []).SelectMany(level => level.SearchTerms ?? [])];
+            if (copy == null || (false == olderVersionsSelectAll && false == terms.Any(term => term.Operator == SearchTermOperator.IsAnyOf)))
+            {
+                return json;
+            }
+            foreach (SearchTerm term in terms)
+            {
+                term.UseOperatorOlderVersionsKnow();
+            }
+            if (olderVersionsSelectAll)
+            {
+                copy.SavedUseFolderMetadata = copy.UseFolderMetadata;
+                copy.UseFolderMetadata = false;
+            }
+            return Newtonsoft.Json.JsonConvert.SerializeObject(copy, Newtonsoft.Json.Formatting.Indented);
+        }
+
         // Keep whatever is still valid from the saved settings. As this selection's terms reflect the current folder template,
         // a saved term whose field was removed, or whose type or choices changed, is just left out.
         public void KeepSettingsFrom(FolderMetadataSelection saved)
@@ -108,7 +138,7 @@ namespace Timelapse.SearchingAndSorting
             {
                 return;
             }
-            UseFolderMetadata = saved.UseFolderMetadata;
+            UseFolderMetadata = saved.SavedUseFolderMetadata ?? saved.UseFolderMetadata;
             CombiningOperator = saved.CombiningOperator;
             foreach (FolderLevelSearchTerms level in Levels)
             {
@@ -120,7 +150,8 @@ namespace Timelapse.SearchingAndSorting
                 foreach (SearchTerm term in level.SearchTerms)
                 {
                     SearchTerm savedTerm = savedLevel.SearchTerms.Find(item => item.DataLabel == term.DataLabel && item.ControlType == term.ControlType);
-                    if (savedTerm != null && IsValueInChoices(term, savedTerm.DatabaseValue))
+                    savedTerm?.RestoreSavedOperator();
+                    if (savedTerm != null && IsValueInChoices(term, savedTerm.DatabaseValue, savedTerm.Operator))
                     {
                         term.UseForSearching = savedTerm.UseForSearching;
                         term.Operator = savedTerm.Operator;
@@ -131,10 +162,13 @@ namespace Timelapse.SearchingAndSorting
             ClearUsesWithoutMetadata();
         }
 
-        private static bool IsValueInChoices(SearchTerm term, string value)
+        // A Fixed Choice 'is any of' value lists several items, each of which must be a menu item, or the (empty) item
+        private static bool IsValueInChoices(SearchTerm term, string value, string termOperator)
         {
             return term.ControlType switch
             {
+                Control.FixedChoice when termOperator == SearchTermOperator.IsAnyOf =>
+                    CustomSelection.SplitIntoChoiceItems(value, term.List).All(item => item == SearchTermOperator.EmptyChoiceItem || term.List.Contains(item)),
                 Control.FixedChoice => term.List.Contains(value ?? string.Empty),
                 Control.MultiChoice => string.IsNullOrEmpty(value) || value.Split(',').All(term.List.Contains),
                 _ => true

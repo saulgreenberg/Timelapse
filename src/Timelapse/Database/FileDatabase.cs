@@ -3629,6 +3629,14 @@ namespace Timelapse.Database
                 // At this point, customSelectionFromJson should have a valid value
                 List<SearchTerm> stlFromJson = customSelectionFromJson.SearchTerms;
 
+                // Remove the marker that makes older versions select all files (see CustomSelection.ToJsonForSaving).
+                // A term saved with an equivalent operator that older versions know gets its real operator back (see SearchTerm.UseOperatorOlderVersionsKnow)
+                stlFromJson.RemoveAll(stFromJson => stFromJson.DataLabel == CustomSelection.OlderVersionsSelectAllMarker);
+                foreach (SearchTerm stFromJson in stlFromJson)
+                {
+                    stFromJson.RestoreSavedOperator();
+                }
+
                 // Check various recognition settings.
                 // If the JSON says recognition is enabled and being used, check if the recognition data is actually there for us
                 if (customSelectionFromJson.RecognitionSelections is { AllDetections: true })
@@ -3718,9 +3726,11 @@ namespace Timelapse.Database
                         // - for different lists
                         // - for an empty databaseValue when we shouldn't include an empty choice
                         // - for a non empty databaseValue that isn't in the list
-                        // except for a Fixed Choice 'is any of', whose value lists several items: each must be in the list, or be the (empty) item
-                        bool isAnyOf = stFromJson.ControlType == Control.FixedChoice && stFromJson.Operator == SearchTermOperator.IsAnyOf;
-                        bool isValueValid = isAnyOf
+                        // except for a value listing several items (a non-empty MultiChoice value, or a Fixed Choice 'is any of' value):
+                        // each item must be in the list, or be the (empty) item
+                        bool isListOfItems = (stFromJson.ControlType == Control.FixedChoice && stFromJson.Operator == SearchTermOperator.IsAnyOf) ||
+                                             (stFromJson.ControlType == Control.MultiChoice && false == string.IsNullOrEmpty(stFromJson.DatabaseValue));
+                        bool isValueValid = isListOfItems
                             ? CustomSelection.SplitIntoChoiceItems(stFromJson.DatabaseValue, choices.ChoiceList)
                                 .All(item => item == SearchTermOperator.EmptyChoiceItem || choices.ChoiceList.Contains(item))
                             : false == ((stFromJson.DatabaseValue == string.Empty && false == choices.IncludeEmptyChoice) ||

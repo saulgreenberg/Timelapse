@@ -196,7 +196,7 @@ namespace Timelapse.SearchingAndSorting
 
         #endregion
 
-        #region Helpers: Fixed Choice operators that take several values
+        #region Helpers: the 'is any of' operator (Fixed Choice and MultiChoice)
         // A Fixed Choice 'is any of' search term: a bracketed Or sub-expression with one term per selected item, e.g.,
         // ( Species = "Deer" OR Species = "Elk" OR ( Species IS NULL OR Species = '' ) ).
         // A single selected item (or none, which searches for an empty value) is the same as =, so it isn't bracketed
@@ -252,6 +252,20 @@ namespace Timelapse.SearchingAndSorting
             }
             return null;
         }
+
+        // A MultiChoice 'is any of' search term. A MultiChoice value is a comma-separated list of items, so this matches values that
+        // contain at least one of the selected items, anywhere in their list: the same search as Includes, but needing only one item to match
+        // (Includes needs them all). e.g., selecting Deer and Elk matches Deer, Elk,Moose and Coyote,Deer,Elk, but not Moose.
+        // With nothing selected, it searches for an empty value, as = does
+        private static string MultiChoiceIsAnyOfWhere(string dataLabel, SearchTerm searchTerm)
+        {
+            string[] items = (searchTerm.DatabaseValue ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            return items.Length == 0
+                ? SqlPhrase.LabelIsNullOrDataLabelEqualsEmpty(dataLabel)
+                : Sql.OpenParenthesis
+                  + SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(SearchTermOperator.Includes), string.Join(",", items), matchAnyTerm: true)
+                  + Sql.CloseParenthesis;
+        }
         #endregion
 
         #region Helpers: CombineSearchTermsAndOperato
@@ -299,6 +313,11 @@ namespace Timelapse.SearchingAndSorting
                     if (searchTerm.ControlType == Control.FixedChoice && searchTerm.Operator == SearchTermOperator.IsAnyOf)
                     {
                         whereForTerm = FixedChoiceIsAnyOfWhere(dataLabel, searchTerm);
+                    }
+                    // A MultiChoice 'is any of' matches values that contain at least one of its selected items
+                    else if (searchTerm.ControlType == Control.MultiChoice && searchTerm.Operator == SearchTermOperator.IsAnyOf)
+                    {
+                        whereForTerm = MultiChoiceIsAnyOfWhere(dataLabel, searchTerm);
                     }
                     // Check to see if the search term is querying for an empty string
                     else if (string.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == SearchTermOperator.Equal)

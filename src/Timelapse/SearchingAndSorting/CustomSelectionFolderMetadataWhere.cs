@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Timelapse.Constant;
 using Timelapse.Database;
@@ -82,6 +83,29 @@ namespace Timelapse.SearchingAndSorting
             if (string.IsNullOrEmpty(term.DatabaseValue) && term.Operator == SearchTermOperator.Equal)
             {
                 return value + Sql.Equal + Sql.Quote(string.Empty);
+            }
+
+            // A Fixed Choice 'is any of': the folder's value is one of the selected items, where (empty) is an empty value.
+            // Nothing selected searches for an empty value, as = does. Form: value IN ( 'Deer', 'Elk', '' )
+            if (term.ControlType == Control.FixedChoice && term.Operator == SearchTermOperator.IsAnyOf)
+            {
+                List<string> items = [.. SplitIntoChoiceItems(term.DatabaseValue, term.List)
+                    .Select(item => item == SearchTermOperator.EmptyChoiceItem ? string.Empty : item)
+                    .DefaultIfEmpty(string.Empty)
+                    .Distinct()];
+                return value + " IN " + Sql.OpenParenthesis + string.Join(", ", items.Select(Sql.Quote)) + Sql.CloseParenthesis;
+            }
+
+            // A MultiChoice 'is any of': the folder's value contains at least one of the selected items (see MultiChoiceIsAnyOfWhere).
+            // Nothing selected searches for an empty value, as = does
+            if (term.ControlType == Control.MultiChoice && term.Operator == SearchTermOperator.IsAnyOf)
+            {
+                string[] items = (term.DatabaseValue ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                return items.Length == 0
+                    ? value + Sql.Equal + Sql.Quote(string.Empty)
+                    : Sql.OpenParenthesis
+                      + SqlPhrase.DataLabelOperatorValue(value, TermToSqlOperator(SearchTermOperator.Includes), string.Join(",", items), matchAnyTerm: true)
+                      + Sql.CloseParenthesis;
             }
 
             if (term.ControlType == Control.MultiChoice && term.Operator is SearchTermOperator.Includes or SearchTermOperator.Excludes)

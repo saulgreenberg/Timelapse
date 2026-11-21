@@ -147,4 +147,4 @@ For any questions, including licensing questions or to arrange a commercial lice
 ---
 
 **Last Updated:** 2026-11-14
-**Timelapse Version:** 2.5.3.0+
+**Timelapse Version:** 2.5.3.1+

@@ -308,33 +308,42 @@ namespace Timelapse.SearchingAndSorting
         #endregion
 
         #region Public Methods - Json for saving
+        // The data label of a search term added to the saved Json when older versions of Timelapse can't restore the selection exactly.
+        // No field has this data label, so their restore check rejects the saved terms and selects all files. This version removes it when restoring
+        public const string OlderVersionsSelectAllMarker = "TimelapseOlderVersionsSelectAll";
+
+        // Whether older versions of Timelapse can't restore this selection so that it selects the same files:
+        // when an 'is any of' term with several items is in use, in the search terms or in the folder metadata terms
+        public bool OlderVersionsCannotRestoreExactly()
+        {
+            return (SearchTerms ?? []).Any(term => term.UseForSearching && term.IsAnyOfWithSeveralItems())
+                   || (FolderMetadata?.IsInUse() == true
+                       && FolderMetadata.Levels.SelectMany(level => level.SearchTerms).Any(term => term.UseForSearching && term.IsAnyOfWithSeveralItems()));
+        }
+
         // The custom selection as Json, for saving in the database so it can be restored when the image set is reopened.
-        // Older versions of Timelapse don't know the Fixed Choice 'is any of' operator. Restoring a term that uses it with a single value
-        // (or none) passes their checks, but builds an invalid query, which makes them shut down. So such terms are saved as the
-        // equivalent '=' (a single value means the same). Terms with several values are kept: older versions reject those values
-        // as not being menu items, and safely revert to selecting all files. This custom selection itself isn't changed
+        // Terms using 'is any of' are saved in a form older versions of Timelapse can also restore (see SearchTerm.UseOperatorOlderVersionsKnow).
+        // If they still couldn't select the same files, a marker term makes them select all files instead
+        // (the folder metadata terms are saved as not in use for them, see FolderMetadataSelection.ToJsonForSaving).
+        // This custom selection itself isn't changed
         public string ToJsonForSaving()
         {
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(this, Newtonsoft.Json.Formatting.Indented);
             CustomSelection copy = Newtonsoft.Json.JsonConvert.DeserializeObject<CustomSelection>(json);
-            bool changed = false;
-            foreach (SearchTerm searchTerm in copy?.SearchTerms ?? [])
+            bool addMarker = OlderVersionsCannotRestoreExactly();
+            if (copy?.SearchTerms == null || (false == addMarker && false == copy.SearchTerms.Any(term => term.Operator == SearchTermOperator.IsAnyOf)))
             {
-                if (searchTerm.ControlType != Control.FixedChoice || searchTerm.Operator != SearchTermOperator.IsAnyOf)
-                {
-                    continue;
-                }
-                List<string> items = SplitIntoChoiceItems(searchTerm.DatabaseValue, searchTerm.List);
-                if (items.Count <= 1)
-                {
-                    searchTerm.Operator = SearchTermOperator.Equal;
-                    searchTerm.DatabaseValue = items.Count == 0 || items[0] == SearchTermOperator.EmptyChoiceItem ? string.Empty : items[0];
-                    changed = true;
-                }
+                return json;
             }
-            return changed
-                ? Newtonsoft.Json.JsonConvert.SerializeObject(copy, Newtonsoft.Json.Formatting.Indented)
-                : json;
+            foreach (SearchTerm searchTerm in copy.SearchTerms)
+            {
+                searchTerm.UseOperatorOlderVersionsKnow();
+            }
+            if (addMarker)
+            {
+                copy.SearchTerms.Add(new() { DataLabel = OlderVersionsSelectAllMarker, Label = OlderVersionsSelectAllMarker, List = [] });
+            }
+            return Newtonsoft.Json.JsonConvert.SerializeObject(copy, Newtonsoft.Json.Formatting.Indented);
         }
         #endregion
 
@@ -437,7 +446,7 @@ namespace Timelapse.SearchingAndSorting
             switch (expression)
             {
                 case SearchTermOperator.Equal:
-                // 'is any of' builds its own sub-expression (see FixedChoiceIsAnyOfWhere),
+                // 'is any of' builds its own sub-expression (see FixedChoiceIsAnyOfWhere and MultiChoiceIsAnyOfWhere),
                 // so it is only treated as Equal if used elsewhere
                 case SearchTermOperator.IsAnyOf:
                     return "=";

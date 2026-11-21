@@ -455,7 +455,8 @@ namespace Timelapse
         // "Sheep" does not return "Bighorn Sheep". Because Glob expression are limited, we do this by
         // searching for the exact term as it would appear in different possible positions in the comma separated list,
         // i.e., at the beginning, middle and end plus as exact matches.
-        public static string DataLabelOperatorValue(string dataLabel, string mathOperator, string value)
+        // Each term must match (AND), or, if matchAnyTerm, at least one of them (OR, as used by the MultiChoice 'is any of')
+        public static string DataLabelOperatorValue(string dataLabel, string mathOperator, string value, bool matchAnyTerm = false)
         {
             value = value?.Trim() ?? string.Empty;
             if (value == string.Empty)
@@ -477,7 +478,7 @@ namespace Timelapse
                 where += Sql.CloseParenthesis;
                 if (i < terms.Length - 1)
                 {
-                    where += Sql.And;
+                    where += matchAnyTerm ? Sql.Or : Sql.And;
                 }
             }
             return where;

@@ -51,7 +51,6 @@ namespace Timelapse.Controls
             this.dataEntryControls = dataEntryControls;
 
             StackPanel panel = new();
-            panel.Children.Add(CreateBetaTestingNote());
             panel.Children.Add(CreateCombiningOperatorButtons());
 
             foreach (GridLength width in new[] { GridLength.Auto, GridLength.Auto, GridLength.Auto, GridLength.Auto, new(1, GridUnitType.Star) })
@@ -78,27 +77,6 @@ namespace Timelapse.Controls
         }
 
         #region Layout
-        private static TextBlock CreateBetaTestingNote()
-        {
-            TextBlock note = new()
-            {
-                Foreground = Brushes.Red,
-                FontWeight = FontWeights.Bold,
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new(5, 0, 5, 0)
-            };
-            Hyperlink email = new(new Run(ExternalLinks.EmailAddress)) { NavigateUri = new(ExternalLinks.EmailAddressAsMailTo) };
-            email.RequestNavigate += (_, e) =>
-            {
-                ProcessExecution.TryProcessStart(e.Uri);
-                e.Handled = true;
-            };
-            note.Inlines.Add("Note: This is a beta preview for testing. Email ");
-            note.Inlines.Add(email);
-            note.Inlines.Add(" with your experiences.");
-            return note;
-        }
-
         private StackPanel CreateCombiningOperatorButtons()
         {
             StackPanel panel = new() { Orientation = Orientation.Horizontal, Margin = new(5) };
@@ -213,16 +191,29 @@ namespace Timelapse.Controls
                 Height = 25,
                 SelectedValue = term.Operator
             };
-            operators.SelectionChanged += (_, _) =>
-            {
-                term.Operator = operators.SelectedValue.ToString();
-                OnSelectionChanged();
-            };
             AddToGrid(operators, row, OperatorColumn);
 
             FrameworkElement value = CreateValueControl(term, thickness);
             value.IsEnabled = term.UseForSearching;
             AddToGrid(value, row, ValueColumn);
+
+            operators.SelectionChanged += (_, _) =>
+            {
+                string previousOperator = term.Operator;
+                term.Operator = operators.SelectedValue.ToString();
+
+                // A Fixed Choice switching to or from 'is any of' needs the other kind of value control (see FixedChoiceAdjustValueForOperator)
+                if (term.ControlType == Control.FixedChoice &&
+                    (previousOperator == SearchTermOperator.IsAnyOf) != (term.Operator == SearchTermOperator.IsAnyOf))
+                {
+                    FixedChoiceAdjustValueForOperator(term);
+                    termsGrid.Children.Remove(value);
+                    value = CreateValueControl(term, thickness);
+                    value.IsEnabled = term.UseForSearching;
+                    AddToGrid(value, row, ValueColumn);
+                }
+                OnSelectionChanged();
+            };
 
             RoutedEventHandler selectChanged = (_, _) =>
             {
@@ -234,6 +225,23 @@ namespace Timelapse.Controls
             };
             select.Checked += selectChanged;
             select.Unchecked += selectChanged;
+        }
+
+        // When a Fixed Choice switches to 'is any of', a single selected value is kept (an empty one becomes the (empty) item).
+        // When it switches back, a single selected value is kept, but several (or none) leave nothing selected, i.e., an empty value
+        private static void FixedChoiceAdjustValueForOperator(SearchTerm term)
+        {
+            if (term.Operator == SearchTermOperator.IsAnyOf)
+            {
+                if (string.IsNullOrEmpty(term.DatabaseValue) && term.List.Contains(string.Empty))
+                {
+                    term.DatabaseValue = SearchTermOperator.EmptyChoiceItem;
+                }
+            }
+            else if (term.DatabaseValue == SearchTermOperator.EmptyChoiceItem || false == term.List.Contains(term.DatabaseValue))
+            {
+                term.DatabaseValue = string.Empty;
+            }
         }
 
         private int AddRow()
@@ -256,12 +264,17 @@ namespace Timelapse.Controls
             return controlType switch
             {
                 Control.Counter or Control.IntegerAny or Control.IntegerPositive or Control.DecimalAny or Control.DecimalPositive
-                    or Control.FixedChoice or Control.DateTime_ or Control.Date_ or Control.Time_ =>
+                    or Control.DateTime_ or Control.Date_ or Control.Time_ =>
                 [
                     SearchTermOperator.Equal, SearchTermOperator.NotEqual, SearchTermOperator.LessThan, SearchTermOperator.GreaterThan,
                     SearchTermOperator.LessThanOrEqual, SearchTermOperator.GreaterThanOrEqual
                 ],
-                Control.MultiChoice => [SearchTermOperator.Equal, SearchTermOperator.NotEqual, SearchTermOperator.Includes, SearchTermOperator.Excludes],
+                Control.FixedChoice =>
+                [
+                    SearchTermOperator.Equal, SearchTermOperator.NotEqual, SearchTermOperator.LessThan, SearchTermOperator.GreaterThan,
+                    SearchTermOperator.LessThanOrEqual, SearchTermOperator.GreaterThanOrEqual, SearchTermOperator.IsAnyOf
+                ],
+                Control.MultiChoice => [SearchTermOperator.Equal, SearchTermOperator.NotEqual, SearchTermOperator.Includes, SearchTermOperator.Excludes, SearchTermOperator.IsAnyOf],
                 Control.Flag => [SearchTermOperator.Equal, SearchTermOperator.NotEqual],
                 _ =>
                 [
@@ -278,8 +291,9 @@ namespace Timelapse.Controls
                 Control.MultiLine => CreateMultiLineValue(term, thickness),
                 Control.Counter or Control.IntegerAny or Control.IntegerPositive => CreateIntegerValue(term, thickness),
                 Control.DecimalAny or Control.DecimalPositive => CreateDecimalValue(term, thickness),
+                Control.FixedChoice when term.Operator == SearchTermOperator.IsAnyOf => CreateMultiChoiceValue(term, thickness, includeEmptyItem: true),
                 Control.FixedChoice => CreateFixedChoiceValue(term, thickness),
-                Control.MultiChoice => CreateMultiChoiceValue(term, thickness),
+                Control.MultiChoice => CreateMultiChoiceValue(term, thickness, includeEmptyItem: false),
                 Control.Flag => CreateFlagValue(term, thickness),
                 Control.DateTime_ => CreateDateTimeValue(term),
                 Control.Date_ => CreateDateValue(term),
@@ -430,13 +444,20 @@ namespace Timelapse.Controls
             return comboBox;
         }
 
-        private WatermarkCheckComboBox CreateMultiChoiceValue(SearchTerm term, Thickness thickness)
+        // A check combo box for selecting several values (MultiChoice, and FixedChoice with 'is any of').
+        // The list's empty item is removed, or (if includeEmptyItem) shown as (empty) so it can be seen and selected
+        private WatermarkCheckComboBox CreateMultiChoiceValue(SearchTerm term, Thickness thickness, bool includeEmptyItem)
         {
+            List<string> items = [.. term.List.Where(item => item != string.Empty)];
+            if (includeEmptyItem && term.List.Contains(string.Empty))
+            {
+                items.Insert(0, SearchTermOperator.EmptyChoiceItem);
+            }
             WatermarkCheckComboBox checkComboBox = new()
             {
                 Width = DefaultControlWidth,
                 Margin = thickness,
-                ItemsSource = term.List.Where(item => item != string.Empty).ToList()
+                ItemsSource = items
             };
             checkComboBox.Opened += ControlsDataHelpers.WatermarkCheckComboBox_DropDownOpened;
             checkComboBox.Closed += ControlsDataHelpers.WatermarkCheckComboBox_DropDownClosed;

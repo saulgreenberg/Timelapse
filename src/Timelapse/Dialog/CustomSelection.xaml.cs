@@ -432,7 +432,8 @@ namespace Timelapse.Dialog
                             SearchTermOperator.Equal,
                             SearchTermOperator.NotEqual,
                             SearchTermOperator.Includes,
-                            SearchTermOperator.Excludes
+                            SearchTermOperator.Excludes,
+                            SearchTermOperator.IsAnyOf
                         ];
                         break;
                     // Relative path only allows = (this will be converted later to a glob to get subfolders) 
