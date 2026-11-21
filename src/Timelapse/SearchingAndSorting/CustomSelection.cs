@@ -406,6 +406,10 @@ namespace Timelapse.SearchingAndSorting
             switch (expression)
             {
                 case SearchTermOperator.Equal:
+                // Placeholder until the behaviour of 'is all of' is defined: it searches as Equal.
+                // ('is one or more of' builds its own bracketed Or sub-expression, see FixedChoiceIsOneOrMoreOfWhere)
+                case SearchTermOperator.IsOneOrMoreOf:
+                case SearchTermOperator.IsAllOf:
                     return "=";
                 case SearchTermOperator.NotEqual:
                     return "<>";

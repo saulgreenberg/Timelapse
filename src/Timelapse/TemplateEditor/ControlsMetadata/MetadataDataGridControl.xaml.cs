@@ -647,9 +647,9 @@ namespace TimelapseTemplateEditor.ControlsMetadata
             if (sender is not WatermarkCheckComboBox checkComboBox) return;
             // Repopulate items in case the list changed via DefineList since last open
             PopulateMultiChoiceCheckComboBox(checkComboBox);
-            // Sync checkmarks to the current Text (comma-separated selected values)
+            // Sync checkmarks to the current Text (comma-separated selected values), trimming each item
             checkComboBox.SelectedItemsOverride = new ObservableCollection<string>(
-                checkComboBox.Text.Split(','));
+                checkComboBox.Text.Split(',', System.StringSplitOptions.TrimEntries));
         }
 
         private void DefaultValueMultiChoiceClosed(object sender, RoutedEventArgs e)

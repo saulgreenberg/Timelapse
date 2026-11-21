@@ -23,6 +23,7 @@ Items are ordered lowest-risk / highest-payoff first. Skip or defer any item by 
 | 2 | V-1 | Virtualized thumbnail grid for unbounded file counts | High | ✅ Complete|
 | 3 | DB-1 | SQLite write failures silently swallowed at ~33 call sites | Medium | ✅ Complete |
 | 4 | DB-2 | SQLite read failures silently swallowed — debug assert only, no user dialog | Low–Medium | ✅ Complete |
+| 5 | MC-1 | View-only mode: MultiChoice values lose items containing spaces | Low | ✅ Complete (uncommitted, needs hand test) |
 
 ---
 
@@ -105,3 +106,54 @@ Before implementation, audit all callers that iterate or count the DataTable to 
 
 ---
 
+## MC-1 · View-only mode: MultiChoice values lose items containing spaces
+
+### Issue
+
+The multi-select drop-down (`WatermarkCheckComboBox`, built on the toolkit's `CheckComboBox`) re-reads its `Text` into checked items only when its `IsEditable` property is true (`CheckComboBox.OnTextChanged` returns early otherwise). When it does, `CheckComboBox.UpdateFromText()` (src/TimelapseWpf.Toolkit/CheckComboBox/Implementation/CheckComboBox.cs) removes *every* space and then splits on commas: `Text.Replace(" ", string.Empty).Split(...)`. `Elk,Red deer` becomes `Elk` and `Reddeer`; `Reddeer` matches no item, so only Elk is checked, and the control then **rewrites its own `Text` to `Elk`**.
+
+Verified 2026-11-21 with a small test harness against the built toolkit:
+
+| IsEditable | After `Text = "Elk,Red deer"` | After the drop-down opens |
+|---|---|---|
+| false (default) | Text unchanged, nothing checked yet | Elk and Red deer checked (correct) |
+| true | **Text becomes `Elk`** | Elk only |
+
+Where `IsEditable` is true:
+
+- `DataEntryMultiChoice` and `MetadataDataEntryMultiChoice` set `IsEditable = isReadOnly` (the property is used inversely, as a read-only flag). Data entry controls are only read-only in **view-only mode** (`DataEntryControl.ContentReadOnly`).
+- Custom Select's check combo boxes (MultiChoice, and Fixed Choice *is one or more of*) and editable data entry leave `IsEditable` false, so they are **not** affected: their checked items are set when the drop-down opens, from `Text.Split(',')`, which keeps spaces.
+
+### Risk of Fixing
+
+**Low.** The fix is one line in the toolkit. `CheckComboBox` is shared by every MultiChoice control, but the changed line only runs when `IsEditable` is true (view-only mode).
+
+### Consequence of Not Fixing
+
+In view-only mode, a MultiChoice value containing an item with a space (e.g., *Elk,Red deer*) is displayed as *Elk*. Worse, if the menu also has the same item without the space, the wrong item is shown: with items *AABB* and *AA BB*, a value of *AA BB* becomes *AABB* and is displayed as the other item. Edits are blocked in view-only mode, so this should only affect what is shown, not the stored data (not traced through every save path).
+
+### Potential Improvement
+
+Split the text on commas and trim each piece, instead of removing all spaces: `Text.Split([Delimiter], StringSplitOptions.RemoveEmptyEntries).Select(item => item.Trim())`. Items keep their inner spaces, and spaces after commas are still ignored.
+
+Related, minor: the drop-down open handlers (`ControlsDataHelpers.WatermarkCheckComboBox_DropDownOpened`, `DataEntryMultiChoice.ContentControl_DropDownOpened`) split on commas without trimming, so a value written with spaces after commas (e.g., `Elk, Red deer`, perhaps from an imported CSV) would not check *Red deer*. Values written by the control itself have no such spaces.
+
+### Status (2026-11-21)
+
+Done, not yet committed or hand tested. `CheckComboBox.UpdateFromText()` now splits with `TrimEntries` instead of removing all spaces. The drop-down open handlers also trim each item (`ControlsDataHelpers.WatermarkCheckComboBox_DropDownOpened`, `DataEntryMultiChoice` open handler and `IntializeMenuFromCommaSeparatedList`, and the template editor's default-value MultiChoice in `TemplateDataGridControl` and `MetadataDataGridControl`): the harness showed that, in normal mode, a value written as `Elk, Red deer` lost Red deer when the drop-down opened. Verified with the harness for AA, AABB, AA BB and their combinations, and for `Elk,Red deer` and `Elk, Red deer`, in both modes.
+
+### Plan
+
+1. Change `CheckComboBox.UpdateFromText()` to trim each piece rather than removing all spaces.
+2. Optionally trim the pieces in the two drop-down open handlers too.
+3. Retest MultiChoice controls in view-only and normal modes.
+
+### How to Test
+
+1. Make a MultiChoice field whose items include one with a space (e.g., *Red deer*) and one without (*Elk*). Set a file's value to Elk and Red deer.
+2. Open the image set in view-only mode. Before the fix, the field shows *Elk*; after it, *Elk,Red deer*. Check the folder metadata MultiChoice the same way.
+3. In normal mode, confirm the field still shows both, the drop-down checks both, and ticking a third item keeps both.
+4. With menu items *AA*, *AABB* and *AA BB*, set values of each and of combinations; confirm in view-only and normal modes that each is shown as itself and never as one of the others.
+5. Custom Select: confirm a MultiChoice selection, and a Fixed Choice *is one or more of* selection, with Red deer still reopen with Red deer checked.
+
+---

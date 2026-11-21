@@ -193,6 +193,64 @@ namespace Timelapse.SearchingAndSorting
 
         #endregion
 
+        #region Helpers: Fixed Choice operators that take several values
+        // A Fixed Choice 'is one or more of' search term: a bracketed Or sub-expression with one term per selected item, e.g.,
+        // ( Species = "Deer" OR Species = "Elk" OR ( Species IS NULL OR Species = '' ) ).
+        // A single selected item (or none, which searches for an empty value) is the same as =, so it isn't bracketed
+        private static string FixedChoiceIsOneOrMoreOfWhere(string dataLabel, SearchTerm searchTerm)
+        {
+            List<string> items = SplitIntoChoiceItems(searchTerm.DatabaseValue, searchTerm.List);
+            if (items.Count == 0)
+            {
+                items.Add(string.Empty);
+            }
+            List<string> terms = [.. items.Select(item => string.IsNullOrEmpty(item) || item == SearchTermOperator.EmptyChoiceItem
+                ? SqlPhrase.LabelIsNullOrDataLabelEqualsEmpty(dataLabel)
+                : SqlPhrase.DataLabelOperatorValue(dataLabel, TermToSqlOperator(SearchTermOperator.Equal), item, Sql.Text))];
+            return terms.Count == 1
+                ? terms[0]
+                : Sql.OpenParenthesis + string.Join(Sql.Or, terms) + Sql.CloseParenthesis;
+        }
+
+        // Split a comma-separated selection into its items. Items are matched against the menu items (and the empty item),
+        // so that a menu item containing a comma (e.g., Deer, adult) stays whole. If the selection can't be split into
+        // menu items (e.g., the menu has changed), it is split on every comma instead
+        public static List<string> SplitIntoChoiceItems(string selection, List<string> menuItems)
+        {
+            if (string.IsNullOrEmpty(selection))
+            {
+                return [];
+            }
+            HashSet<string> items = [.. menuItems ?? [], SearchTermOperator.EmptyChoiceItem];
+            string[] parts = selection.Split(',');
+            List<string> result = SplitIntoChoiceItems(parts, 0, items);
+            return result ?? [.. parts.Select(part => part.Trim()).Where(part => part.Length > 0)];
+        }
+
+        // Recursively split parts[start..] into menu items, trying the longest item first. Returns null if it can't be done
+        private static List<string> SplitIntoChoiceItems(string[] parts, int start, HashSet<string> items)
+        {
+            if (start == parts.Length)
+            {
+                return [];
+            }
+            for (int end = parts.Length; end > start; end--)
+            {
+                string candidate = string.Join(",", parts, start, end - start);
+                if (items.Contains(candidate) || items.Contains(candidate.Trim()))
+                {
+                    List<string> rest = SplitIntoChoiceItems(parts, end, items);
+                    if (rest != null)
+                    {
+                        rest.Insert(0, items.Contains(candidate) ? candidate : candidate.Trim());
+                        return rest;
+                    }
+                }
+            }
+            return null;
+        }
+        #endregion
+
         #region Helpers: CombineSearchTermsAndOperato
         // Combine the search terms in searchTerms using the termCombiningOperator (i.e. And or OR), and special cases in as needed.
         private string CombineSearchTermsAndOperator(IEnumerable<SearchTerm> searchTerms, CustomSelectionOperatorEnum termCombiningOperator)
@@ -234,8 +292,13 @@ namespace Timelapse.SearchingAndSorting
                     // If we are using detections, then we have to qualify the data label e.g., DataTable.X
                     string dataLabel = RecognitionSelections.UseRecognition ? DBTables.FileData + Sql.Dot + searchTerm.DataLabel : searchTerm.DataLabel;
 
+                    // A Fixed Choice 'is one or more of' becomes a bracketed Or sub-expression of its selected items
+                    if (searchTerm.ControlType == Control.FixedChoice && searchTerm.Operator == SearchTermOperator.IsOneOrMoreOf)
+                    {
+                        whereForTerm = FixedChoiceIsOneOrMoreOfWhere(dataLabel, searchTerm);
+                    }
                     // Check to see if the search term is querying for an empty string
-                    if (string.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == SearchTermOperator.Equal)
+                    else if (string.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.Operator == SearchTermOperator.Equal)
                     {
                         // It is, so we also need to expand the query to check for both nulls an empty string, as both are considered equivalent for query purposes
                         // Form: ( dataLabel IS NULL OR  dataLabel = '' );

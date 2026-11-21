@@ -100,7 +100,8 @@ namespace Timelapse.ControlsDataEntry
         {
             IgnoreSelectionChanged = true;
             IntializeMenuFromCommaSeparatedList(ContentControl.Text);
-            ObservableCollection<string> itemsList = new(this.ContentControl.Text.Split(','));
+            // Trim each item, so a value written with spaces after its commas (e.g., Elk, Red deer) still checks its items
+            ObservableCollection<string> itemsList = new(this.ContentControl.Text.Split(',', System.StringSplitOptions.TrimEntries));
             this.ContentControl.SelectedItemsOverride = itemsList;
             IgnoreSelectionChanged = false;
         }
@@ -201,7 +202,7 @@ namespace Timelapse.ControlsDataEntry
         #region Public methods
         public void IntializeMenuFromCommaSeparatedList(string commaSeparatedList)
         {
-            ObservableCollection<string> itemsList = new(commaSeparatedList.Split(','));
+            ObservableCollection<string> itemsList = new(commaSeparatedList.Split(',', System.StringSplitOptions.TrimEntries));
             ContentControl.SelectedItemsOverride = itemsList;
         }
         #endregion

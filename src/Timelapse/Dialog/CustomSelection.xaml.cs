@@ -398,13 +398,11 @@ namespace Timelapse.Dialog
                     case Control.DecimalAny:
                     case Control.DecimalPositive:
                     case DatabaseColumn.DateTime:
-                    case Control.FixedChoice:
                     case Control.DateTime_:
                     case Control.Date_:
                     case Control.Time_:
                         // No globs in Counters or Integers as that text field only allows numbers, we can't enter the special characters Glob required
                         // No globs in Dates the date entries are constrained by the date picker
-                        // No globs in Fixed Choices as choice entries are constrained by menu selection
                         termOperators =
                         [
                             SearchTermOperator.Equal,
@@ -413,6 +411,20 @@ namespace Timelapse.Dialog
                             SearchTermOperator.GreaterThan,
                             SearchTermOperator.LessThanOrEqual,
                             SearchTermOperator.GreaterThanOrEqual
+                        ];
+                        break;
+                    case Control.FixedChoice:
+                        // No globs in Fixed Choices as choice entries are constrained by menu selection
+                        termOperators =
+                        [
+                            SearchTermOperator.Equal,
+                            SearchTermOperator.NotEqual,
+                            SearchTermOperator.LessThan,
+                            SearchTermOperator.GreaterThan,
+                            SearchTermOperator.LessThanOrEqual,
+                            SearchTermOperator.GreaterThanOrEqual,
+                            SearchTermOperator.IsOneOrMoreOf,
+                            SearchTermOperator.IsAllOf
                         ];
                         break;
                     case Control.MultiChoice:
@@ -469,6 +481,7 @@ namespace Timelapse.Dialog
                     IsEnabled = searchTerm.UseForSearching,
                     ItemsSource = termOperators,
                     Margin = thickness,
+                    // The drop-down list widens to fit longer operators (e.g., is one or more of), while the box itself keeps this width
                     Width = 78,
                     Height = 25,
                     SelectedValue = searchTerm.Operator,
@@ -693,56 +706,20 @@ namespace Timelapse.Dialog
                         break;
 
                     case Control.FixedChoice:
+                        // FixedChoice presents a combo box, or a check combo box (as MultiChoice does) for the operators that take several values
+                        if (IsMultipleValueOperator(searchTerm.Operator))
                         {
-                            // FixedChoice presents combo boxes, so they can be constructed the same way
-                            ComboBox comboBoxValue = new()
-                            {
-                                FontWeight = FontWeights.Normal,
-                                IsEnabled = searchTerm.UseForSearching,
-                                Width = DefaultControlWidth,
-                                Margin = thickness,
-
-                                // Create the dropdown menu
-                                ItemsSource = searchTerm.List,
-                                SelectedItem = searchTerm.DatabaseValue,
-                                TabIndex = tabIndex++
-                            };
-                            comboBoxValue.SelectionChanged += FixedChoice_SelectionChanged;
-                            comboBoxValue.GotFocus += ControlsDataHelpers.Control_GotFocus;
-                            comboBoxValue.LostFocus += ControlsDataHelpers.Control_LostFocus;
-                            Grid.SetRow(comboBoxValue, gridRowIndex);
-                            Grid.SetColumn(comboBoxValue, ValueColumn);
-                            SearchTerms.Children.Add(comboBoxValue);
-                            break;
+                            this.CheckComboBoxCreateValueControl(searchTerm, thickness, gridRowIndex, tabIndex++, includeEmptyItem: true);
                         }
+                        else
+                        {
+                            this.ComboBoxCreateValueControl(searchTerm, thickness, gridRowIndex, tabIndex++);
+                        }
+                        break;
                     case Control.MultiChoice:
-                        {
-                            // MultiChoice presents checkCombo boxes, so they can be constructed the same way
-                            // Remove the empty item from the list
-                            List<string> newList = [.. searchTerm.List];
-                            newList.Remove(string.Empty);
-                            WatermarkCheckComboBox checkComboBoxValue = new()
-                            {
-                                FontWeight = FontWeights.Normal,
-                                IsEnabled = searchTerm.UseForSearching,
-                                Width = DefaultControlWidth,
-                                Margin = thickness,
-                                // Create the dropdown menu
-                                ItemsSource = newList,
-                                TabIndex = tabIndex++
-                            };
-                            // Populate the combobox menu
-                            checkComboBoxValue.Opened += ControlsDataHelpers.WatermarkCheckComboBox_DropDownOpened;
-                            checkComboBoxValue.Closed += ControlsDataHelpers.WatermarkCheckComboBox_DropDownClosed;
-                            checkComboBoxValue.ItemSelectionChanged += WatermarkCheckComboBox_ItemSelectionChanged;
-                            checkComboBoxValue.GotFocus += ControlsDataHelpers.Control_GotFocus;
-                            checkComboBoxValue.LostFocus += ControlsDataHelpers.Control_LostFocus;
-                            checkComboBoxValue.Text = searchTerm.DatabaseValue;
-                            Grid.SetRow(checkComboBoxValue, gridRowIndex);
-                            Grid.SetColumn(checkComboBoxValue, ValueColumn);
-                            SearchTerms.Children.Add(checkComboBoxValue);
-                            break;
-                        }
+                        // MultiChoice presents check combo boxes
+                        this.CheckComboBoxCreateValueControl(searchTerm, thickness, gridRowIndex, tabIndex++, includeEmptyItem: false);
+                        break;
                     case DatabaseColumn.DeleteFlag:
                     case Control.Flag:
                         {
@@ -1319,7 +1296,15 @@ namespace Timelapse.Dialog
                 return;
             }
             int row = Grid.GetRow(comboBox);  // Get the row number...
-            Database.CustomSelection.SearchTerms[row - 1].Operator = comboBox.SelectedValue.ToString(); // Set the corresponding expression to the current selection
+            SearchTerm searchTerm = Database.CustomSelection.SearchTerms[row - 1];
+            string previousOperator = searchTerm.Operator;
+            searchTerm.Operator = comboBox.SelectedValue.ToString(); // Set the corresponding expression to the current selection
+
+            // A Fixed Choice switching between an operator that takes one value and one that takes several needs the other kind of value control
+            if (searchTerm.ControlType == Control.FixedChoice && IsMultipleValueOperator(previousOperator) != IsMultipleValueOperator(searchTerm.Operator))
+            {
+                this.FixedChoiceSwapValueControl(searchTerm, row);
+            }
             await UpdateSearchDialogFeedback();
         }
 
@@ -1823,6 +1808,98 @@ namespace Timelapse.Dialog
             RadioButtonTermCombiningAnd.IsEnabled = multipleNonStandardSelectionsMade > 1;
             RadioButtonTermCombiningOr.IsEnabled = multipleNonStandardSelectionsMade > 1;
             return Task.CompletedTask;
+        }
+        #endregion
+
+        #region Value controls: combo box and check combo box (FixedChoice and MultiChoice)
+        // The Fixed Choice operators that take several values, selected in a check combo box rather than a combo box
+        private static bool IsMultipleValueOperator(string termOperator)
+        {
+            return termOperator is SearchTermOperator.IsOneOrMoreOf or SearchTermOperator.IsAllOf;
+        }
+
+        // A combo box for selecting a single value (FixedChoice)
+        private void ComboBoxCreateValueControl(SearchTerm searchTerm, Thickness thickness, int gridRowIndex, int controlTabIndex)
+        {
+            ComboBox comboBoxValue = new()
+            {
+                FontWeight = FontWeights.Normal,
+                IsEnabled = searchTerm.UseForSearching,
+                Width = DefaultControlWidth,
+                Margin = thickness,
+
+                // Create the dropdown menu
+                ItemsSource = searchTerm.List,
+                SelectedItem = searchTerm.DatabaseValue,
+                TabIndex = controlTabIndex
+            };
+            comboBoxValue.SelectionChanged += FixedChoice_SelectionChanged;
+            comboBoxValue.GotFocus += ControlsDataHelpers.Control_GotFocus;
+            comboBoxValue.LostFocus += ControlsDataHelpers.Control_LostFocus;
+            Grid.SetRow(comboBoxValue, gridRowIndex);
+            Grid.SetColumn(comboBoxValue, ValueColumn);
+            SearchTerms.Children.Add(comboBoxValue);
+        }
+
+        // A check combo box for selecting several values (MultiChoice, and FixedChoice with an operator that takes several values).
+        // The list's empty item is removed, or (if includeEmptyItem) shown as (empty) so it can be seen and selected
+        private void CheckComboBoxCreateValueControl(SearchTerm searchTerm, Thickness thickness, int gridRowIndex, int controlTabIndex, bool includeEmptyItem)
+        {
+            List<string> newList = [.. searchTerm.List];
+            if (newList.Remove(string.Empty) && includeEmptyItem)
+            {
+                newList.Insert(0, SearchTermOperator.EmptyChoiceItem);
+            }
+            WatermarkCheckComboBox checkComboBoxValue = new()
+            {
+                FontWeight = FontWeights.Normal,
+                IsEnabled = searchTerm.UseForSearching,
+                Width = DefaultControlWidth,
+                Margin = thickness,
+                // Create the dropdown menu
+                ItemsSource = newList,
+                TabIndex = controlTabIndex
+            };
+            // Populate the combobox menu
+            checkComboBoxValue.Opened += ControlsDataHelpers.WatermarkCheckComboBox_DropDownOpened;
+            checkComboBoxValue.Closed += ControlsDataHelpers.WatermarkCheckComboBox_DropDownClosed;
+            checkComboBoxValue.ItemSelectionChanged += WatermarkCheckComboBox_ItemSelectionChanged;
+            checkComboBoxValue.GotFocus += ControlsDataHelpers.Control_GotFocus;
+            checkComboBoxValue.LostFocus += ControlsDataHelpers.Control_LostFocus;
+            checkComboBoxValue.Text = searchTerm.DatabaseValue;
+            Grid.SetRow(checkComboBoxValue, gridRowIndex);
+            Grid.SetColumn(checkComboBoxValue, ValueColumn);
+            SearchTerms.Children.Add(checkComboBoxValue);
+        }
+
+        // Replace a Fixed Choice's value control with the kind its new operator needs: a check combo box for several values, otherwise a combo box.
+        // A single selected value is kept. When returning to a combo box with several values selected, nothing is selected
+        private void FixedChoiceSwapValueControl(SearchTerm searchTerm, int row)
+        {
+            UIElement oldValueControl = GetGridElement<UIElement>(ValueColumn, row);
+            Thickness thickness = oldValueControl is FrameworkElement oldElement ? oldElement.Margin : new(5, 2, 5, 2);
+            int controlTabIndex = oldValueControl is System.Windows.Controls.Control oldControl ? oldControl.TabIndex : 0;
+            SearchTerms.Children.Remove(oldValueControl);
+
+            if (IsMultipleValueOperator(searchTerm.Operator))
+            {
+                // An empty single value carries over as the (empty) item
+                if (string.IsNullOrEmpty(searchTerm.DatabaseValue) && searchTerm.List.Contains(string.Empty))
+                {
+                    searchTerm.DatabaseValue = SearchTermOperator.EmptyChoiceItem;
+                }
+                this.CheckComboBoxCreateValueControl(searchTerm, thickness, row, controlTabIndex, includeEmptyItem: true);
+            }
+            else
+            {
+                // The value is a single selection only if it is one of the menu items, or the (empty) item;
+                // otherwise several (or none) were selected
+                if (searchTerm.DatabaseValue == SearchTermOperator.EmptyChoiceItem || false == searchTerm.List.Contains(searchTerm.DatabaseValue))
+                {
+                    searchTerm.DatabaseValue = string.Empty;
+                }
+                this.ComboBoxCreateValueControl(searchTerm, thickness, row, controlTabIndex);
+            }
         }
         #endregion
 

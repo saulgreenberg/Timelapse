@@ -714,7 +714,8 @@ namespace Timelapse.ControlsCore
         {
             if (sender is WatermarkCheckComboBox checkComboBox)
             {
-                ObservableCollection<string> itemsList = new(checkComboBox.Text.Split(','));
+                // Trim each item, so a value written with spaces after its commas (e.g., Elk, Red deer) still checks its items
+                ObservableCollection<string> itemsList = new(checkComboBox.Text.Split(',', System.StringSplitOptions.TrimEntries));
                 checkComboBox.SelectedItemsOverride = itemsList;
             }
         }

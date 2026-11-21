@@ -344,7 +344,9 @@ namespace TimelapseWpf.Toolkit
       List<string> selectedValues = null;
       if( !String.IsNullOrEmpty( this.Text ) )
       {
-        selectedValues = this.Text.Replace( " ", string.Empty ).Split([Delimiter], StringSplitOptions.RemoveEmptyEntries ).ToList();
+        // Trim each item rather than removing all spaces, so items containing spaces (e.g., Red deer) still match,
+        // and items differing only by a space (e.g., AABB vs AA BB) aren't confused
+        selectedValues = this.Text.Split([Delimiter], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries ).ToList();
       }
 
       this.UpdateFromList( selectedValues, this.GetItemDisplayValue );
