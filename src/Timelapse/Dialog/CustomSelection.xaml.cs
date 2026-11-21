@@ -423,8 +423,7 @@ namespace Timelapse.Dialog
                             SearchTermOperator.GreaterThan,
                             SearchTermOperator.LessThanOrEqual,
                             SearchTermOperator.GreaterThanOrEqual,
-                            SearchTermOperator.IsOneOrMoreOf,
-                            SearchTermOperator.IsAllOf
+                            SearchTermOperator.IsOneOrMoreOf
                         ];
                         break;
                     case Control.MultiChoice:
@@ -706,7 +705,7 @@ namespace Timelapse.Dialog
                         break;
 
                     case Control.FixedChoice:
-                        // FixedChoice presents a combo box, or a check combo box (as MultiChoice does) for the operators that take several values
+                        // FixedChoice presents a combo box, or a check combo box (as MultiChoice does) for the operator that takes several values (is one or more of)
                         if (IsMultipleValueOperator(searchTerm.Operator))
                         {
                             this.CheckComboBoxCreateValueControl(searchTerm, thickness, gridRowIndex, tabIndex++, includeEmptyItem: true);
@@ -1812,10 +1811,10 @@ namespace Timelapse.Dialog
         #endregion
 
         #region Value controls: combo box and check combo box (FixedChoice and MultiChoice)
-        // The Fixed Choice operators that take several values, selected in a check combo box rather than a combo box
+        // The Fixed Choice operator that takes several values (is one or more of), selected in a check combo box rather than a combo box
         private static bool IsMultipleValueOperator(string termOperator)
         {
-            return termOperator is SearchTermOperator.IsOneOrMoreOf or SearchTermOperator.IsAllOf;
+            return termOperator is SearchTermOperator.IsOneOrMoreOf;
         }
 
         // A combo box for selecting a single value (FixedChoice)
@@ -1841,7 +1840,7 @@ namespace Timelapse.Dialog
             SearchTerms.Children.Add(comboBoxValue);
         }
 
-        // A check combo box for selecting several values (MultiChoice, and FixedChoice with an operator that takes several values).
+        // A check combo box for selecting several values (MultiChoice, and FixedChoice with is one or more of).
         // The list's empty item is removed, or (if includeEmptyItem) shown as (empty) so it can be seen and selected
         private void CheckComboBoxCreateValueControl(SearchTerm searchTerm, Thickness thickness, int gridRowIndex, int controlTabIndex, bool includeEmptyItem)
         {
