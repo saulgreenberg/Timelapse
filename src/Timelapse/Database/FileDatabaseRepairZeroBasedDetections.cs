@@ -51,8 +51,10 @@ namespace Timelapse.Database
                 {
                     foreach (DataRow row in dataTable.Rows)
                     {
-                        categories[Convert.ToString(row[DetectionCategoriesColumns.Category], CultureInfo.InvariantCulture)] =
-                            Convert.ToString(row[DetectionCategoriesColumns.Label], CultureInfo.InvariantCulture);
+                        // Convert.ToString is declared as possibly returning null (it doesn't for a DataRow value, as DBNull becomes ""),
+                        // and a dictionary key can't be null
+                        categories[Convert.ToString(row[DetectionCategoriesColumns.Category], CultureInfo.InvariantCulture) ?? string.Empty] =
+                            Convert.ToString(row[DetectionCategoriesColumns.Label], CultureInfo.InvariantCulture) ?? string.Empty;
                     }
                 }
                 if (categories.Keys.Any(key => false == int.TryParse(key, NumberStyles.None, CultureInfo.InvariantCulture, out _)))

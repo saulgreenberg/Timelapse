@@ -2311,7 +2311,7 @@ namespace Timelapse.Dialog
             updateButtonText.Inlines.Add(new Run("'s menu items to include these categories"));
             updateButton.Content = updateButtonText;
             updateButton.Visibility = Visibility.Visible;
-            if (updateButton.Parent is System.Windows.Controls.Panel buttonPanel && buttonPanel.Parent is Grid dialogGrid)
+            if (updateButton.Parent is System.Windows.Controls.Panel { Parent: Grid dialogGrid } buttonPanel)
             {
                 buttonPanel.Children.Remove(updateButton);
                 Grid.SetRow(updateButton, Grid.GetRow(buttonPanel));

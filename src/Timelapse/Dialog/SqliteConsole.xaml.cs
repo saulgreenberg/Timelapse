@@ -91,9 +91,10 @@ namespace Timelapse.Dialog
         #region Receiving statements and expressions
         private void ShowWhat_Checked(object sender, RoutedEventArgs e)
         {
-            showWhat = sender == RBSelectOnly
+            // Which radio button was checked: a reference comparison, as intended
+            showWhat = ReferenceEquals(sender, RBSelectOnly)
                 ? ShowWhat.SelectOnly
-                : sender == RBWhereOnly
+                : ReferenceEquals(sender, RBWhereOnly)
                     ? ShowWhat.WhereOnly
                     : ShowWhat.All;
         }

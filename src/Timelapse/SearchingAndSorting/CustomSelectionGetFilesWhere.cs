@@ -329,7 +329,7 @@ namespace Timelapse.SearchingAndSorting
                     else
                     {
                         // The search term is querying for a non-empty value.
-                        Debug.Assert(searchTerm.DatabaseValue!.Contains("\"") == false,
+                        Debug.Assert(searchTerm.DatabaseValue!.Contains('"') == false,
                             $"Search term '{searchTerm.DatabaseValue}' contains quotation marks and could be used for SQL injection.");
                         if (dataLabel == DatabaseColumn.RelativePath ||
                             dataLabel == DBTables.FileData + Sql.Dot + DatabaseColumn.RelativePath)

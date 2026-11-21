@@ -465,9 +465,9 @@ namespace Timelapse.Controls
             {
                 if (checkComboBox.SelectedItemsOverride != null)
                 {
-                    List<string> items = [.. checkComboBox.SelectedItemsOverride.Cast<string>()];
-                    items.Sort();
-                    string newText = string.Join(",", items).Trim(',');
+                    List<string> itemsSelected = [.. checkComboBox.SelectedItemsOverride.Cast<string>()];
+                    itemsSelected.Sort();
+                    string newText = string.Join(",", itemsSelected).Trim(',');
                     if (checkComboBox.Text != newText)
                     {
                         checkComboBox.Text = newText;
