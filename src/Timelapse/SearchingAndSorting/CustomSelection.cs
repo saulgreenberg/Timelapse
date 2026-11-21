@@ -307,6 +307,29 @@ namespace Timelapse.SearchingAndSorting
         }
         #endregion
 
+        #region Public Methods - Refresh a choice list
+        // The search terms' choice lists are copied from the template when the custom selection is created or restored.
+        // When a FixedChoice or MultiChoice control's menu items change afterwards (e.g., when categories are added to it
+        // while populating it with recognition data), refresh its search term's list so the Custom Select menu shows them.
+        // The list is built as the constructor builds it: the choices, with an empty item at the beginning to allow searching for empty values
+        public void RefreshChoiceList(ControlRow control)
+        {
+            if (control == null || (control.Type != Control.FixedChoice && control.Type != Control.MultiChoice))
+            {
+                return;
+            }
+            foreach (SearchTerm searchTerm in SearchTerms.Where(term => term.DataLabel == control.DataLabel))
+            {
+                List<string> choiceList = [.. Choices.ChoicesFromJson(control.List).ChoiceList];
+                if (choiceList.Count > 0)
+                {
+                    choiceList.Insert(0, string.Empty);
+                }
+                searchTerm.List = choiceList;
+            }
+        }
+        #endregion
+
         #region Public Methods - Clear Custom Search Uses
         // Clear all the 'use' flags in the custom search term and in the detections (if any)
         public void ClearCustomSearchUses()

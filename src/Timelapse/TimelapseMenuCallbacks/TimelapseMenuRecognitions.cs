@@ -181,8 +181,9 @@ namespace Timelapse
             }
 
             // Syncing reloads the data file's controls, so refresh using the reloaded control:
-            // the file table column that knows the valid choices, and the data entry menu
+            // the file table column that knows the valid choices, the data entry menu, and the Custom Select menu
             ControlRow updatedControl = DataHandler.FileDatabase.GetControlFromControls(dataLabel) ?? ddbControl;
+            DataHandler.FileDatabase.CustomSelection?.RefreshChoiceList(updatedControl);
             FileTableColumn column = FileTableColumn.CreateColumnMatchingControlRowsType(updatedControl);
             if (column != null)
             {
